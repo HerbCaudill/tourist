@@ -60,6 +60,7 @@ export function WalkingMap(
     api: "1",
     destination: `${destination.lat},${destination.lon}`,
     travelmode: "walking",
+    dir_action: "navigate",
     ...(origin ? { origin: `${origin.lat},${origin.lon}` } : {}),
   }).toString()
   const current = result?.request === request && failed !== request ? result : undefined
@@ -92,6 +93,7 @@ export function WalkingMap(
         )}
         <a
           href={directions.href}
+          aria-label="Walking directions in Google Maps"
           target="_blank"
           rel="noreferrer"
           className="text-red-700 underline"

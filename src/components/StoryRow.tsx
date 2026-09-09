@@ -35,7 +35,7 @@ export function StoryRow(
             aria-hidden="true"
           />
         </span>
-        <span className="block font-semibold">{story.title}</span>
+        <span className="block py-1.5 leading-tight font-semibold">{story.title}</span>
         <span className="block text-[11px] text-neutral-700">{story.preview}</span>
       </span>
     </button>
