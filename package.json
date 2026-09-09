@@ -1,0 +1,50 @@
+{
+  "name": "tourist",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:pw": "playwright test",
+    "test:pw:ui": "playwright test --ui",
+    "test:pw:headed": "playwright test --headed",
+    "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1",
+    "typecheck": "tsc -b",
+    "format": "oxfmt .",
+    "lint": "oxlint ."
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.8.0",
+    "@tabler/icons-react": "^3.46.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.2.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "shadcn": "^4.21.0",
+    "tw-animate-css": "^1.4.0"
+  },
+  "devDependencies": {
+    "@herbcaudill/eslint-plugin": "^0.2.0",
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "eslint": "^10.10.0",
+    "jsdom": "^30.0.1",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.79.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.0.0"
+  }
+}
