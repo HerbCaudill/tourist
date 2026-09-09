@@ -54,7 +54,12 @@ describe("saved reading", () => {
     await user.click(screen.getByRole("button", { name: /worst poet/ }))
     expect(screen.getByText(/Dundee handloom weaver/)).toBeVisible()
     expect(screen.getByPlaceholderText("ask a follow-up")).toBeDisabled()
+    const storyPath = window.location.pathname
+    expect(storyPath).toMatch(/^\/stories\//)
     unmount()
+    render(<App research={research} history={createHistoryStore({ storage })} />)
+    expect(screen.getByText(/Dundee handloom weaver/)).toBeVisible()
+    expect(window.location.pathname).toBe(storyPath)
     expect(createHistoryStore({ storage }).read().discoveries).toHaveLength(1)
     expect(research.locate).not.toHaveBeenCalled()
     expect(research.discover).not.toHaveBeenCalled()

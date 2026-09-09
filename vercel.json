@@ -5,5 +5,15 @@
       "includeFiles": "server/prompts/*.prompt.md",
       "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/stories/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/chats/:path*",
+      "destination": "/index.html"
+    }
+  ]
 }

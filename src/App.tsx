@@ -4,6 +4,7 @@ import { NearbyScreen } from "./components/NearbyScreen"
 import { SavedReading } from "./components/SavedReading"
 import { StoryScreen } from "./components/StoryScreen"
 import { RADIUS_METERS } from "./constants"
+import { useNavigation } from "./hooks/useNavigation"
 import { useConversations } from "./hooks/useConversations"
 import { useOnline } from "./hooks/useOnline"
 import { createHistoryStore } from "./lib/createHistoryStore"
@@ -19,7 +20,6 @@ export function App(
     history: suppliedHistory,
   }: Props,
 ) {
-  const [view, setView] = useState<View>({ kind: "nearby" })
   const online = useOnline()
   const [history] = useState(
     () => suppliedHistory ?? (research.mapProvider === "google" ? createHistoryStore() : undefined),
@@ -39,7 +39,7 @@ export function App(
     chat.clear()
     setClearError(history ? !history.clear() : false)
     changed()
-    setView({ kind: "nearby" })
+    navigation.clear()
   }
 
   const stories = discovery?.stories ?? []
@@ -47,6 +47,17 @@ export function App(
     ? conversationContext(discovery?.location ?? location, discovery)
     : undefined
   const generalConversation = generalContext && chat.conversations[generalContext.id]
+  const contexts = [
+    ...[...(discovery ? [discovery] : []), ...(saved?.discoveries ?? [])].flatMap(item => [
+      conversationContext(item.location, item),
+      ...item.stories.map((story, index) =>
+        conversationContext(item.location, item, story, index + 1),
+      ),
+    ]),
+    ...Object.values(chat.conversations).map(conversation => conversation.context),
+  ]
+  const navigation = useNavigation(contexts)
+  const { view, navigate: setView } = navigation
 
   /** Send a question while retaining this conversation's originating context. */
   const ask = (question: string, context: ConversationContext) => {
@@ -56,6 +67,21 @@ export function App(
   }
 
   const screen = (() => {
+    if (!view)
+      return (
+        <div className="px-[18px] py-4">
+          <p role="status">
+            {busy ? "Loading saved reading…" : "This page is no longer saved on this device."}
+          </p>
+          <button
+            type="button"
+            className="mt-2 text-red-700 underline"
+            onClick={() => navigation.back({ kind: "nearby" })}
+          >
+            Back to nearby
+          </button>
+        </div>
+      )
     if (view.kind === "story") {
       const { story, context } = view
       return (
@@ -67,7 +93,7 @@ export function App(
           onOpenChat={
             chat.conversations[context.id] ? () => setView({ kind: "chat", context }) : undefined
           }
-          onBack={() => setView({ kind: "nearby" })}
+          onBack={() => navigation.back({ kind: "nearby" })}
           onAsk={question => ask(question, context)}
         />
       )
@@ -95,7 +121,9 @@ export function App(
           offline={!online}
           questionDisabled={!location}
           suggestions={suggestions.filter(question => !asked.has(question))}
-          onBack={() => setView(story ? { kind: "story", story, context } : { kind: "nearby" })}
+          onBack={() =>
+            navigation.back(story ? { kind: "story", story, context } : { kind: "nearby" })
+          }
           onAsk={question => ask(question, context)}
         />
       )
@@ -199,11 +227,6 @@ function conversationContext(
 }
 
 const defaultResearch = createLiveResearch()
-
-type View =
-  | { kind: "nearby" }
-  | { kind: "story"; story: Story; context: ConversationContext }
-  | { kind: "chat"; context: ConversationContext }
 
 type Props = {
   /** Adapter for location and research. */
