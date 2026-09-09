@@ -26,6 +26,8 @@ export function NearbyScreen(
     onChoosePlace,
     onOpenStory,
     onAsk,
+    chatPending,
+    onOpenChat,
   }: Props,
 ) {
   const [query, setQuery] = useState("")
@@ -175,7 +177,20 @@ export function NearbyScreen(
           </a>
         </p>
       )}
-      <Prompt placeholder="ask about this place" onAsk={onAsk} disabled={!location} />
+      {onOpenChat && (
+        <button
+          type="button"
+          onClick={onOpenChat}
+          className="px-[18px] py-2 text-left text-red-700 underline"
+        >
+          Open conversation
+        </button>
+      )}
+      <Prompt
+        placeholder="ask about this place"
+        onAsk={onAsk}
+        disabled={!location || chatPending}
+      />
     </>
   )
 }
@@ -207,4 +222,8 @@ type Props = {
   onOpenStory: (id: string) => void
   /** Start general chat. */
   onAsk: (question: string) => void
+  /** Whether the existing general conversation has an unanswered question. */
+  chatPending?: boolean
+  /** Reopen the existing general conversation. */
+  onOpenChat?: () => void
 }

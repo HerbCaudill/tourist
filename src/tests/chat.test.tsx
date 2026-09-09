@@ -152,4 +152,36 @@ describe("contextual chat", () => {
     )
     expect(research.ask.mock.calls[1][0].question).toBe(research.ask.mock.calls[0][0].question)
   })
+  it("keeps story entry disabled while its answer is pending and can reopen that conversation", async () => {
+    const user = userEvent.setup()
+    const research = {
+      ...createFakeResearch({ delayMs: 0 }),
+      ask: vi.fn().mockImplementation(() => new Promise<Answer>(() => {})),
+    }
+    render(<App research={research} />)
+    await user.click(await screen.findByRole("button", { name: /worst poet/ }))
+    await user.type(screen.getByPlaceholderText("ask a follow-up"), "First question{enter}")
+    await user.click(screen.getByRole("button", { name: /story/ }))
+    expect(screen.getByPlaceholderText("ask a follow-up")).toBeDisabled()
+    await user.click(screen.getByRole("button", { name: "Open conversation" }))
+    expect(screen.getByText("First question")).toBeVisible()
+    expect(research.ask).toHaveBeenCalledOnce()
+  })
+
+  it("keeps general entry disabled after failure and reopens the failed question", async () => {
+    const user = userEvent.setup()
+    const research = {
+      ...createFakeResearch({ delayMs: 0 }),
+      ask: vi.fn().mockRejectedValue(new Error("Connection interrupted")),
+    }
+    render(<App research={research} />)
+    await screen.findByRole("button", { name: /worst poet/ })
+    await user.type(screen.getByPlaceholderText("ask about this place"), "First question{enter}")
+    await screen.findByRole("alert")
+    await user.click(screen.getByRole("button", { name: /nearby/ }))
+    expect(screen.getByPlaceholderText("ask about this place")).toBeDisabled()
+    await user.click(screen.getByRole("button", { name: "Open conversation" }))
+    expect(screen.getByText("First question")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Retry answer" })).toBeVisible()
+  })
 })

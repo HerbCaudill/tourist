@@ -20,6 +20,10 @@ export function App(
     useDiscovery(research)
   const chat = useConversations(research)
   const stories = discovery?.stories ?? []
+  const generalContext = location
+    ? conversationContext(discovery?.location ?? location, discovery)
+    : undefined
+  const generalConversation = generalContext && chat.conversations[generalContext.id]
 
   /** Send a question while retaining this conversation's originating context. */
   const ask = (question: string, context: ConversationContext) => {
@@ -36,6 +40,10 @@ export function App(
           story={story}
           number={context.number ?? 1}
           origin={context.originLocation}
+          chatPending={!!chat.conversations[context.id]?.pending}
+          onOpenChat={
+            chat.conversations[context.id] ? () => setView({ kind: "chat", context }) : undefined
+          }
           onBack={() => setView({ kind: "nearby" })}
           onAsk={question => ask(question, context)}
         />
@@ -94,9 +102,14 @@ export function App(
               ),
             })
         }}
+        chatPending={!!generalConversation?.pending}
+        onOpenChat={
+          generalContext && generalConversation
+            ? () => setView({ kind: "chat", context: generalContext })
+            : undefined
+        }
         onAsk={question => {
-          if (location)
-            ask(question, conversationContext(discovery?.location ?? location, discovery))
+          if (generalContext) ask(question, generalContext)
         }}
       />
     )

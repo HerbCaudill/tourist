@@ -15,6 +15,8 @@ export function StoryScreen(
     origin,
     onBack,
     onAsk,
+    chatPending,
+    onOpenChat,
   }: Props,
 ) {
   return (
@@ -44,7 +46,16 @@ export function StoryScreen(
         ))}
         <Footnotes sources={story.sources} />
       </article>
-      <Prompt placeholder="ask a follow-up" onAsk={onAsk} />
+      {onOpenChat && (
+        <button
+          type="button"
+          onClick={onOpenChat}
+          className="px-[18px] py-2 text-left text-red-700 underline"
+        >
+          Open conversation
+        </button>
+      )}
+      <Prompt placeholder="ask a follow-up" onAsk={onAsk} disabled={chatPending} />
     </>
   )
 }
@@ -60,4 +71,8 @@ type Props = {
   onBack: () => void
   /** Start a follow-up chat with this question. */
   onAsk: (question: string) => void
+  /** Prevent a second question from being lost while the previous answer waits. */
+  chatPending?: boolean
+  /** Reopen the existing transcript without sending another question. */
+  onOpenChat?: () => void
 }
