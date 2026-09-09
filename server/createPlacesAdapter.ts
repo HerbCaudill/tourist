@@ -65,6 +65,10 @@ export function createPlacesAdapter(
               "cemetery",
               "tourist_attraction",
               "park",
+              "concert_hall",
+              "performing_arts_theater",
+              "art_gallery",
+              "library",
             ],
             locationRestriction: {
               circle: {
