@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
-import type { Discovery, Location } from "../types"
+import type { Discovery, Location, ResearchProgress } from "../types"
 import { Cursor } from "./Cursor"
+import { GoogleMap } from "./GoogleMap"
 import { HeaderLine } from "./HeaderLine"
 import { MiniMap } from "./MiniMap"
 import { Prompt } from "./Prompt"
@@ -15,12 +17,25 @@ export function NearbyScreen(
     location,
     radiusMeters,
     researching,
+    mapProvider,
+    progress,
+    error,
+    locationError,
     onRefresh,
+    onRetry,
+    onChoosePlace,
     onOpenStory,
     onAsk,
   }: Props,
 ) {
+  const [query, setQuery] = useState("")
   const stories = discovery?.stories ?? []
+  const origin = discovery?.location ?? location
+  const moved =
+    location &&
+    origin &&
+    (location.coordinates.lat !== origin.coordinates.lat ||
+      location.coordinates.lon !== origin.coordinates.lon)
   const updated = discovery?.researchedAt.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -33,18 +48,18 @@ export function NearbyScreen(
         left={
           <>
             <b>tourist</b> <span className="text-neutral-500">@</span>{" "}
-            {location ? location.name.toLowerCase() : "locating…"}
+            {location ? location.name.toLowerCase() : researching ? "locating…" : "choose a place"}
           </>
         }
         right={
           <>
-            {location && `±${location.accuracyMeters}m `}
+            {location && `±${Math.round(location.accuracyMeters)}m `}
             {updated && `${updated} `}
             <button
               type="button"
               aria-label="Refresh"
               onClick={onRefresh}
-              disabled={researching || !location}
+              disabled={researching}
               className={cn("text-red-700", researching && "animate-pulse")}
             >
               [r]
@@ -54,56 +69,142 @@ export function NearbyScreen(
       />
 
       <div className="flex-1 overflow-y-auto px-[18px] pb-2">
-        {location && (
-          <div className="my-2.5">
-            <MiniMap
-              you={location.coordinates}
-              markers={stories.map((s, i) => ({
-                label: String(i + 1),
-                coordinates: s.coordinates,
-              }))}
-              radiusMeters={radiusMeters}
-            />
+        {error && (
+          <div role="alert" className="my-2 text-red-700">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={researching}
+              className="mt-1 underline"
+            >
+              Try again
+            </button>
           </div>
         )}
-        {researching && stories.length === 0 && (
-          <p className="py-1 text-neutral-500">
-            researching within {formatDistance(radiusMeters).replace(" ", "")} <Cursor />
+        <details
+          open={locationError || !location ? true : undefined}
+          className="my-2 text-neutral-600"
+        >
+          <summary className="cursor-pointer">Choose a place</summary>
+          <form
+            className="mt-2 flex gap-2"
+            onSubmit={event => {
+              event.preventDefault()
+              if (query.trim()) onChoosePlace(query.trim())
+            }}
+          >
+            <input
+              aria-label="Enter a place"
+              placeholder="Street or landmark, city"
+              maxLength={200}
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              className="min-w-0 flex-1 border-b border-neutral-400 bg-transparent py-1 outline-none"
+            />
+            <button
+              type="submit"
+              disabled={
+                !query.trim() || (researching && (!progress || query.trim() === location?.name))
+              }
+              className="text-red-700 disabled:text-neutral-400"
+            >
+              Search
+            </button>
+          </form>
+        </details>
+        {moved && (
+          <p className="my-2 text-neutral-500">
+            Showing earlier stories near {origin.name.toLowerCase()}. Distances and map use that
+            location.
+          </p>
+        )}
+        {origin && (
+          <div className="my-2.5">
+            {(discovery?.mapProvider ?? mapProvider) === "google" ? (
+              <GoogleMap location={origin} stories={stories} radiusMeters={radiusMeters} />
+            ) : (
+              <MiniMap
+                you={origin.coordinates}
+                markers={stories.map((story, index) => ({
+                  label: String(index + 1),
+                  coordinates: story.coordinates,
+                }))}
+                radiusMeters={radiusMeters}
+              />
+            )}
+            <p className="mt-1 text-neutral-500">
+              {radiusMeters > 200 ? "Expanded search" : "Search area"}:{" "}
+              {formatDistance(radiusMeters)}
+              {origin.accuracyMeters > 0 && ` · location ±${Math.round(origin.accuracyMeters)} m`}
+            </p>
+          </div>
+        )}
+        {researching && (
+          <p role="status" className="py-1 text-neutral-500">
+            {progress
+              ? `${progress.status === "queued" ? "Waiting to research" : "Researching"} within ${formatDistance(progress.radiusMeters)}${progress.radiusMeters > 200 ? " · expanded search" : ""}`
+              : "Finding your location"}{" "}
+            <Cursor />
           </p>
         )}
         {!researching && discovery && stories.length === 0 && (
-          <p className="py-1 text-neutral-500">nothing worth telling within 200m. try [r] later.</p>
+          <p className="py-1 text-neutral-500">
+            Nothing worth telling within {formatDistance(radiusMeters)}. Try refreshing later.
+          </p>
         )}
         <div className={cn(researching && stories.length > 0 && "opacity-60")}>
-          {stories.map((story, i) => (
+          {stories.map((story, index) => (
             <StoryRow
               key={story.id}
               story={story}
-              number={i + 1}
+              number={index + 1}
               onOpen={() => onOpenStory(story.id)}
             />
           ))}
         </div>
       </div>
-
+      {mapProvider === "google" && (
+        <p className="px-[18px] pb-1 text-[10px] text-neutral-500">
+          <a href="/terms.html" className="underline">
+            Terms
+          </a>
+          {" · "}
+          <a href="/privacy.html" className="underline">
+            Privacy
+          </a>
+        </p>
+      )}
       <Prompt placeholder="ask about this place" onAsk={onAsk} />
     </>
   )
 }
 
 type Props = {
-  /** The latest completed research, if any. */
+  /** Latest completed research. */
   discovery?: Discovery
-  /** The active location, if known. */
+  /** Current chosen or browser location. */
   location?: Location
-  /** Search radius currently in use. */
+  /** Radius belonging to the displayed results. */
   radiusMeters: number
-  /** Whether research is currently running. */
+  /** Whether location or research is pending. */
   researching: boolean
-  /** Run discovery again. */
+  /** Maps provider required by the active research adapter. */
+  mapProvider?: "google"
+  /** Server progress, when research has started. */
+  progress?: ResearchProgress
+  /** Recoverable user-facing failure. */
+  error?: string
+  /** Whether to open the typed location fallback. */
+  locationError: boolean
+  /** Start fresh discovery. */
   onRefresh: () => void
-  /** Open a story by id. */
+  /** Reconnect or retry location. */
+  onRetry: () => void
+  /** Search around a typed place. */
+  onChoosePlace: (query: string) => void
+  /** Open a story snapshot. */
   onOpenStory: (id: string) => void
-  /** Start a general chat with this question. */
+  /** Start general chat. */
   onAsk: (question: string) => void
 }

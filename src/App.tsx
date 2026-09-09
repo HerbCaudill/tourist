@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { ChatScreen } from "./components/ChatScreen"
 import { NearbyScreen } from "./components/NearbyScreen"
 import { StoryScreen } from "./components/StoryScreen"
 import { RADIUS_METERS } from "./constants"
 import { generalFaq } from "./data/generalFaq"
+import { useDiscovery } from "./hooks/useDiscovery"
 import { createFakeResearch } from "./lib/createFakeResearch"
-import type { Discovery, Location, Message, Research, Story } from "./types"
+import type { Location, Message, Research, Story } from "./types"
 
 /** The Tourist app: nearby stories, a story reader, and contextual chat. */
 export function App(
@@ -15,55 +16,37 @@ export function App(
   }: Props,
 ) {
   const [view, setView] = useState<View>({ kind: "nearby" })
-  const [location, setLocation] = useState<Location>()
-  const [discovery, setDiscovery] = useState<Discovery>()
-  const [researching, setResearching] = useState(false)
+  const { location, discovery, busy, progress, error, locationError, refresh, retry, choosePlace } =
+    useDiscovery(research)
   const [conversations, setConversations] = useState<Record<string, Message[]>>({})
   const [answering, setAnswering] = useState(false)
-  const requestId = useRef(0)
-
-  /** Run discovery around a location, ignoring results superseded by a newer request. */
-  const discover = useCallback(
-    async (where: Location) => {
-      const id = ++requestId.current
-      setResearching(true)
-      try {
-        const result = await research.discover(where)
-        if (id !== requestId.current) return
-        setDiscovery(result)
-      } finally {
-        if (id === requestId.current) setResearching(false)
-      }
-    },
-    [research],
-  )
-
-  useEffect(() => {
-    let cancelled = false
-    setResearching(true)
-    research.locate().then(where => {
-      if (cancelled) return
-      setLocation(where)
-      discover(where)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [research, discover])
+  const [chatError, setChatError] = useState<string>()
 
   const stories = discovery?.stories ?? []
-  const storyById = (id: string) => stories.find(s => s.id === id)
-  const numberOf = (story: Story) => stories.indexOf(story) + 1
 
   /** Send a question in the conversation for a story, or the general one. */
   const ask = async (question: string, story?: Story) => {
     const key = story?.id ?? GENERAL
-    setView({ kind: "chat", storyId: story?.id })
+    setView({
+      kind: "chat",
+      snapshot: story
+        ? {
+            story,
+            origin:
+              view.kind !== "nearby" && view.snapshot ? view.snapshot.origin : discovery?.location,
+            number:
+              view.kind !== "nearby" && view.snapshot
+                ? view.snapshot.number
+                : stories.indexOf(story) + 1,
+          }
+        : undefined,
+    })
     setConversations(c => ({
       ...c,
       [key]: [...(c[key] ?? []), { id: nextId(), role: "user", text: question }],
     }))
     setAnswering(true)
+    setChatError(undefined)
     try {
       const answer = await research.ask(question, story)
       setConversations(c => ({
@@ -73,6 +56,8 @@ export function App(
           { id: nextId(), role: "tourist", text: answer.text, source: answer.source },
         ],
       }))
+    } catch {
+      setChatError("The answer could not be retrieved. Please try again.")
     } finally {
       setAnswering(false)
     }
@@ -80,31 +65,35 @@ export function App(
 
   const screen = (() => {
     if (view.kind === "story") {
-      const story = storyById(view.id)
-      if (!story) return null
+      const { story, number } = view.snapshot
       return (
         <StoryScreen
           story={story}
-          number={numberOf(story)}
+          number={number}
+          origin={view.snapshot.origin}
           onBack={() => setView({ kind: "nearby" })}
           onAsk={q => ask(q, story)}
         />
       )
     }
     if (view.kind === "chat") {
-      const story = view.storyId ? storyById(view.storyId) : undefined
+      const story = view.snapshot?.story
       const key = story?.id ?? GENERAL
       const asked = new Set((conversations[key] ?? []).map(m => m.text))
-      const faq = story ? story.faq : generalFaq
+      const suggestions = story
+        ? (story.suggestedQuestions ?? story.faq?.map(f => f.question) ?? [])
+        : generalFaq.map(f => f.question)
       return (
         <ChatScreen
           story={story}
-          number={story && numberOf(story)}
+          number={view.snapshot?.number}
           contextLabel={story ? story.id : (location?.name ?? "here")}
           messages={conversations[key] ?? []}
           answering={answering}
-          suggestions={faq.map(f => f.question).filter(q => !asked.has(q))}
-          onBack={() => setView(story ? { kind: "story", id: story.id } : { kind: "nearby" })}
+          suggestions={suggestions.filter(q => !asked.has(q))}
+          onBack={() =>
+            setView(view.snapshot ? { kind: "story", snapshot: view.snapshot } : { kind: "nearby" })
+          }
           onAsk={q => ask(q, story)}
         />
       )
@@ -114,9 +103,22 @@ export function App(
         discovery={discovery}
         location={location}
         radiusMeters={discovery?.radiusMeters ?? RADIUS_METERS}
-        researching={researching}
-        onRefresh={() => location && discover(location)}
-        onOpenStory={id => setView({ kind: "story", id })}
+        researching={busy}
+        mapProvider={research.mapProvider}
+        progress={progress}
+        error={error}
+        locationError={locationError}
+        onRetry={retry}
+        onChoosePlace={choosePlace}
+        onRefresh={refresh}
+        onOpenStory={id => {
+          const index = stories.findIndex(story => story.id === id)
+          if (index >= 0)
+            setView({
+              kind: "story",
+              snapshot: { story: stories[index], number: index + 1, origin: discovery?.location },
+            })
+        }}
         onAsk={q => ask(q)}
       />
     )
@@ -124,6 +126,11 @@ export function App(
 
   return (
     <main className="mx-auto flex h-dvh max-w-md flex-col bg-[#eeeeec] font-mono text-[12.5px] leading-normal text-neutral-900">
+      {chatError && view.kind === "chat" && (
+        <p role="alert" className="px-[18px] py-2 text-red-700">
+          {chatError}
+        </p>
+      )}
       {screen}
     </main>
   )
@@ -136,7 +143,19 @@ const defaultResearch = createFakeResearch()
 
 const GENERAL = "general"
 
-type View = { kind: "nearby" } | { kind: "story"; id: string } | { kind: "chat"; storyId?: string }
+type StorySnapshot = {
+  /** Full reading context retained across replacement discoveries. */
+  story: Story
+  /** The number shown when the story was opened. */
+  number: number
+  /** Origin from which the displayed distance was measured. */
+  origin?: Location
+}
+
+type View =
+  | { kind: "nearby" }
+  | { kind: "story"; snapshot: StorySnapshot }
+  | { kind: "chat"; snapshot?: StorySnapshot }
 
 type Props = {
   /** Adapter for location and research. */

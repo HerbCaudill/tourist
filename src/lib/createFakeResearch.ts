@@ -16,6 +16,7 @@ export function createFakeResearch(
       await wait(delayMs / 3)
       return location
     },
+    resolveLocation: async query => ({ ...location, name: query }),
     discover: async where => {
       await wait(delayMs)
       return {
@@ -41,7 +42,7 @@ const withGeometry = (story: Omit<Story, "distanceMeters" | "bearing">, from: Lo
 
 /** Pick the canned answer whose pattern matches the question, or a fallback. */
 const answerFor = (question: string, story?: Story): Answer => {
-  const candidates: Faq[] = story ? story.faq : generalFaq
+  const candidates: Faq[] = story ? (story.faq ?? []) : generalFaq
   const hit = candidates.find(f => f.matches.test(question))
   if (hit) return { text: hit.answer, source: hit.source }
   const about = story ? `about ${story.place}` : "about this spot"

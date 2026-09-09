@@ -54,7 +54,13 @@ export type Story = {
   /** References for the reader. */
   sources: Source[]
   /** Questions the prototype can answer about this story. */
-  faq: Faq[]
+  faq?: Faq[]
+  /** Suggested questions from live research, without canned answers. */
+  suggestedQuestions?: string[]
+  /** Geographic provider identifier for contextual follow-up. */
+  placeId?: string
+  /** Whether recent events shorten the useful cache lifetime. */
+  timeSensitive?: boolean
 }
 
 /** The user's active location as shown in the header. */
@@ -79,6 +85,12 @@ export type Discovery = {
   radiusMeters: number
   /** When the research completed. */
   researchedAt: Date
+  /** The map provider required for this discovery. */
+  mapProvider?: "google"
+  /** Deadline for retaining provider-derived coordinates. */
+  coordinatesExpireAt?: string
+  /** Editorial version for future cache validation. */
+  promptVersion?: string
 }
 
 /** A reply from the research backend to a question. */
@@ -103,12 +115,18 @@ export type Message = {
 
 /** The narrow adapter the app uses to reach location and a research backend. */
 export type Research = {
+  /** Provider for the live small map, including before research finishes. */
+  mapProvider?: "google"
   /** Find out where the user is. */
   locate: () => Promise<Location>
+  /** Resolve an explicit street or landmark choice. */
+  resolveLocation: (query: string) => Promise<Location>
   /** Find stories around a location. */
   discover: (
     /** Where to search. */
     location: Location,
+    /** Identity, cancellation, and progress for a resumable operation. */
+    options?: ResearchOptions,
   ) => Promise<Discovery>
   /** Answer a question, optionally about a specific story. */
   ask: (
@@ -117,4 +135,22 @@ export type Research = {
     /** The story the question is about, if any. */
     story?: Story,
   ) => Promise<Answer>
+}
+
+/** Caller controls for one durable discovery operation. */
+export type ResearchOptions = {
+  /** Reuse this UUID to reconnect after a connection failure. */
+  requestId?: string
+  /** Abort client polling when another location supersedes this one. */
+  signal?: AbortSignal
+  /** Report honest queue and search-radius progress. */
+  onProgress?: (progress: ResearchProgress) => void
+}
+
+/** The known state of live discovery. */
+export type ResearchProgress = {
+  /** Whether the runner is queued or executing. */
+  status: "queued" | "running"
+  /** Current bounded search radius. */
+  radiusMeters: number
 }
