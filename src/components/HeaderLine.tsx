@@ -11,7 +11,7 @@ export function HeaderLine(
   return (
     <div className="shrink-0 px-[18px]">
       <div className="flex justify-between gap-3 pt-1">
-        <span className="min-w-0 truncate">{left}</span>
+        <div className="min-w-0 flex-1 truncate">{left}</div>
         <span className="shrink-0 text-neutral-500">{right}</span>
       </div>
       <hr className="mt-2 border-neutral-300" />

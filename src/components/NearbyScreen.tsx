@@ -21,7 +21,6 @@ export function NearbyScreen(
     mapProvider,
     progress,
     error,
-    locationError,
     onRefresh,
     onRetry,
     onChoosePlace,
@@ -50,10 +49,37 @@ export function NearbyScreen(
     <>
       <HeaderLine
         left={
-          <>
-            <b>tourist</b> <span className="text-neutral-500">@</span>{" "}
-            {location ? location.name.toLowerCase() : researching ? "locating…" : "choose a place"}
-          </>
+          <form
+            className="flex min-w-0 items-center gap-1.5"
+            onSubmit={event => {
+              event.preventDefault()
+              if (query.trim()) onChoosePlace(query.trim())
+            }}
+          >
+            <b>tourist</b>
+            <span className="text-neutral-500">@</span>
+            <input
+              aria-label="Enter a place"
+              disabled={offline}
+              placeholder={location?.name.toLowerCase() ?? "choose a place"}
+              maxLength={200}
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-500 focus:border-b focus:border-neutral-400"
+            />
+            {query.trim() && (
+              <button
+                type="submit"
+                aria-label="Search"
+                disabled={
+                  offline || (researching && (!progress || query.trim() === location?.name))
+                }
+                className="shrink-0 text-red-700 disabled:text-neutral-400"
+              >
+                ↵
+              </button>
+            )}
+          </form>
         }
         right={
           <>
@@ -86,40 +112,6 @@ export function NearbyScreen(
             </button>
           </div>
         )}
-        <details
-          open={locationError || !location ? true : undefined}
-          className="my-2 text-neutral-600"
-        >
-          <summary className="cursor-pointer">Choose a place</summary>
-          <form
-            className="mt-2 flex gap-2"
-            onSubmit={event => {
-              event.preventDefault()
-              if (query.trim()) onChoosePlace(query.trim())
-            }}
-          >
-            <input
-              aria-label="Enter a place"
-              disabled={offline}
-              placeholder="Street or landmark, city"
-              maxLength={200}
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-              className="min-w-0 flex-1 border-b border-neutral-400 bg-transparent py-1 outline-none"
-            />
-            <button
-              type="submit"
-              disabled={
-                offline ||
-                !query.trim() ||
-                (researching && (!progress || query.trim() === location?.name))
-              }
-              className="text-red-700 disabled:text-neutral-400"
-            >
-              Search
-            </button>
-          </form>
-        </details>
         {!location && discovery && (
           <p className="my-2 text-neutral-500">
             Saved stories near {discovery.location.name.toLowerCase()}.
