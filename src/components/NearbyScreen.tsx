@@ -111,9 +111,15 @@ export function NearbyScreen(
         {origin && (
           <div className="-mx-[18px] my-2.5">
             {(discovery?.mapProvider ?? mapProvider) === "google" ? (
-              <GoogleMap location={origin} stories={stories} radiusMeters={radiusMeters} />
+              <GoogleMap
+                location={origin}
+                stories={stories}
+                radiusMeters={radiusMeters}
+                researching={researching}
+              />
             ) : (
               <MiniMap
+                researching={researching}
                 you={origin.coordinates}
                 markers={stories.map((story, index) => ({
                   label: String(index + 1),
@@ -125,7 +131,7 @@ export function NearbyScreen(
           </div>
         )}
         {researching && (
-          <p role="status" className="py-1 text-neutral-500">
+          <p role="status" className={origin ? "sr-only" : "py-1 text-neutral-500"}>
             {progress
               ? `${progress.status === "queued" ? "Waiting to research" : "Researching"} within ${formatDistance(progress.radiusMeters)}${progress.radiusMeters > 200 ? " · expanded search" : ""}`
               : "Finding your location"}{" "}
@@ -150,7 +156,7 @@ export function NearbyScreen(
         {offline && !discovery && (
           <p className="py-2 text-neutral-500">No saved stories on this device.</p>
         )}
-        {savedReading}
+        <div hidden>{savedReading}</div>
       </div>
       {onOpenChat && (
         <button

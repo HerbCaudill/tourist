@@ -5,7 +5,7 @@ import { location } from "../src/data/location"
 // These requests and stories are deterministic mocks; the page and service worker use the production build.
 test.use({ viewport: { width: 430, height: 932 } })
 
-test("reopens a cached production app offline, retains its pending question, and clears reading history", async ({
+test("reopens a cached production app offline, retains its pending question, and resumes its saved conversation", async ({
   page,
   context,
 }) => {
@@ -88,9 +88,7 @@ test("reopens a cached production app offline, retains its pending question, and
   await expect(page.getByText(/Dundee handloom weaver/)).toBeVisible()
   await expect(page.getByPlaceholder("ask a follow-up")).toBeDisabled()
   await page.screenshot({ path: "test-results/ledger-offline-story.png", fullPage: true })
-  await page.getByRole("button", { name: /back/ }).click()
-  await page.getByText("Saved reading", { exact: true }).click()
-  await page.getByRole("button", { name: /Conversation: The worst poet/ }).click()
+  await page.getByRole("button", { name: "Open conversation" }).click()
   await expect(page.getByText("What happened next?", { exact: true })).toHaveCount(1)
   await expect(page.getByRole("button", { name: "Retry answer", exact: true })).toBeDisabled()
   await context.setOffline(false)
@@ -98,12 +96,4 @@ test("reopens a cached production app offline, retains its pending question, and
   await expect(page.getByText("A saved, sourced answer.")).toBeVisible()
   expect(requests[1].requestId).toBe(requests[0].requestId)
   expect(discoveries).toBe(1)
-  await context.setOffline(true)
-  await page.getByRole("button", { name: /story/ }).click()
-  await page.getByRole("button", { name: /back/ }).click()
-  await page.getByText("Saved reading", { exact: true }).click()
-  await page.getByRole("button", { name: "Clear history", exact: true }).click()
-  await expect(page.getByText("No saved stories on this device.")).toBeVisible()
-  await page.reload()
-  await expect(page.getByText("No saved stories on this device.")).toBeVisible()
 })

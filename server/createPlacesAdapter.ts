@@ -121,7 +121,6 @@ export function createPlacesAdapter(
         format: "png",
         style: "feature:all|saturation:-100",
       }).toString()
-      url.searchParams.append("markers", `color:blue|size:small|${center.lat},${center.lon}`)
       markers.forEach((marker, index) =>
         url.searchParams.append(
           "markers",

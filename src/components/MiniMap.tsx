@@ -1,3 +1,4 @@
+import { LocationMarker } from "./LocationMarker"
 import { useState } from "react"
 import { createMapGeometry } from "./createMapGeometry"
 import { useElementWidth } from "../hooks/useElementWidth"
@@ -14,6 +15,7 @@ export function MiniMap(
     zoom,
     accuracyMeters,
     height = 200,
+    researching,
   }: Props,
 ) {
   const [ref, width] = useElementWidth<HTMLDivElement>()
@@ -93,9 +95,9 @@ export function MiniMap(
               </g>
             )
           })}
-          <circle cx={youPx.x} cy={youPx.y} r={5} fill="#111" stroke="#fff" strokeWidth={2} />
         </svg>
       )}
+      {width > 0 && <LocationMarker left={youPx.x} top={youPx.y} researching={researching} />}
       {failedTile === viewport && (
         <span
           role="status"
@@ -121,6 +123,8 @@ export function MiniMap(
 }
 
 type Props = {
+  /** Animate while nearby research is pending. */
+  researching?: boolean
   /** Where the user is. */
   you: Coordinates
   /** Numbered places to mark. */

@@ -1,3 +1,4 @@
+import { LocationMarker } from "./LocationMarker"
 import { useEffect, useState } from "react"
 import { formatDistance } from "../lib/formatDistance"
 import type { Location, Story } from "../types"
@@ -9,6 +10,7 @@ export function GoogleMap(
     location,
     stories,
     radiusMeters,
+    researching,
   }: Props,
 ) {
   const [image, setImage] = useState<{ request: string; url: string }>()
@@ -49,14 +51,17 @@ export function GoogleMap(
   }, [request])
 
   return (
-    <div className="bg-neutral-200">
+    <div className="relative overflow-hidden bg-neutral-200">
       {image?.request === request && failed !== request ? (
-        <img
-          src={image.url}
-          alt={`Map of stories within ${formatDistance(radiusMeters)}`}
-          className="block h-auto w-full"
-          onError={() => setFailed(request)}
-        />
+        <>
+          <img
+            src={image.url}
+            alt={`Map of stories within ${formatDistance(radiusMeters)}`}
+            className="block h-auto w-full"
+            onError={() => setFailed(request)}
+          />
+          <LocationMarker researching={researching} />
+        </>
       ) : (
         <p className="min-h-[160px] px-[18px] py-4 text-neutral-600">
           {failed === request
@@ -69,6 +74,8 @@ export function GoogleMap(
 }
 
 type Props = {
+  /** Animate while nearby research is pending. */
+  researching?: boolean
   /** Research origin, including its accuracy. */
   location: Location
   /** Numbered story anchors in row order. */

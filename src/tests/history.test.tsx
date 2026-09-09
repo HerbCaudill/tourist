@@ -41,7 +41,7 @@ async function setup() {
 }
 
 describe("saved reading", () => {
-  it("reopens full stories offline and clears both saved and visible history", async () => {
+  it("reopens full stories offline", async () => {
     const user = userEvent.setup()
     const { fake, discovery, store, storage } = await setup()
     store.saveDiscovery(discovery)
@@ -54,12 +54,8 @@ describe("saved reading", () => {
     await user.click(screen.getByRole("button", { name: /worst poet/ }))
     expect(screen.getByText(/Dundee handloom weaver/)).toBeVisible()
     expect(screen.getByPlaceholderText("ask a follow-up")).toBeDisabled()
-    await user.click(screen.getByRole("button", { name: /back/ }))
-    await user.click(screen.getByText("Saved reading"))
-    await user.click(screen.getByRole("button", { name: "Clear history" }))
-    expect(screen.queryByRole("button", { name: /worst poet/ })).not.toBeInTheDocument()
     unmount()
-    expect(createHistoryStore({ storage }).read().discoveries).toEqual([])
+    expect(createHistoryStore({ storage }).read().discoveries).toHaveLength(1)
     expect(research.locate).not.toHaveBeenCalled()
     expect(research.discover).not.toHaveBeenCalled()
   })
@@ -153,7 +149,6 @@ describe("saved reading", () => {
   )
 
   it("does not restore cleared history when a pending discovery finishes late", async () => {
-    const user = userEvent.setup()
     const { fake, discovery, store, storage } = await setup()
     let finish!: (value: Discovery) => void
     const research = {
@@ -165,12 +160,14 @@ describe("saved reading", () => {
           }),
       ),
     }
-    render(<App research={research} history={store} />)
+    const { result } = renderHook(() => useDiscovery(research, store))
     await waitFor(() => expect(research.discover).toHaveBeenCalledOnce())
-    await user.click(screen.getByText("Saved reading", { exact: true }))
-    await user.click(screen.getByRole("button", { name: "Clear history" }))
+    await act(async () => {
+      result.current.clear()
+      store.clear()
+    })
     await act(async () => finish(discovery))
-    expect(screen.queryByRole("button", { name: /worst poet/ })).not.toBeInTheDocument()
+    expect(result.current.discovery).toBeUndefined()
     expect(createHistoryStore({ storage }).read().discoveries).toEqual([])
     expect(createHistoryStore({ storage }).read().pendingDiscovery).toBeUndefined()
   })
