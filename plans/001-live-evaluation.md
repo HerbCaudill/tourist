@@ -12,13 +12,13 @@ The first Vercel API invocation exposed a TypeScript import-extension packaging 
 
 ## Observed research
 
-| Location | Observed result | Checks |
-| --- | --- | --- |
-| Candlemaker Row, Edinburgh | Three stories at 200 m; 139 seconds end to end. | A replay of the initial request returned the same recovery ticket. Polling progressed from queued to running to completed. All attached places were within the search radius. |
-| Plaça del Rei, Barcelona – first sample | Three geographically valid stories at 200 m; 163 seconds. Source-quality failure. | Several named article citations linked to publisher homepages. This sample prompted a reviewed schema correction that rejects bare homepages and stronger exact-URL instructions. |
-| Plaça del Rei, Barcelona – corrected sample | Three stories at 200 m; 361 seconds including queue wait. | All citations link to specific retrieved articles or place pages. The assassination attempt, relocated Casa Padellàs and Santa Àgata account were checked against the supplied sources. |
-| Cluny Gardens, Edinburgh | Two stories at 200 m, both tied to Morningside Parish Church 179 m away; 320 seconds including queue wait. | The researcher returned fewer than three stories. The proposed-but-unbuilt tower and the union of five churches are supported by the linked institutional pages. |
-| Usher Hall, Edinburgh | Three historic stories at 200 m; 524 seconds including queue wait. | St Cuthbert's history, Agatha Christie's wedding and the castle water infrastructure have specific linked sources. The sample also revealed that the original type filter omitted the concert venue; a reviewed expansion to cultural venue categories was verified against Google and now includes Usher Hall. |
+| Location                                    | Observed result                                                                                            | Checks                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candlemaker Row, Edinburgh                  | Three stories at 200 m; 139 seconds end to end.                                                            | A replay of the initial request returned the same recovery ticket. Polling progressed from queued to running to completed. All attached places were within the search radius.                                                                                                                                   |
+| Plaça del Rei, Barcelona – first sample     | Three geographically valid stories at 200 m; 163 seconds. Source-quality failure.                          | Several named article citations linked to publisher homepages. This sample prompted a reviewed schema correction that rejects bare homepages and stronger exact-URL instructions.                                                                                                                               |
+| Plaça del Rei, Barcelona – corrected sample | Three stories at 200 m; 361 seconds including queue wait.                                                  | All citations link to specific retrieved articles or place pages. The assassination attempt, relocated Casa Padellàs and Santa Àgata account were checked against the supplied sources.                                                                                                                         |
+| Cluny Gardens, Edinburgh                    | Two stories at 200 m, both tied to Morningside Parish Church 179 m away; 320 seconds including queue wait. | The researcher returned fewer than three stories. The proposed-but-unbuilt tower and the union of five churches are supported by the linked institutional pages.                                                                                                                                                |
+| Usher Hall, Edinburgh                       | Three historic stories at 200 m; 524 seconds including queue wait.                                         | St Cuthbert's history, Agatha Christie's wedding and the castle water infrastructure have specific linked sources. The sample also revealed that the original type filter omitted the concert venue; a reviewed expansion to cultural venue categories was verified against Google and now includes Usher Hall. |
 
 The Edinburgh result covered the Covenanters' Prison, Magdalen Chapel and the disputed Greyfriars Bobby story. The prison account's location, confinement dates and distinction between the 1679 prison and later burials are supported by the [Scottish Covenanter Memorials Association's plaque transcription](https://www.covenanter.org.uk/greyfriars_prison.html). The chapel account's glass and qualified Assembly history are supported by the [Scottish Reformation Society's account](https://scottishreformationsociety.org/magdalen-chapel/). Bobby's traditional account links to [Forever Edinburgh](https://edinburgh.org/blog/the-tale-of-greyfriars-bobby/), and the result explicitly labels it disputed. These checks establish support for the sampled claims, not exhaustive historical verification.
 
@@ -45,3 +45,26 @@ The final 11 client build files were scanned for the actual private Google Maps 
 ## Remaining acceptance
 
 Safari, installed-PWA behavior and an actual outing on Herb's iPhone 17 Pro Max require real-device acceptance; browser emulation does not establish those outcomes. That acceptance remains assigned to Herb in the task tracker.
+
+## Instrumented latency sample
+
+On 9 September 2026, a fresh Candlemaker Row discovery completed in 157 seconds and returned three stories at 200 metres. It completed on attempt 1 with no radius expansion. Instrumentation was deployed in Cloudflare worker version `b4e46b6c-40ca-491c-a79a-252e1ba3f7e3` and Vercel deployment `tourist-knbpws41a-herb-caudills-projects.vercel.app`. The model remained GPT-5.5 with reasoning effort unspecified.
+
+| Measurement                                                                       | Seconds |
+| --------------------------------------------------------------------------------- | ------: |
+| Google Places, within submission                                                  |   0.177 |
+| Complete app-side submission                                                      |   2.140 |
+| Queue wait                                                                        |   6.060 |
+| Sandbox readiness, including any startup                                          |   2.448 |
+| Read credentials                                                                  |   0.224 |
+| Write runtime configuration and prompt                                            |   0.739 |
+| Codex execution                                                                   | 130.244 |
+| Save refreshed credentials                                                        |   0.952 |
+| Read result                                                                       |   3.329 |
+| Cleanup                                                                           |   9.492 |
+| Complete attempt, containing runner phases and internal dispatch/storage overhead | 148.618 |
+| Persist completion                                                                |   0.474 |
+
+Codex execution accounts for about 83% of client elapsed time in this sample. That phase includes CLI startup, model/provider waits, reasoning, web searches, and output generation; it does not isolate thinking time from tool latency. Cleanup and result reading together took 12.8 seconds. Queueing and sandbox readiness were smaller contributors. These are one request's observations, not averages or evidence of steady-state cold/warm behavior. Places is included in submission, and the runner phases are included in attempt duration; do not add these overlapping measurements. Submission can also overlap initial queueing. The remaining client overhead includes HTTP transport and the five-second polling cadence.
+
+The diagnostic events use opaque request and job identifiers and fixed phase labels. They do not contain prompts, credentials, research text, source pages, tickets, or coordinates. See `server/README.md` and the codex-cloud README for retrieval and interpretation.
