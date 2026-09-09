@@ -89,7 +89,6 @@ test("recovers from denied location, follows live research progress, and opens a
   await expect(page.getByText(/Map unavailable. The stories are still available/)).toBeVisible()
   await row.click()
   await expect(page.getByText(/Dundee handloom weaver/)).toBeVisible()
-  await expect(page.getByText(/Distance from candlemaker row/)).toBeVisible()
   await expect(page.getByRole("link", { name: /mcgonagall online/ })).toHaveAttribute(
     "href",
     "https://www.mcgonagall-online.org.uk/works/the-tay-bridge-disaster",

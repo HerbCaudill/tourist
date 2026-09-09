@@ -12,7 +12,6 @@ export function StoryScreen(
   {
     story,
     number,
-    origin,
     onBack,
     onAsk,
     chatPending,
@@ -32,11 +31,6 @@ export function StoryScreen(
       />
       <article className="flex-1 overflow-y-auto px-[18px] pt-2 pb-3">
         <p className="text-neutral-500">{story.place.toLowerCase()}</p>
-        {origin && (
-          <p className="mt-1 text-[11px] text-neutral-500">
-            Distance from {origin.name.toLowerCase()}
-          </p>
-        )}
         <h1 className="mt-1 mb-3 text-[14px] font-semibold">{story.title}</h1>
         {story.account.map((paragraph, i) => (
           <p key={i} className="mb-2.5 text-neutral-800">
