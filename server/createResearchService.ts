@@ -28,6 +28,7 @@ export function createResearchService(
 
   /** Submit or reuse one radius of discovery. */
   async function startDiscovery(context: DiscoveryContext): Promise<PendingResearch> {
+    const submissionStarted = performance.now()
     const jobId = tickets.jobId([
       "discovery",
       context.requestId,
@@ -36,12 +37,14 @@ export function createResearchService(
     ])
     const existing = await runner.get(jobId)
     if (existing) return resumeDiscovery(existing)
+    const placesStarted = performance.now()
     const candidates = (await places.nearby(context.location, context.radiusMeters))
       .filter(
         place =>
           distanceBetween(context.location.coordinates, place.coordinates) <= context.radiusMeters,
       )
       .slice(0, 12)
+    const placesMs = Math.round(performance.now() - placesStarted)
     const ticket = tickets.seal({
       ...context,
       jobId,
@@ -65,6 +68,17 @@ export function createResearchService(
       if (!recovered) throw error
       job = recovered
     }
+    console.log(
+      JSON.stringify({
+        event: "research_timing",
+        phase: "discovery_submit",
+        requestId: context.requestId,
+        jobId,
+        radiusMeters: context.radiusMeters,
+        placesMs,
+        durationMs: Math.round(performance.now() - submissionStarted),
+      }),
+    )
     return resumeDiscovery(job)
   }
 

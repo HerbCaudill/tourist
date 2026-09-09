@@ -65,3 +65,9 @@ Sources checked on 9 September 2026: [Places policies and attribution](https://d
 ## Verification
 
 `pnpm test run server/tests` exercises radius expansion, bad source URLs, invented place IDs, idempotent submission, expiry, chat context, private transports, HTTP byte bounds, safe failure messages and map proxying. `pnpm typecheck` includes strict backend checking through `tsconfig.server.json`. Unit checks do not establish historical truth or prove deployed secret/prompt wiring; live discovery and follow-up plus source review remain coordinator acceptance gates.
+
+## Research timing diagnostics
+
+Each newly submitted discovery pass emits a structured `research_timing` event with phase `discovery_submit`, opaque `requestId` and `jobId`, `radiusMeters`, `placesMs`, and total `durationMs`. These logs contain no location, provider candidates, prompts, tickets, or credentials. Submission duration includes the Places duration; do not add them together. Replayed submissions reuse the existing job and do not emit a new submission event. Failed submissions do not currently produce this summary.
+
+Use Vercel runtime logs to find `research_timing`, then match the job ID in codex-cloud's Cloudflare logs. The runner measures queue wait, sandbox readiness, credential restoration, setup, complete Codex execution, credential persistence, result reading, cleanup, and per-attempt completion/persistence. Attempt numbers distinguish retries. The Codex phase includes reasoning and web-tool waits together. A request that expands its radius has another job ID under the same request ID. No timing metadata is added to the browser API.

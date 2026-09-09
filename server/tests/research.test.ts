@@ -267,3 +267,25 @@ it.each([
     }),
   ).rejects.toMatchObject({ code })
 })
+
+it("correlates discovery submission timing without logging location or prompt content", async () => {
+  const log = vi.spyOn(console, "log").mockImplementation(() => {})
+  try {
+    const { service } = setup([{ stories: [story] }])
+    await service.discover({ requestId, location })
+    const event = log.mock.calls
+      .map(([value]) => JSON.parse(value))
+      .find(value => value.phase === "discovery_submit")
+    expect(event).toEqual({
+      event: "research_timing",
+      phase: "discovery_submit",
+      requestId,
+      jobId: expect.any(String),
+      radiusMeters: 200,
+      placesMs: expect.any(Number),
+      durationMs: expect.any(Number),
+    })
+  } finally {
+    log.mockRestore()
+  }
+})
