@@ -1,3 +1,4 @@
+import { IconMessageCircle } from "@tabler/icons-react"
 import { useEffect, useRef } from "react"
 import { cn } from "cn"
 import type { Message } from "../types"
@@ -91,9 +92,15 @@ export function ChatTranscript(
               key={q}
               type="button"
               onClick={() => onAsk(q)}
-              className="block w-full text-left text-neutral-800 hover:text-red-700"
+              className="flex w-full items-start gap-1.5 text-left text-neutral-800 hover:text-red-700"
             >
-              <span className="text-neutral-500">?</span> {q.toLowerCase()}
+              <IconMessageCircle
+                size={14}
+                stroke={1.5}
+                className="mt-px shrink-0 text-neutral-500"
+                aria-hidden="true"
+              />
+              <span>{q.toLowerCase()}</span>
             </button>
           ))}
         </div>
