@@ -180,17 +180,6 @@ export function NearbyScreen(
         )}
         {savedReading}
       </div>
-      {mapProvider === "google" && (
-        <p className="px-[18px] pb-1 text-[10px] text-neutral-500">
-          <a href="/terms.html" className="underline">
-            Terms
-          </a>
-          {" · "}
-          <a href="/privacy.html" className="underline">
-            Privacy
-          </a>
-        </p>
-      )}
       {onOpenChat && (
         <button
           type="button"
