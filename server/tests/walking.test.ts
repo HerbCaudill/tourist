@@ -14,7 +14,22 @@ it("draws the provider's walking route and returns its distance and duration wit
     .fn<typeof fetch>()
     .mockResolvedValueOnce(
       Response.json({
-        routes: [{ distanceMeters: 97, duration: "93s", polyline: { encodedPolyline: "abcd" } }],
+        routes: [
+          {
+            distanceMeters: 97,
+            duration: "93s",
+            polyline: {
+              geoJsonLinestring: {
+                type: "LineString",
+                coordinates: [
+                  [origin.lon, origin.lat],
+                  [-3.206, 55.9507],
+                  [destination.lon, destination.lat],
+                ],
+              },
+            },
+          },
+        ],
       }),
     )
     .mockResolvedValueOnce(
@@ -31,11 +46,16 @@ it("draws the provider's walking route and returns its distance and duration wit
     origin: { location: { latLng: { latitude: origin.lat } } },
   })
   const map = new URL(String(fetcher.mock.calls[1][0]))
-  expect(map.searchParams.get("path")).toContain("enc:abcd")
+  expect(map.searchParams.get("center")).toBeTruthy()
+  expect(response.headers.get("Content-Type")).toBe("image/svg+xml")
+  const image = await response.text()
+  expect(image).toContain('stroke-dasharray="0 7"')
+  expect(image).toContain('stroke-linecap="round"')
+  expect(image).toContain("data:image/png;base64,iVBORw==")
   expect(response.headers.get("X-Walk-Meters")).toBe("97")
   expect(response.headers.get("X-Walk-Seconds")).toBe("93")
   expect(response.headers.get("Cache-Control")).toContain("no-store")
-  expect(await response.text()).not.toContain("private-key")
+  expect(image).not.toContain("private-key")
 })
 
 it("rejects malformed locations before contacting Google", async () => {

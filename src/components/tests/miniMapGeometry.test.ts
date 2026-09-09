@@ -2,6 +2,29 @@ import { describe, expect, it } from "vitest"
 import { createMapGeometry } from "../createMapGeometry"
 
 describe("map framing", () => {
+  it("aligns a static map center with its route overlay and leaves room for pins", () => {
+    const points = [
+      { lat: 55.95, lon: -3.206 },
+      { lat: 55.951, lon: -3.205 },
+    ]
+    const map = createMapGeometry({
+      you: points[0],
+      markers: points,
+      radiusMeters: 0,
+      width: 640,
+      height: 300,
+      padding: 48,
+    })
+    expect(map.center.lon).toBeCloseTo(-3.2055, 5)
+    expect(map.toLocal(map.center).x).toBeCloseTo(320, 5)
+    expect(map.toLocal(map.center).y).toBeCloseTo(150, 5)
+    for (const point of points) {
+      expect(map.toLocal(point).x).toBeGreaterThanOrEqual(48)
+      expect(map.toLocal(point).x).toBeLessThanOrEqual(592)
+      expect(map.toLocal(point).y).toBeGreaterThanOrEqual(48)
+      expect(map.toLocal(point).y).toBeLessThanOrEqual(252)
+    }
+  })
   it.each([200, 500, 1000])("fits a %im search on a mobile map", radiusMeters => {
     const map = createMapGeometry({
       you: { lat: 55.95, lon: -3.19 },

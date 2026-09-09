@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer"
+import { createMapGeometry } from "../src/components/createMapGeometry.ts"
 import { Schema } from "effect"
 import { Coordinates } from "../src/research/Coordinates.ts"
 import { distanceBetween } from "../src/lib/distanceBetween.ts"
@@ -49,12 +51,13 @@ export async function handleWalkingRequest(
           "Content-Type": "application/json",
           "X-Goog-Api-Key": key,
           "X-Goog-FieldMask":
-            "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+            "routes.duration,routes.distanceMeters,routes.polyline.geoJsonLinestring",
         },
         body: JSON.stringify({
           origin: waypoint(origin),
           destination: waypoint(destination),
           travelMode: "WALK",
+          polylineEncoding: "GEO_JSON_LINESTRING",
         }),
       },
       transport,
@@ -62,6 +65,15 @@ export async function handleWalkingRequest(
     const data = decode(Routes, await readProviderJson(response), "malformed")
     const route = data.routes?.[0]
     if (!route) throw new ResearchError("unavailable")
+    const points = route.polyline.geoJsonLinestring.coordinates.map(([lon, lat]) => ({ lat, lon }))
+    const geometry = createMapGeometry({
+      you: origin,
+      markers: [...points, destination],
+      radiusMeters: 0,
+      width: 640,
+      height: 300,
+      padding: 48,
+    })
     const url = new URL("https://maps.googleapis.com/maps/api/staticmap")
     url.search = new URLSearchParams({
       key,
@@ -69,7 +81,8 @@ export async function handleWalkingRequest(
       scale: "2",
       format: "png",
       style: "feature:all|saturation:-100",
-      path: `color:0xb91c1cff|weight:3|enc:${route.polyline.encodedPolyline}`,
+      center: `${geometry.center.lat},${geometry.center.lon}`,
+      zoom: String(geometry.zoom),
     }).toString()
     url.searchParams.append("markers", `color:red|size:tiny|${origin.lat},${origin.lon}`)
     url.searchParams.append(
@@ -81,10 +94,17 @@ export async function handleWalkingRequest(
     if (!map.ok || !map.headers.get("content-type")?.startsWith("image/png"))
       throw new ResearchError("malformed")
     const image = await readBoundedBody(map, 2_000_000, "malformed")
-    return new Response(image.buffer as ArrayBuffer, {
+    const path = points
+      .map(point => {
+        const { x, y } = geometry.toLocal(point)
+        return `${x.toFixed(2)},${y.toFixed(2)}`
+      })
+      .join(" ")
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300"><image width="640" height="300" href="data:image/png;base64,${Buffer.from(image).toString("base64")}"/><polyline points="${path}" fill="none" stroke="#b91c1c" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 7"/></svg>`
+    return new Response(svg, {
       headers: {
         ...headers,
-        "Content-Type": "image/png",
+        "Content-Type": "image/svg+xml",
         "X-Walk-Meters": String(route.distanceMeters ?? 0),
         "X-Walk-Seconds": String(parseFloat(route.duration)),
       },
@@ -117,7 +137,15 @@ const Routes = Schema.Struct({
         distanceMeters: Schema.optional(Schema.Number.pipe(Schema.between(0, 200_000))),
         duration: Schema.String.pipe(Schema.pattern(/^\d+(\.\d+)?s$/)),
         polyline: Schema.Struct({
-          encodedPolyline: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(10_000)),
+          geoJsonLinestring: Schema.Struct({
+            type: Schema.Literal("LineString"),
+            coordinates: Schema.Array(
+              Schema.Tuple(
+                Schema.Number.pipe(Schema.between(-180, 180)),
+                Schema.Number.pipe(Schema.between(-90, 90)),
+              ),
+            ).pipe(Schema.minItems(2), Schema.maxItems(10_000)),
+          }),
         }),
       }),
     ),

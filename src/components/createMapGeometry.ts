@@ -11,6 +11,7 @@ export function createMapGeometry(
     width,
     height,
     zoom: maxZoom = 19,
+    padding = 18,
   }: Options,
 ) {
   const center = project(you)
@@ -33,8 +34,8 @@ export function createMapGeometry(
   const minY = Math.min(...points.map(p => p.y))
   const maxY = Math.max(...points.map(p => p.y))
   const scale = Math.min(
-    Math.max(1, width - 36) / Math.max(maxX - minX, 1e-10),
-    Math.max(1, height - 36) / Math.max(maxY - minY, 1e-10),
+    Math.max(1, width - padding * 2) / Math.max(maxX - minX, 1e-10),
+    Math.max(1, height - padding * 2) / Math.max(maxY - minY, 1e-10),
   )
   const zoom = Math.max(0, Math.min(19, maxZoom, Math.floor(Math.log2(scale / 256))))
   const world = 256 * 2 ** zoom
@@ -65,6 +66,10 @@ export function createMapGeometry(
   }
   return {
     zoom,
+    center: {
+      lat: (Math.atan(Math.sinh(Math.PI * (1 - minY - maxY))) * 180) / Math.PI,
+      lon: ((((((minX + maxX) / 2) * 360) % 360) + 360) % 360) - 180,
+    },
     tiles,
     toLocal,
     you: toLocal(you),
@@ -104,6 +109,8 @@ type Options = {
   width: number
   /** Viewport height. */
   height: number
+  /** Space reserved for marker icons at the viewport edges. */
+  padding?: number
   /** Optional maximum zoom. */
   zoom?: number
 }

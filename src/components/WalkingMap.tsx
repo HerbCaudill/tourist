@@ -34,7 +34,7 @@ export function WalkingMap(
           cache: "no-store",
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(45_000)]),
         })
-        if (!response.ok || !response.headers.get("content-type")?.startsWith("image/png"))
+        if (!response.ok || !response.headers.get("content-type")?.startsWith("image/svg+xml"))
           throw new Error("route_unavailable")
         const blob = await response.blob()
         if (controller.signal.aborted) return
