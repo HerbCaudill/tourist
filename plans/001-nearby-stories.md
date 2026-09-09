@@ -12,7 +12,9 @@ Prioritize significant historical or recent events and fun, obscure facts. The m
 
 Start within a block or two. Expand only when there is nothing worthwhile close by, and make the expanded area clear. Distinguish documented facts, disputed accounts, and folklore naturally in the prose, with accessible source links. Uncertainty should be explained without overwhelming each story with labels.
 
-Use Herb’s existing `codex-cloud` project for LLM access through his subscription.
+Use Herb’s existing `codex-cloud` project for LLM access through his subscription. Host Tourist on Vercel, using Cloudflare for the existing runner and any additional infrastructure that proves necessary.
+
+The primary device is Herb’s iPhone 17 Pro Max, using Safari and the installed PWA. Herb is comfortable with whatever discovery and chat waiting times the runner produces; latency is not an acceptance gate. Show progress and handle failures reliably. Limiting other people’s access is not a requirement, so the first version needs no user login or access gate.
 
 ## Proposed first-version defaults
 
@@ -23,7 +25,7 @@ These fill gaps in the conversation and remain adjustable during implementation.
 - Use approximate straight-line distances, calculated from coordinates. Do not present them as walking distances or times. Associate stories with a defensible place or area rather than inventing a precise point.
 - Refresh location on opening or returning to the app. Reuse suitable recent results, and provide an explicit refresh action. Do not replace an open story or interrupt a conversation when the user moves.
 - When location is denied, unavailable, or too imprecise, allow a place name as a fallback and make the active location visible. GPS accuracy must not silently imply knowledge of which building Herb is in.
-- Start as a private app for Herb, in English. Save recent discoveries and conversations on the device. Full offline research and cross-device synchronization can wait; cached reading should remain available offline.
+- Design primarily for Herb, in English, without requiring user accounts. Save recent discoveries and conversations on the device. Full offline research and cross-device synchronization can wait; cached reading should remain available offline.
 - Keep the first interface focused on previews, story reading, and chat. Maps, directions, audio, proactive notifications, planned walks, accounts for other users, and personalization controls are possible later extensions.
 
 ## Existing foundation and integration constraints
@@ -48,13 +50,13 @@ Return the fuller account with discovery when practical so opening a preview is 
 
 ### Backend and LLM access
 
-Use a small authenticated Tourist backend to call `codex-cloud`. Keep its general-purpose endpoint token server-side. The mobile client gets access only to Tourist’s discovery and chat operations. Choose the simplest private authentication and hosting arrangement compatible with the existing deployment during the first checkpoint.
+Use a small Tourist backend hosted on Vercel to call `codex-cloud`. Keep the runner’s general-purpose endpoint token server-side and authenticate backend calls to it. The mobile client gets access only to Tourist’s discovery and chat operations, without a user login or access gate. Reuse the existing Cloudflare runner; add Cloudflare infrastructure only if required for reliable execution.
 
 Keep the provider integration behind a narrow adapter. Send conversation history and relevant story/source context in each request because the current runner is ephemeral. Bound that context and preserve the active location separately from the location associated with a story.
 
 Handle busy responses, timeouts, subscription/authentication failures, and malformed output explicitly. Prevent duplicate research from repeated taps, bound retries, and ignore responses superseded by a newer location request. Preserve the user’s question and existing discoveries after a failure. Do not silently switch to a paid API.
 
-Begin by measuring the existing request/response endpoint. If mobile disconnects or hosting request limits make it unreliable, introduce persisted jobs with status polling before depending on long open requests. Streaming or changes to `codex-cloud` should follow a demonstrated need.
+Check the existing request/response endpoint against Vercel’s applicable request limits and mobile connection behavior. Long waits are acceptable, but dropped requests are not. If necessary, introduce persisted jobs with status polling, using Cloudflare where needed to let research complete independently of a Vercel request. Measure latency to inform progress behavior and timeout handling, not to impose a speed target. Streaming or changes to `codex-cloud` should follow a demonstrated need.
 
 The current general runner restores Google credentials and shared skills as well as Codex authentication. For Tourist’s web research, establish a restricted execution path with only the credentials and tools it needs. Keep any required changes in `codex-cloud` explicit and independently reviewable.
 
@@ -68,10 +70,10 @@ Use local persistence for recent stories and conversations, with a clear-history
 
 ## Implementation checkpoints
 
-1. **Prove location-based research through codex-cloud.** Exercise the existing endpoint with representative locations and a follow-up question. Establish source retrieval, place resolution, structured response validation, cold and warm latency, and failure behavior. Confirm the restricted execution path, private access, and hosting approach. Record whether a places provider or persisted jobs are necessary. This checkpoint passes when the resulting stories are geographically defensible and source-supported, and measured waiting time is acceptable for opening the app on a walk.
+1. **Prove location-based research through codex-cloud.** Exercise the existing endpoint with representative locations and a follow-up question. Establish source retrieval, place resolution, structured response validation, cold and warm latency, and failure behavior. Confirm the restricted execution path and Vercel integration, keeping runner credentials server-side without adding a user access gate. Record whether a places provider or persisted jobs are necessary. This checkpoint passes when the resulting stories are geographically defensible and source-supported, and requests complete reliably with visible progress, regardless of waiting time.
 2. **Deliver automatic nearby discovery.** Connect browser location, backend research, bounded radius expansion, validated stories, and the mobile preview/detail interface. Include location fallback, empty results, retry, and protection against stale responses. Acceptance: opening at a location yields useful close-by previews without a typed prompt; expansion happens only when close results offer nothing worthwhile.
 3. **Deliver contextual chat.** Support follow-up questions from a story and independently initiated questions from the main screen. Preserve bounded conversation context through the stateless runner and keep source links available. Acceptance: a follow-up understands the selected story, while general chat understands the active location; failures preserve the question for retry.
-4. **Make it dependable on a walk.** Add local persistence, cache freshness, offline reading, foreground refresh behavior, installation polish, and private deployment. Verify on Herb’s actual phone. Tune the prompt and radius defaults against real outings. Acceptance: reopening is useful, movement does not disrupt reading, weak connectivity does not erase results, and the deployed app can be used without exposing the runner token.
+4. **Make it dependable on a walk.** Add local persistence, cache freshness, offline reading, foreground refresh behavior, installation polish, and deployment on Vercel with Cloudflare where needed. Verify in Safari and as an installed PWA on Herb’s iPhone 17 Pro Max. Tune the prompt and radius defaults against real outings. Acceptance: reopening is useful, movement does not disrupt reading, weak connectivity does not erase results, and the deployed app can be used without exposing the runner token.
 
 Checkpoints are planning boundaries, not filed tasks yet. Convert the approved plan into reviewable Beads work, splitting cross-repository changes where needed.
 
@@ -81,13 +83,11 @@ Use focused red-green tests for stable executable behavior: radius expansion, di
 
 Keep a small set of research evaluation locations: the motivating Edinburgh churchyard, a dense historic area, a quiet residential block, and a location with a recent event. Check the actual story-to-place connection, source support, variety, uncertainty wording, and whether the result rewards opening the app. Do not hard-code the poet into the application to pass the benchmark.
 
-Exercise permission denial, poor location accuracy, no credible findings, radius expansion, a busy runner, malformed output, slow or failed requests, movement during research, app reopening, and offline reading. Measure cold and warm discovery and follow-up latency before setting a performance target. Run installation and navigation checks on the actual target phone in addition to browser automation.
+Exercise permission denial, poor location accuracy, no credible findings, radius expansion, a busy runner, malformed output, slow or failed requests, movement during research, app reopening, and offline reading. Observe cold and warm discovery and follow-up latency to verify progress and request lifetime handling; there is no performance target. Run installation and navigation checks in Safari and as an installed PWA on Herb’s iPhone 17 Pro Max in addition to browser automation.
 
 ## Unresolved questions
 
-- What discovery and chat waiting times will Herb accept? Measure the current runner first so this can be decided against evidence.
-- Which phone/browser should be the primary acceptance target?
 - Can the current runner resolve nearby places and retrieve adequate sources reliably, or does Tourist need a dedicated places provider?
-- Which private access and hosting arrangement is simplest, and do measured request lifetimes require persisted jobs?
+- Do Vercel request limits and mobile connection behavior require persisted jobs, and if so, what additional Cloudflare infrastructure is necessary?
 
 No further editorial decisions are required to begin the integration checkpoint once the plan is approved.
