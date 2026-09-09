@@ -100,7 +100,7 @@ export async function handleWalkingRequest(
         return `${x.toFixed(2)},${y.toFixed(2)}`
       })
       .join(" ")
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300"><image width="640" height="300" href="data:image/png;base64,${Buffer.from(image).toString("base64")}"/><polyline points="${path}" fill="none" stroke="#b91c1c" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 7"/></svg>`
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300"><image width="640" height="300" href="data:image/png;base64,${Buffer.from(image).toString("base64")}"/><polyline points="${path}" fill="none" stroke="#b91c1c" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 7"/></svg>`
     return new Response(svg, {
       headers: {
         ...headers,
