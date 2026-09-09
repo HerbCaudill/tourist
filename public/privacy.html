@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy · Tourist</title>
+    <meta
+      name="description"
+      content="How Tourist processes location, questions, maps and research history."
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        font:
+          16px/1.7 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        color: #28251f;
+        background: #f8f7f3;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+        line-height: 1.3;
+        margin-top: 2rem;
+      }
+      h2 {
+        font-size: 1rem;
+        margin-top: 2rem;
+      }
+      a {
+        color: #a52216;
+        text-underline-offset: 0.2em;
+      }
+      a:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 4px;
+      }
+      .date {
+        color: #68645e;
+        font-size: 0.875rem;
+      }
+      footer {
+        border-top: 1px solid #d6d2ca;
+        margin-top: 2rem;
+        padding-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Back"><a href="/">← Tourist</a></nav>
+      <h1>Privacy</h1>
+      <p class="date">Updated 9 September 2026</p>
+      <p>
+        Tourist uses a location and your questions to research nearby stories. The live research
+        features described here are being introduced into the prototype. A demonstration using fixed
+        sample stories does not submit a live research request.
+      </p>
+      <h2>Location and Google Maps</h2>
+      <p>
+        Your browser asks permission before providing your device's location. You can refuse and
+        enter a street or landmark instead, or revoke permission in your browser settings.
+      </p>
+      <p>
+        For live discovery, Tourist sends coordinates and their reported accuracy to its backend.
+        Google receives the typed place query when resolving a location, coordinates and a search
+        radius when finding nearby places, and the map center and markers when creating a map image.
+        These requests go through Tourist's backend.
+      </p>
+      <p>
+        Tourist's Google Maps features are subject to the
+        <a href="https://policies.google.com/privacy">Google Privacy Policy</a>, incorporated here
+        for those features. Google processes data under that policy. Map images retain Google's
+        attribution. Provider place names are temporary research clues; the stories and their labels
+        are researched from linked sources.
+      </p>
+      <h2>Research and questions</h2>
+      <p>
+        Tourist's backend runs on Vercel. A research service on Cloudflare sends the research
+        location, nearby place clues and relevant context to OpenAI's Codex service for research. A
+        follow-up question also includes a bounded portion of the conversation and relevant stories.
+        Research can involve web searches and reading external source pages.
+      </p>
+      <p>
+        Research prompts and results are encrypted in Tourist's Cloudflare job storage so work can
+        continue if your phone disconnects. Jobs become unavailable 24 hours after creation and are
+        scheduled for deletion then. Storage or delivery failures can delay physical deletion. This
+        period describes Tourist's job storage; service providers' own data policies also apply.
+      </p>
+      <p>
+        The app uses encrypted, expiring recovery tickets to resume research. Its API sends location
+        and conversation data in request bodies rather than page addresses. Tourist's application
+        code does not log research payloads or raw provider errors. Hosting and service providers
+        can process technical request information needed to operate their services.
+      </p>
+      <h2>Data in your browser</h2>
+      <p>
+        Tourist caches app files for reopening. Local reading history and a clear-history control
+        are being added. When that feature is available, recent discoveries and conversations will
+        be saved in this browser for offline reading, with bounded retention. Google map images and
+        raw nearby-place results will not be included in that archive.
+      </p>
+      <p>
+        You can remove Tourist's local data through your browser's clear-site-data controls. This
+        does not erase research already sent to service providers or cancel a submitted job.
+        Research job expiry is separate from browser storage.
+      </p>
+      <h2>Links to sources</h2>
+      <p>
+        Opening a source link takes you to another website, which has its own privacy practices.
+        Tourist does not control that site's content or data collection.
+      </p>
+      <footer><a href="/">Return to Tourist</a> · <a href="/terms.html">Terms of use</a></footer>
+    </main>
+  </body>
+</html>
