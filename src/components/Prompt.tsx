@@ -28,16 +28,19 @@ export function Prompt(
       }}
     >
       <span className="text-red-700">&gt;</span>
-      <input
-        className="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-neutral-400/60"
-        placeholder={placeholder}
-        value={text}
-        onChange={e => setText(e.target.value)}
-        disabled={disabled}
-        maxLength={2000}
-        enterKeyHint="send"
-        aria-label={placeholder}
-      />
+      {/* Keep a 16px input for iOS focus handling, scaled to the surrounding 12.5px text. */}
+      <span className="relative h-[1.25em] min-w-0 flex-1">
+        <input
+          className="absolute top-0 left-0 w-[128%] origin-top-left scale-[0.78125] bg-transparent text-[16px] leading-tight outline-none placeholder:text-neutral-400/60"
+          placeholder={placeholder}
+          value={text}
+          onChange={e => setText(e.target.value)}
+          disabled={disabled}
+          maxLength={2000}
+          enterKeyHint="send"
+          aria-label={placeholder}
+        />
+      </span>
       <button
         aria-label="Send question"
         type="submit"
