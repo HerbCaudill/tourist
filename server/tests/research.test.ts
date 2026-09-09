@@ -4,11 +4,14 @@ import { createResearchService } from "../createResearchService.ts"
 
 /** Exercise discovery against a persistent runner without network dependencies. */
 function setup(results: unknown[]) {
-  const jobs = new Map<string, { id: string; status: "completed"; result: string }>()
+  const jobs = new Map<
+    string,
+    { id: string; status: "completed"; result: string; context?: string }
+  >()
   const nearby = vi.fn(async () => [candidate])
-  const start = vi.fn(async (id: string, _prompt: string) => {
-    jobs.set(id, { id, status: "completed", result: JSON.stringify(results.shift()) })
-    return { id, status: "queued" as const }
+  const start = vi.fn(async (id: string, _prompt: string, context?: string) => {
+    jobs.set(id, { id, status: "completed", result: JSON.stringify(results.shift()), context })
+    return { id, status: "queued" as const, context }
   })
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
@@ -116,7 +119,11 @@ it("never attaches model-invented places, and returns a genuine empty result at 
 })
 
 it("reports a lost or expired job instead of restarting research during a poll", async () => {
-  const start = vi.fn(async (id: string) => ({ id, status: "queued" as const }))
+  const start = vi.fn(async (id: string, _prompt: string, context?: string) => ({
+    id,
+    status: "queued" as const,
+    context,
+  }))
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
     places: { nearby: async () => [candidate], resolve: vi.fn(), map: vi.fn() },
@@ -135,7 +142,10 @@ it("expires context after a day and does not reveal precise location in its tick
     secret: "test-secret-with-at-least-32-characters",
     now: () => time,
     places: { nearby: async () => [candidate], resolve: vi.fn(), map: vi.fn() },
-    runner: { start: async id => ({ id, status: "queued" }), get: async () => null },
+    runner: {
+      start: async (id, _prompt, context) => ({ id, status: "queued", context }),
+      get: async () => null,
+    },
   })
   const initial = await service.discover({ requestId, location })
   expect(Buffer.from(ticketOf(initial), "base64url").toString()).not.toContain("55.946")
@@ -167,4 +177,74 @@ it("passes bounded selected-story and conversation context into a follow-up, wit
   await expect(
     service.chat({ ...input, history: Array.from({ length: 13 }, () => input.history[0]) }),
   ).rejects.toMatchObject({ code: "invalid" })
+})
+
+it("reconnects with the original geographic context when Google changes or becomes unavailable", async () => {
+  const { service, nearby } = setup([{ stories: [story] }])
+  await service.discover({ requestId, location })
+  nearby.mockRejectedValue(new Error("Google is unavailable"))
+  const replay = await service.discover({ requestId, location })
+  const result = await service.discover({ ticket: ticketOf(replay) })
+  expect(result).toMatchObject({
+    status: "completed",
+    discovery: { stories: [{ coordinates: candidate.coordinates }] },
+  })
+  expect(nearby).toHaveBeenCalledTimes(1)
+})
+
+it("uses the first persisted context when duplicate creates race with different Google candidates", async () => {
+  const jobs = new Map<
+    string,
+    { id: string; status: "completed"; result: string; context?: string }
+  >()
+  const nearby = vi
+    .fn()
+    .mockResolvedValueOnce([candidate])
+    .mockResolvedValueOnce([
+      {
+        ...candidate,
+        coordinates: { ...candidate.coordinates, lat: candidate.coordinates.lat + 0.001 },
+      },
+    ])
+  const service = createResearchService({
+    secret: "test-secret-with-at-least-32-characters",
+    places: { nearby, resolve: vi.fn(), map: vi.fn() },
+    runner: {
+      get: async id => jobs.get(id) ?? null,
+      start: async (id, _prompt, context) => {
+        if (jobs.has(id)) throw new Error("Concurrent job conflict")
+        jobs.set(id, {
+          id,
+          status: "completed",
+          result: JSON.stringify({ stories: [story] }),
+          context,
+        })
+        return { id, status: "queued", context }
+      },
+    },
+  })
+  const [first, second] = await Promise.all([
+    service.discover({ requestId, location }),
+    service.discover({ requestId, location }),
+  ])
+  expect(ticketOf(first)).toBe(ticketOf(second))
+  const result = await service.discover({ ticket: ticketOf(second) })
+  expect(result).toMatchObject({
+    status: "completed",
+    discovery: { stories: [{ coordinates: candidate.coordinates }] },
+  })
+})
+
+it.each([
+  ["research_auth", "auth"],
+  ["research_timeout", "timeout"],
+])("preserves terminal runner %s as public %s", async (error, code) => {
+  const service = createResearchService({
+    secret: "test-secret-with-at-least-32-characters",
+    places: { nearby: vi.fn(), resolve: vi.fn(), map: vi.fn() },
+    runner: { get: async id => ({ id, status: "failed", error }), start: vi.fn() },
+  })
+  await expect(
+    service.chat({ requestId, question: "What happened?", location, stories: [], history: [] }),
+  ).rejects.toMatchObject({ code })
 })

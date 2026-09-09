@@ -28,12 +28,6 @@ export function createResearchService(
 
   /** Submit or reuse one radius of discovery. */
   async function startDiscovery(context: DiscoveryContext): Promise<PendingResearch> {
-    const candidates = (await places.nearby(context.location, context.radiusMeters))
-      .filter(
-        place =>
-          distanceBetween(context.location.coordinates, place.coordinates) <= context.radiusMeters,
-      )
-      .slice(0, 12)
     const jobId = tickets.jobId([
       "discovery",
       context.requestId,
@@ -41,9 +35,21 @@ export function createResearchService(
       context.radiusMeters,
     ])
     const existing = await runner.get(jobId)
-    const job =
-      existing ??
-      (await runner.start(
+    if (existing) return resumeDiscovery(existing)
+    const candidates = (await places.nearby(context.location, context.radiusMeters))
+      .filter(
+        place =>
+          distanceBetween(context.location.coordinates, place.coordinates) <= context.radiusMeters,
+      )
+      .slice(0, 12)
+    const ticket = tickets.seal({
+      ...context,
+      jobId,
+      candidates: candidates.map(({ id, coordinates }) => ({ id, coordinates })),
+    })
+    let job: RunnerJob
+    try {
+      job = await runner.start(
         jobId,
         prompt("discovery", {
           date: now().toISOString().slice(0, 10),
@@ -51,13 +57,23 @@ export function createResearchService(
           radiusMeters: context.radiusMeters,
           candidates,
         }),
-      ))
-    const ticket = tickets.seal({
-      ...context,
-      jobId,
-      candidates: candidates.map(({ id, coordinates }) => ({ id, coordinates })),
-    })
-    return pending(job, ticket, context.radiusMeters)
+        ticket,
+      )
+    } catch (error) {
+      // Another request may have won creation, or submission may have succeeded before disconnecting.
+      const recovered = await runner.get(jobId)
+      if (!recovered) throw error
+      job = recovered
+    }
+    return resumeDiscovery(job)
+  }
+
+  /** Reuse the exact geography sealed when this job was first created, without another Google request. */
+  function resumeDiscovery(job: RunnerJob): PendingResearch {
+    if (!job.context) throw new ResearchError("malformed")
+    const context = decode(DiscoveryContext, tickets.open(job.context), "expired")
+    if (context.jobId !== job.id) throw new ResearchError("malformed")
+    return pending(job, job.context, context.radiusMeters)
   }
 
   return {
@@ -164,15 +180,12 @@ function prompt(name: "discovery" | "chat", context: unknown) {
 /** Translate terminal failures without returning private runner messages. */
 function pending(job: RunnerJob, ticket: string, radiusMeters?: 200 | 500 | 1000): PendingResearch {
   if (job.status === "failed") {
-    const error = job.error?.toLowerCase() ?? ""
     throw new ResearchError(
-      /auth|login|subscription|credential/.test(error)
+      job.error === "research_auth"
         ? "auth"
-        : /timeout|timed out/.test(error)
+        : ["research_timeout", "queue_timeout", "research_interrupted"].includes(job.error ?? "")
           ? "timeout"
-          : /busy|capacity/.test(error)
-            ? "busy"
-            : "unavailable",
+          : "unavailable",
     )
   }
   return {

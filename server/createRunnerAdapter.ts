@@ -25,10 +25,14 @@ export function createRunnerAdapter(
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
   return {
     /** Submit the fixed request shape, safely replaying the same identifier. */
-    async start(id, prompt) {
+    async start(id, prompt, context) {
       const response = await fetchProvider(
         new URL("/v1/research/jobs", base),
-        { method: "POST", headers, body: JSON.stringify({ id, prompt }) },
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ id, prompt, ...(context !== undefined ? { context } : {}) }),
+        },
         transport,
       )
       if (response.status === 404) throw new ResearchError("unavailable")
@@ -54,6 +58,7 @@ export function createRunnerAdapter(
 const Job = Schema.Struct({
   id: Schema.String,
   status: Schema.Literal("queued", "running", "completed", "failed"),
+  context: Schema.optional(Schema.String.pipe(Schema.maxLength(40_000))),
   result: Schema.optional(Schema.String.pipe(Schema.maxLength(100_000))),
   error: Schema.optional(Schema.String.pipe(Schema.maxLength(4000))),
 })

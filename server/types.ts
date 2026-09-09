@@ -32,11 +32,13 @@ export type RunnerJob = {
   result?: string
   /** Private upstream diagnostic, never returned verbatim. */
   error?: string
+  /** Original opaque recovery context, encrypted by the caller. */
+  context?: string
 }
 /** Private async runner transport. */
 export type RunnerAdapter = {
   /** Submit a replayable job. */
-  start: (id: string, prompt: string) => Promise<RunnerJob>
+  start: (id: string, prompt: string, context?: string) => Promise<RunnerJob>
   /** Read status; null means absent or expired. */
   get: (id: string) => Promise<RunnerJob | null>
 }
