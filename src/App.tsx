@@ -181,7 +181,7 @@ export function App(
   })()
 
   return (
-    <main className="mx-auto flex h-dvh max-w-md flex-col bg-[#eeeeec] pt-[calc(env(safe-area-inset-top)+24px)] font-mono text-[12.5px] leading-tight text-neutral-900">
+    <main className="bg-background mx-auto flex h-dvh max-w-md flex-col pt-[calc(env(safe-area-inset-top)+24px)] font-mono text-[12.5px] leading-tight text-neutral-900">
       {!online && (
         <p role="status" className="px-[18px] py-2 text-neutral-600">
           You're offline. Saved reading is available; new research and answers need a connection.
