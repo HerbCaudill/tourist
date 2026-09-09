@@ -1,6 +1,6 @@
 import { formatDistance } from "../lib/formatDistance"
 import type { Story } from "../types"
-import { KindTag } from "./KindTag"
+import { IconArrowNarrowRightDashed } from "@tabler/icons-react"
 
 /** One numbered entry in the nearby ledger. */
 export function StoryRow(
@@ -21,11 +21,19 @@ export function StoryRow(
         {formatDistance(story.distanceMeters).replace(" ", "")}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex justify-between text-neutral-500">
+        <span className="flex justify-between gap-2 text-neutral-500">
           <span>
-            <span className="text-red-700">{number}</span> {story.place.toLowerCase()}
+            <span className="mr-1 inline-flex size-[18px] items-center justify-center rounded-full bg-red-700 text-[10px] font-medium text-white">
+              {number}
+            </span>{" "}
+            {story.place.toLowerCase()}
           </span>
-          <KindTag kind={story.kind} />
+          <IconArrowNarrowRightDashed
+            size={18}
+            stroke={1.5}
+            className="shrink-0"
+            aria-hidden="true"
+          />
         </span>
         <span className="block font-semibold">{story.title}</span>
         <span className="block text-[12px] text-neutral-700">{story.preview}</span>

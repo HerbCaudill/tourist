@@ -79,7 +79,6 @@ export function NearbyScreen(
         }
         right={
           <>
-            {location && `±${Math.round(location.accuracyMeters)}m `}
             {updated && `${updated} `}
             <button
               type="button"

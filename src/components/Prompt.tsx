@@ -1,4 +1,4 @@
-import { IconSend } from "@tabler/icons-react"
+import { IconCircleArrowUpFilled } from "@tabler/icons-react"
 import { useState } from "react"
 
 /** A command-line style input for asking Tourist a question. */
@@ -41,10 +41,10 @@ export function Prompt(
       <button
         aria-label="Send question"
         type="submit"
-        className="text-neutral-500"
+        className="text-red-700"
         disabled={disabled || !text.trim()}
       >
-        <IconSend size={16} stroke={1.5} aria-hidden="true" />
+        <IconCircleArrowUpFilled size={22} aria-hidden="true" />
       </button>
     </form>
   )

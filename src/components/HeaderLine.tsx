@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-/** The one-line header at the top of every ledger screen, with a rule beneath. */
+/** The one-line header at the top of every ledger screen. */
 export function HeaderLine(
   /** Left and right content. */
   {
@@ -14,7 +14,6 @@ export function HeaderLine(
         <div className="min-w-0 flex-1 truncate">{left}</div>
         <span className="shrink-0 text-neutral-500">{right}</span>
       </div>
-      <hr className="mt-2 border-neutral-300" />
     </div>
   )
 }
