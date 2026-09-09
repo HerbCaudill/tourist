@@ -3,10 +3,41 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import { App } from "../App"
 import { location } from "../data/location"
-import type { Discovery } from "../types"
+import type { Discovery, Location } from "../types"
 import { createFakeResearch } from "../lib/createFakeResearch"
 
 describe("live discovery states", () => {
+  it("accepts a typed place during GPS lookup and ignores its late result", async () => {
+    const user = userEvent.setup()
+    let finishGps!: (value: Location) => void
+    const fake = createFakeResearch({ delayMs: 0 })
+    const chosen = { ...location, name: "Edinburgh Castle" }
+    const research = {
+      ...fake,
+      locate: vi.fn(
+        () =>
+          new Promise<Location>(resolve => {
+            finishGps = resolve
+          }),
+      ),
+      resolveLocation: vi.fn().mockResolvedValue(chosen),
+      discover: vi.fn(fake.discover),
+    }
+    render(<App research={research} />)
+    await waitFor(() => expect(research.locate).toHaveBeenCalledOnce())
+    await user.type(screen.getByRole("textbox", { name: "Enter a place" }), "Edinburgh Castle")
+    await user.click(screen.getByRole("button", { name: "Search" }))
+    await waitFor(() => expect(research.resolveLocation).toHaveBeenCalledWith("Edinburgh Castle"))
+    await screen.findByRole("button", { name: /worst poet/ })
+    await act(async () => finishGps(location))
+    expect(research.discover).toHaveBeenCalledOnce()
+    expect(research.discover.mock.calls[0][0]).toEqual(chosen)
+    expect(screen.getByRole("textbox", { name: "Enter a place" })).toHaveAttribute(
+      "placeholder",
+      "edinburgh castle",
+    )
+  })
+
   it("offers a place fallback when location permission fails and discovers there", async () => {
     const user = userEvent.setup()
     const research = {

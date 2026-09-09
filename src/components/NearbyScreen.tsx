@@ -62,9 +62,7 @@ export function NearbyScreen(
               <button
                 type="submit"
                 aria-label="Search"
-                disabled={
-                  offline || (researching && (!progress || query.trim() === location?.name))
-                }
+                disabled={offline}
                 className="shrink-0 text-red-700 disabled:text-neutral-400"
               >
                 <IconCircleCheckFilled size={18} aria-hidden="true" />
