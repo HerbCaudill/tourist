@@ -1,0 +1,53 @@
+import { useState } from "react"
+
+/** A command-line style input for asking Tourist a question. */
+export function Prompt(
+  /** Placeholder text and submit handler. */
+  {
+    placeholder,
+    onAsk,
+    disabled = false,
+  }: Props,
+) {
+  const [text, setText] = useState("")
+
+  const submit = () => {
+    const question = text.trim()
+    if (!question || disabled) return
+    onAsk(question)
+    setText("")
+  }
+
+  return (
+    <form
+      className="flex shrink-0 items-center gap-1.5 border-t border-neutral-300 px-[18px] pt-2.5 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+      onSubmit={e => {
+        e.preventDefault()
+        submit()
+      }}
+    >
+      <span className="text-red-700">&gt;</span>
+      <input
+        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-500"
+        placeholder={placeholder}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        disabled={disabled}
+        enterKeyHint="send"
+        aria-label={placeholder}
+      />
+      <button type="submit" className="text-neutral-500" disabled={disabled || !text.trim()}>
+        ↵
+      </button>
+    </form>
+  )
+}
+
+type Props = {
+  /** Placeholder text for the input. */
+  placeholder: string
+  /** Called with the trimmed question when the user sends. */
+  onAsk: (question: string) => void
+  /** Whether sending is currently blocked. */
+  disabled?: boolean
+}
