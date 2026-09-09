@@ -7,6 +7,14 @@ import path from "path"
 export default defineConfig({
   server: {
     port: 5179,
+    strictPort: true,
+    proxy: {
+      // Use the deployed research service without copying its private credentials locally.
+      "/api": {
+        target: "https://tourist.herbcaudill.com",
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [
     react(),

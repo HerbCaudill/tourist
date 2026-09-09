@@ -1,5 +1,9 @@
 # Tourist research backend
 
+## Local development
+
+Run `pnpm dev` to start the site at `http://localhost:5179`. Vite serves the local interface with hot reload and proxies `/api` requests to `https://tourist.herbcaudill.com`. Live research requires an internet connection and uses the deployed backend; local changes to `api/` or `server/` are not served by this command. No local credentials or separate backend process are required.
+
 The Ledger remains on its dummy adapter until the coordinator verifies the live runner, these operations, and the later UI integration. This implementation does not switch the production UI.
 
 All browser operations use `POST`, `Content-Type: application/json`, a body without extra fields, and no query string. Responses use `Cache-Control: private, no-store`. Never put precise location, chat text, context tickets, or credentials into URLs or logs. Source links are evidence links; the backend does not fetch caller-supplied URLs.
