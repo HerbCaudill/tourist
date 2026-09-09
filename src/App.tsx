@@ -62,7 +62,7 @@ export function App(
         <StoryScreen
           story={story}
           number={context.number ?? 1}
-          origin={context.originLocation}
+          origin={location ?? context.originLocation}
           chatPending={!online || !location || !!chat.conversations[context.id]?.pending}
           onOpenChat={
             chat.conversations[context.id] ? () => setView({ kind: "chat", context }) : undefined

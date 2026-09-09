@@ -1,3 +1,4 @@
+import { WalkingMap } from "./WalkingMap"
 import { formatDistance } from "../lib/formatDistance"
 import type { Location, Story } from "../types"
 import { BackButton } from "./BackButton"
@@ -11,6 +12,7 @@ export function StoryScreen(
   {
     story,
     number,
+    origin,
     onBack,
     onAsk,
     chatPending,
@@ -30,6 +32,12 @@ export function StoryScreen(
       <article className="flex-1 overflow-y-auto px-[18px] pt-2 pb-3">
         <p className="text-neutral-500">{story.place.toLowerCase()}</p>
         <h1 className="mt-1 mb-3 text-[14px] font-semibold">{story.title}</h1>
+        <WalkingMap
+          number={number}
+          origin={origin?.coordinates}
+          destination={story.coordinates}
+          place={story.place}
+        />
         {story.account.map((paragraph, i) => (
           <p key={i} className="mb-2.5 text-neutral-800">
             {paragraph}
