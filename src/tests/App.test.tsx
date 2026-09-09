@@ -47,7 +47,7 @@ describe("App", () => {
     render(<App research={research} />)
     await screen.findByPlaceholderText(/candlemaker row/)
     await user.type(
-      await screen.findByPlaceholderText("ask about this place"),
+      await screen.findByPlaceholderText("Ask me anything"),
       "Why is it called Candlemaker Row?{enter}",
     )
     expect(await screen.findByText(/candlemakers’ guild/)).toBeInTheDocument()

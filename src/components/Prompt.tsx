@@ -1,3 +1,4 @@
+import { IconSend } from "@tabler/icons-react"
 import { useState } from "react"
 
 /** A command-line style input for asking Tourist a question. */
@@ -28,7 +29,7 @@ export function Prompt(
     >
       <span className="text-red-700">&gt;</span>
       <input
-        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-500"
+        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-400/60"
         placeholder={placeholder}
         value={text}
         onChange={e => setText(e.target.value)}
@@ -37,8 +38,13 @@ export function Prompt(
         enterKeyHint="send"
         aria-label={placeholder}
       />
-      <button type="submit" className="text-neutral-500" disabled={disabled || !text.trim()}>
-        ↵
+      <button
+        aria-label="Send question"
+        type="submit"
+        className="text-neutral-500"
+        disabled={disabled || !text.trim()}
+      >
+        <IconSend size={16} stroke={1.5} aria-hidden="true" />
       </button>
     </form>
   )

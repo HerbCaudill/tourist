@@ -50,10 +50,7 @@ describe("contextual chat", () => {
     }
     render(<App research={research} />)
     await screen.findByRole("button", { name: /worst poet/ })
-    await user.type(
-      screen.getByPlaceholderText("ask about this place"),
-      "What happened here?{enter}",
-    )
+    await user.type(screen.getByPlaceholderText("Ask me anything"), "What happened here?{enter}")
     expect(await screen.findByRole("alert")).toHaveTextContent("Connection interrupted")
     await user.click(screen.getByRole("button", { name: "Retry answer" }))
     expect(await screen.findByText("Recovered answer")).toBeVisible()
@@ -139,10 +136,7 @@ describe("contextual chat", () => {
     }
     render(<App research={research} />)
     await screen.findByRole("button", { name: /worst poet/ })
-    await user.type(
-      screen.getByPlaceholderText("ask about this place"),
-      "What happened here?{enter}",
-    )
+    await user.type(screen.getByPlaceholderText("Ask me anything"), "What happened here?{enter}")
     await screen.findByRole("alert")
     await user.click(screen.getByRole("button", { name: "Retry answer" }))
     expect(await screen.findByText("Fresh answer")).toBeVisible()
@@ -176,10 +170,10 @@ describe("contextual chat", () => {
     }
     render(<App research={research} />)
     await screen.findByRole("button", { name: /worst poet/ })
-    await user.type(screen.getByPlaceholderText("ask about this place"), "First question{enter}")
+    await user.type(screen.getByPlaceholderText("Ask me anything"), "First question{enter}")
     await screen.findByRole("alert")
     await user.click(screen.getByRole("button", { name: /nearby/ }))
-    expect(screen.getByPlaceholderText("ask about this place")).toBeDisabled()
+    expect(screen.getByPlaceholderText("Ask me anything")).toBeDisabled()
     await user.click(screen.getByRole("button", { name: "Open conversation" }))
     expect(screen.getByText("First question")).toBeVisible()
     expect(screen.getByRole("button", { name: "Retry answer" })).toBeVisible()

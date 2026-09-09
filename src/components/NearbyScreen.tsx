@@ -1,3 +1,4 @@
+import { IconRefresh } from "@tabler/icons-react"
 import { useState, type ReactNode } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
@@ -92,7 +93,7 @@ export function NearbyScreen(
               disabled={researching || offline}
               className={cn("text-red-700", researching && "animate-pulse")}
             >
-              [r]
+              <IconRefresh size={16} stroke={1.5} aria-hidden="true" />
             </button>
           </>
         }
@@ -181,11 +182,7 @@ export function NearbyScreen(
           Open conversation
         </button>
       )}
-      <Prompt
-        placeholder="ask about this place"
-        onAsk={onAsk}
-        disabled={!location || chatPending}
-      />
+      <Prompt placeholder="Ask me anything" onAsk={onAsk} disabled={!location || chatPending} />
     </>
   )
 }
