@@ -3,14 +3,14 @@ import { ChatScreen } from "./components/ChatScreen"
 import { NearbyScreen } from "./components/NearbyScreen"
 import { StoryScreen } from "./components/StoryScreen"
 import { RADIUS_METERS } from "./constants"
-import { generalFaq } from "./data/generalFaq"
+import { useConversations } from "./hooks/useConversations"
 import { useDiscovery } from "./hooks/useDiscovery"
 import { createFakeResearch } from "./lib/createFakeResearch"
-import type { Location, Message, Research, Story } from "./types"
+import type { ConversationContext, Discovery, Location, Research, Story } from "./types"
 
 /** The Tourist app: nearby stories, a story reader, and contextual chat. */
 export function App(
-  /** Optional research adapter, mainly so tests can remove the fake delay. */
+  /** Explicit adapter injection for development and tests. */
   {
     research = defaultResearch,
   }: Props,
@@ -18,83 +18,52 @@ export function App(
   const [view, setView] = useState<View>({ kind: "nearby" })
   const { location, discovery, busy, progress, error, locationError, refresh, retry, choosePlace } =
     useDiscovery(research)
-  const [conversations, setConversations] = useState<Record<string, Message[]>>({})
-  const [answering, setAnswering] = useState(false)
-  const [chatError, setChatError] = useState<string>()
-
+  const chat = useConversations(research)
   const stories = discovery?.stories ?? []
 
-  /** Send a question in the conversation for a story, or the general one. */
-  const ask = async (question: string, story?: Story) => {
-    const key = story?.id ?? GENERAL
-    setView({
-      kind: "chat",
-      snapshot: story
-        ? {
-            story,
-            origin:
-              view.kind !== "nearby" && view.snapshot ? view.snapshot.origin : discovery?.location,
-            number:
-              view.kind !== "nearby" && view.snapshot
-                ? view.snapshot.number
-                : stories.indexOf(story) + 1,
-          }
-        : undefined,
-    })
-    setConversations(c => ({
-      ...c,
-      [key]: [...(c[key] ?? []), { id: nextId(), role: "user", text: question }],
-    }))
-    setAnswering(true)
-    setChatError(undefined)
-    try {
-      const answer = await research.ask(question, story)
-      setConversations(c => ({
-        ...c,
-        [key]: [
-          ...(c[key] ?? []),
-          { id: nextId(), role: "tourist", text: answer.text, source: answer.source },
-        ],
-      }))
-    } catch {
-      setChatError("The answer could not be retrieved. Please try again.")
-    } finally {
-      setAnswering(false)
-    }
+  /** Send a question while retaining this conversation's originating context. */
+  const ask = (question: string, context: ConversationContext) => {
+    if (!location) return
+    setView({ kind: "chat", context })
+    chat.ask(context, question, location)
   }
 
   const screen = (() => {
     if (view.kind === "story") {
-      const { story, number } = view.snapshot
+      const { story, context } = view
       return (
         <StoryScreen
           story={story}
-          number={number}
-          origin={view.snapshot.origin}
+          number={context.number ?? 1}
+          origin={context.originLocation}
           onBack={() => setView({ kind: "nearby" })}
-          onAsk={q => ask(q, story)}
+          onAsk={question => ask(question, context)}
         />
       )
     }
     if (view.kind === "chat") {
-      const story = view.snapshot?.story
-      const key = story?.id ?? GENERAL
-      const asked = new Set((conversations[key] ?? []).map(m => m.text))
-      const suggestions = story
-        ? (story.suggestedQuestions ?? story.faq?.map(f => f.question) ?? [])
-        : generalFaq.map(f => f.question)
+      const { context } = view
+      const story = context.stories.find(item => item.id === context.selectedStoryId)
+      const conversation = chat.conversations[context.id]
+      const messages = conversation?.messages ?? []
+      const asked = new Set(messages.map(message => message.text))
+      const suggestions =
+        story?.suggestedQuestions ??
+        context.stories.flatMap(item => item.suggestedQuestions ?? []).slice(0, 3)
       return (
         <ChatScreen
           story={story}
-          number={view.snapshot?.number}
-          contextLabel={story ? story.id : (location?.name ?? "here")}
-          messages={conversations[key] ?? []}
-          answering={answering}
-          suggestions={suggestions.filter(q => !asked.has(q))}
-          onBack={() =>
-            setView(view.snapshot ? { kind: "story", snapshot: view.snapshot } : { kind: "nearby" })
-          }
-          onAsk={q => ask(q, story)}
+          number={context.number}
+          contextLabel={story?.place ?? context.originLocation.name}
+          messages={messages}
+          answering={!!conversation?.pending && !conversation.error}
+          error={conversation?.error}
+          onRetry={() => chat.retry(context.id)}
+          onRestart={() => chat.retry(context.id, true)}
+          restartRequired={conversation?.restartRequired}
+          suggestions={suggestions.filter(question => !asked.has(question))}
+          onBack={() => setView(story ? { kind: "story", story, context } : { kind: "nearby" })}
+          onAsk={question => ask(question, context)}
         />
       )
     }
@@ -113,49 +82,62 @@ export function App(
         onRefresh={refresh}
         onOpenStory={id => {
           const index = stories.findIndex(story => story.id === id)
-          if (index >= 0)
+          if (index >= 0 && discovery)
             setView({
               kind: "story",
-              snapshot: { story: stories[index], number: index + 1, origin: discovery?.location },
+              story: stories[index],
+              context: conversationContext(
+                discovery.location,
+                discovery,
+                stories[index],
+                index + 1,
+              ),
             })
         }}
-        onAsk={q => ask(q)}
+        onAsk={question => {
+          if (location)
+            ask(question, conversationContext(discovery?.location ?? location, discovery))
+        }}
       />
     )
   })()
 
   return (
     <main className="mx-auto flex h-dvh max-w-md flex-col bg-[#eeeeec] font-mono text-[12.5px] leading-normal text-neutral-900">
-      {chatError && view.kind === "chat" && (
-        <p role="alert" className="px-[18px] py-2 text-red-700">
-          {chatError}
-        </p>
-      )}
       {screen}
     </main>
   )
 }
 
-/** Produce a unique id for a message. */
-const nextId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+/** Capture a stable source and location snapshot for general or story conversation. */
+function conversationContext(
+  /** Origin of the displayed story distances. */
+  originLocation: Location,
+  /** Latest complete discovery, when one exists. */
+  discovery?: Discovery,
+  /** Selected story, absent for a general chat. */
+  story?: Story,
+  /** Story number in its original list. */
+  number?: number,
+): ConversationContext {
+  return {
+    id: `${discovery?.researchedAt.toISOString() ?? "new"}/${originLocation.coordinates.lat}/${originLocation.coordinates.lon}/${story?.id ?? "general"}`,
+    originLocation,
+    stories: story ? [story] : (discovery?.stories ?? []),
+    selectedStoryId: story?.id,
+    number,
+    researchedAt: discovery?.researchedAt.toISOString() ?? new Date().toISOString(),
+    coordinatesExpireAt: discovery?.coordinatesExpireAt,
+    promptVersion: discovery?.promptVersion,
+  }
+}
 
 const defaultResearch = createFakeResearch()
 
-const GENERAL = "general"
-
-type StorySnapshot = {
-  /** Full reading context retained across replacement discoveries. */
-  story: Story
-  /** The number shown when the story was opened. */
-  number: number
-  /** Origin from which the displayed distance was measured. */
-  origin?: Location
-}
-
 type View =
   | { kind: "nearby" }
-  | { kind: "story"; snapshot: StorySnapshot }
-  | { kind: "chat"; snapshot?: StorySnapshot }
+  | { kind: "story"; story: Story; context: ConversationContext }
+  | { kind: "chat"; context: ConversationContext }
 
 type Props = {
   /** Adapter for location and research. */

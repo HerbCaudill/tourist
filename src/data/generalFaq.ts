@@ -1,4 +1,4 @@
-import type { Faq } from "../types"
+import type { Faq } from "./types"
 
 /** Questions the prototype can answer without a story selected. */
 export const generalFaq: Faq[] = [

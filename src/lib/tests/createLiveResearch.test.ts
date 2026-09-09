@@ -88,4 +88,96 @@ describe("live discovery adapter", () => {
     expect(transport.mock.calls[0][0]).toBe("/api/location")
     expect(JSON.parse(transport.mock.calls[0][1].body)).toEqual({ query: "Candlemaker Row" })
   })
+  it("sends explicit chat context and reconnects a failed poll with its saved ticket", async () => {
+    const transport = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ status: "queued", ticket: "chat-ticket", retryAfterMs: 5000 }),
+      )
+      .mockRejectedValueOnce(new TypeError("network"))
+      .mockResolvedValueOnce(
+        Response.json({
+          status: "completed",
+          answer: {
+            text: "Sourced answer",
+            sources: [{ name: "Source", org: "Archive", url: "https://example.com/source" }],
+          },
+        }),
+      )
+    const research = createLiveResearch({ fetch: transport, wait: async () => {} })
+    const request = {
+      requestId,
+      question: "What happened?",
+      location,
+      originLocation: { ...location, name: "Original place" },
+      stories: [],
+      history: [{ role: "user" as const, text: "Earlier question" }],
+    }
+    await expect(research.ask(request)).rejects.toThrow("connection")
+    const answer = await research.ask(request)
+    expect(JSON.parse(transport.mock.calls[0][1].body)).toEqual(request)
+    expect(JSON.parse(transport.mock.calls[2][1].body)).toEqual({ ticket: "chat-ticket" })
+    expect(answer.sources[0].url).toBe("https://example.com/source")
+  })
+  it("bounds UTF-8 chat context while retaining the selected story and a source", async () => {
+    const transport = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ status: "completed", answer: { text: "Answer", sources: [] } }),
+      )
+    const research = createLiveResearch({ fetch: transport })
+    const story = {
+      id: "selected",
+      placeId: "place",
+      place: "Place",
+      coordinates: location.coordinates,
+      distanceMeters: 20,
+      bearing: "N",
+      title: "Title",
+      preview: "Preview",
+      account: Array.from({ length: 8 }, () => "古".repeat(3000)),
+      kind: "documented" as const,
+      sources: Array.from({ length: 8 }, () => ({
+        name: "Source",
+        org: "Archive",
+        url: "https://example.com/" + "古".repeat(1900),
+      })),
+      suggestedQuestions: [],
+      timeSensitive: false,
+    }
+    await research.ask({
+      requestId,
+      question: "Question",
+      location,
+      originLocation: location,
+      stories: [story, { ...story, id: "other" }],
+      selectedStoryId: "selected",
+      history: Array.from({ length: 12 }, () => ({
+        role: "user" as const,
+        text: "古".repeat(6000),
+      })),
+    })
+    const body = transport.mock.calls[0][1].body
+    expect(new TextEncoder().encode(body).byteLength).toBeLessThanOrEqual(68_000)
+    const request = JSON.parse(body)
+    expect(request.stories[0].id).toBe("selected")
+    expect(request.stories[0].account.length).toBeGreaterThan(0)
+    expect(request.stories[0].sources.length).toBeGreaterThan(0)
+  })
+  it("marks an expired server job for a fresh retry", async () => {
+    const transport = vi
+      .fn()
+      .mockResolvedValue(Response.json({ error: { code: "expired" } }, { status: 410 }))
+    const research = createLiveResearch({ fetch: transport })
+    await expect(
+      research.ask({
+        requestId,
+        question: "Question",
+        location,
+        originLocation: location,
+        stories: [],
+        history: [],
+      }),
+    ).rejects.toMatchObject({ code: "expired", restartRequired: true })
+  })
 })

@@ -2,7 +2,8 @@ import { RADIUS_METERS } from "../constants"
 import { generalFaq } from "../data/generalFaq"
 import { location } from "../data/location"
 import { stories } from "../data/stories"
-import type { Answer, Faq, Location, Research, Story } from "../types"
+import type { Faq } from "../data/types"
+import type { Answer, Location, Research, Story } from "../types"
 import { compassBearing } from "./compassBearing"
 import { distanceBetween } from "./distanceBetween"
 
@@ -26,27 +27,34 @@ export function createFakeResearch(
         researchedAt: new Date(),
       }
     },
-    ask: async (question, story) => {
+    ask: async ({ question, selectedStoryId, stories: contextStories }) => {
       await wait(delayMs)
-      return answerFor(question, story)
+      return answerFor(
+        question,
+        contextStories.find(story => story.id === selectedStoryId),
+      )
     },
   }
 }
 
 /** Add the computed distance and bearing from the user to a story. */
-const withGeometry = (story: Omit<Story, "distanceMeters" | "bearing">, from: Location): Story => ({
+const withGeometry = ({ faq, ...story }: (typeof stories)[number], from: Location): Story => ({
   ...story,
+  suggestedQuestions: faq.map(item => item.question),
   distanceMeters: distanceBetween(from.coordinates, story.coordinates),
   bearing: compassBearing(from.coordinates, story.coordinates),
 })
 
 /** Pick the canned answer whose pattern matches the question, or a fallback. */
 const answerFor = (question: string, story?: Story): Answer => {
-  const candidates: Faq[] = story ? (story.faq ?? []) : generalFaq
+  const candidates: Faq[] = story
+    ? (stories.find(value => value.id === story.id)?.faq ?? [])
+    : generalFaq
   const hit = candidates.find(f => f.matches.test(question))
-  if (hit) return { text: hit.answer, source: hit.source }
+  if (hit) return { text: hit.answer, source: hit.source, sources: [] }
   const about = story ? `about ${story.place}` : "about this spot"
   return {
+    sources: [],
     text: `I don’t have notes on that ${about} yet. In the finished app this is where Tourist would go and research it. For now, try one of the suggested questions.`,
   }
 }

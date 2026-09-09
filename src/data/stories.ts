@@ -1,3 +1,4 @@
+import type { Faq } from "./types"
 import type { Story } from "../types"
 
 /** The three stories within a block or two, strongest first. */
@@ -143,4 +144,7 @@ export const stories: StoryData[] = [
 ]
 
 /** A story as authored, before distance and bearing are computed. */
-type StoryData = Omit<Story, "distanceMeters" | "bearing">
+type StoryData = Omit<Story, "distanceMeters" | "bearing"> & {
+  /** Fixture-only canned answers. */
+  faq: Faq[]
+}

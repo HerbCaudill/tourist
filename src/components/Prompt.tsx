@@ -33,6 +33,7 @@ export function Prompt(
         value={text}
         onChange={e => setText(e.target.value)}
         disabled={disabled}
+        maxLength={2000}
         enterKeyHint="send"
         aria-label={placeholder}
       />

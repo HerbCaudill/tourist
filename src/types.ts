@@ -19,18 +19,6 @@ export type Source = {
   url: string
 }
 
-/** A canned answer for a question the prototype can recognise. */
-export type Faq = {
-  /** The question as offered to the user. */
-  question: string
-  /** Pattern that a typed question must match to get this answer. */
-  matches: RegExp
-  /** The answer text. */
-  answer: string
-  /** Where the answer comes from. */
-  source?: string
-}
-
 /** One memorable story tied to a nearby place. */
 export type Story = {
   /** Stable identifier. */
@@ -53,8 +41,6 @@ export type Story = {
   kind: Kind
   /** References for the reader. */
   sources: Source[]
-  /** Questions the prototype can answer about this story. */
-  faq?: Faq[]
   /** Suggested questions from live research, without canned answers. */
   suggestedQuestions?: string[]
   /** Geographic provider identifier for contextual follow-up. */
@@ -95,6 +81,8 @@ export type Discovery = {
 
 /** A reply from the research backend to a question. */
 export type Answer = {
+  /** Clickable references returned with the answer. */
+  sources: Source[]
   /** The reply text. */
   text: string
   /** Where the answer comes from, if known. */
@@ -103,6 +91,8 @@ export type Answer = {
 
 /** One turn in a conversation. */
 export type Message = {
+  /** Clickable references attached to this answer. */
+  sources?: Source[]
   /** Stable identifier. */
   id: string
   /** Who said it. */
@@ -128,12 +118,12 @@ export type Research = {
     /** Identity, cancellation, and progress for a resumable operation. */
     options?: ResearchOptions,
   ) => Promise<Discovery>
-  /** Answer a question, optionally about a specific story. */
+  /** Answer a bounded question in its explicit conversation context. */
   ask: (
-    /** What the user typed. */
-    question: string,
-    /** The story the question is about, if any. */
-    story?: Story,
+    /** Complete user question, history, and geographic context. */
+    request: ChatRequest,
+    /** Cancel local polling when the app closes. */
+    options?: ResearchOptions,
   ) => Promise<Answer>
 }
 
@@ -153,4 +143,60 @@ export type ResearchProgress = {
   status: "queued" | "running"
   /** Current bounded search radius. */
   radiusMeters: number
+}
+
+/** Serializable context fixed when a conversation begins. */
+export type ConversationContext = {
+  /** Stable identity for this discovery and optional story. */
+  id: string
+  /** Location associated with the original stories and distances. */
+  originLocation: Location
+  /** Original source-backed stories, retained across refreshes. */
+  stories: Story[]
+  /** Selected story, absent for a general conversation. */
+  selectedStoryId?: string
+  /** Story's original ledger number. */
+  number?: number
+  /** Original research timestamp. */
+  researchedAt: string
+  /** Deadline for retaining provider-derived coordinates. */
+  coordinatesExpireAt?: string
+  /** Editorial version used for this context. */
+  promptVersion?: string
+}
+
+/** Complete bounded request passed to the live chat operation. */
+export type ChatRequest = {
+  /** Idempotent identifier retained when an answer is retried. */
+  requestId: string
+  /** Current user question. */
+  question: string
+  /** Active position when the question was sent. */
+  location: Location
+  /** Location associated with the original conversation. */
+  originLocation: Location
+  /** Original story and source context. */
+  stories: Story[]
+  /** Most recent previous turns, bounded to twelve. */
+  history: Pick<Message, "role" | "text">[]
+  /** Story selected in this conversation. */
+  selectedStoryId?: string
+}
+
+/** Locally retained transcript and any exact request awaiting retry. */
+export type Conversation = {
+  /** Matches the fixed context identity. */
+  id: string
+  /** Originating stories and geographic context. */
+  context: ConversationContext
+  /** User questions and successful answers in order. */
+  messages: Message[]
+  /** Exact request preserved during interruption or a retryable failure. */
+  pending?: ChatRequest
+  /** User-facing error for the pending request. */
+  error?: string
+  /** Whether retry must replace an expired or terminal job ID. */
+  restartRequired?: boolean
+  /** ISO timestamp of the most recent change. */
+  updatedAt: string
 }

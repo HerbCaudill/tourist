@@ -10,10 +10,10 @@ test("recovers from denied location, follows live research progress, and opens a
   const fixture = await createFakeResearch({ delayMs: 0 }).discover(location)
   const discovery = {
     ...fixture,
-    stories: fixture.stories.map(({ faq, ...story }) => ({
+    stories: fixture.stories.map(story => ({
       ...story,
       placeId: story.id,
-      suggestedQuestions: faq?.map(item => item.question).slice(0, 3) ?? [],
+      suggestedQuestions: story.suggestedQuestions?.slice(0, 3) ?? [],
       timeSensitive: false,
     })),
     researchedAt: fixture.researchedAt.toISOString(),
@@ -48,6 +48,28 @@ test("recovers from denied location, follows live research progress, and opens a
   await page.route("**/api/map", route =>
     route.fulfill({ status: 503, json: { error: { code: "unavailable" } } }),
   )
+  const chatRequests: Record<string, unknown>[] = []
+  await page.route("**/api/chat", async route => {
+    const request = route.request().postDataJSON()
+    if (request.ticket)
+      return route.fulfill({
+        json: {
+          status: "completed",
+          answer: {
+            text: "A documented reply about the poet.",
+            sources: [
+              { name: "Local archive", org: "Archive", url: "https://example.com/archive" },
+            ],
+          },
+        },
+      })
+    chatRequests.push(request)
+    if (chatRequests.length === 1) return route.abort("failed")
+    await route.fulfill({
+      status: 202,
+      json: { status: "running", ticket: "answer-ticket", retryAfterMs: 1000 },
+    })
+  })
   await page.goto("/?research=live")
   await expect(page.getByRole("alert")).toContainText("Location access was denied")
   await page.getByRole("textbox", { name: "Enter a place" }).fill("Candlemaker Row, Edinburgh")
@@ -66,4 +88,17 @@ test("recovers from denied location, follows live research progress, and opens a
     "href",
     "https://www.mcgonagall-online.org.uk/",
   )
+  await page.getByPlaceholder("ask a follow-up").fill("What happened next?")
+  await page.keyboard.press("Enter")
+  await expect(page.getByRole("alert")).toContainText("connection was interrupted")
+  await page.getByRole("button", { name: "Retry answer", exact: true }).click()
+  await expect(page.getByText("A documented reply about the poet.")).toBeVisible()
+  await expect(page.getByRole("link", { name: /Local archive/ })).toHaveAttribute(
+    "href",
+    "https://example.com/archive",
+  )
+  await expect(page.getByText("What happened next?", { exact: true })).toHaveCount(1)
+  expect(chatRequests[1].requestId).toBe(chatRequests[0].requestId)
+  expect(chatRequests[1].originLocation).toEqual(location)
+  expect(chatRequests[1].selectedStoryId).toBe("mcgonagall")
 })

@@ -4,6 +4,7 @@ import { ResearchDiscovery } from "../research/ResearchDiscovery"
 import { ResearchLocation } from "../research/ResearchLocation"
 import { ResearchStory } from "../research/ResearchStory"
 import type { Discovery, Research, ResearchOptions } from "../types"
+import { ResearchClientError } from "./ResearchClientError"
 import { locateBrowser } from "./locateBrowser"
 
 /** Connect the Ledger to validated Tourist operations and resumable server jobs. */
@@ -12,7 +13,6 @@ export function createLiveResearch(
   { fetch: transport = globalThis.fetch.bind(globalThis), wait = waitForPoll }: Dependencies = {},
 ): Research {
   const continuations = new Map<string, string>()
-  let latest: Discovery | undefined
 
   /** Send a bounded operation request without caching location or context. */
   async function post(path: string, body: unknown, signal?: AbortSignal): Promise<unknown> {
@@ -34,12 +34,12 @@ export function createLiveResearch(
         } catch {
           /* A failed proxy response can be HTML. */
         }
-        throw new Error(ERRORS[code] ?? ERRORS.unavailable)
+        throw new ResearchClientError(code, ERRORS[code] ?? ERRORS.unavailable)
       }
       try {
         return await response.json()
       } catch {
-        throw new Error(ERRORS.malformed)
+        throw new ResearchClientError("malformed", ERRORS.malformed)
       }
     } catch (error) {
       if (signal?.aborted) throw signal.reason
@@ -93,8 +93,8 @@ export function createLiveResearch(
         !Number.isFinite(researchedAt.getTime()) ||
         !Number.isFinite(Date.parse(result.discovery.coordinatesExpireAt))
       )
-        throw new Error(ERRORS.malformed)
-      latest = {
+        throw new ResearchClientError("malformed", ERRORS.malformed)
+      const discovery: Discovery = {
         ...result.discovery,
         stories: result.discovery.stories.map(story => ({
           ...story,
@@ -105,31 +105,31 @@ export function createLiveResearch(
         researchedAt,
         mapProvider: "google",
       }
-      return latest
+      return discovery
     },
-    ask: async (question, story) => {
-      if (!latest) throw new Error("Choose a location before asking a question.")
-      const requestId = crypto.randomUUID()
-      const stories = story ? [story] : latest.stories
+    ask: async (request, options = {}) => {
+      const stories = request.stories.map(value => decode(ResearchStory, value))
+      const history = request.history
+        .slice(-12)
+        .map(message => ({ ...message, text: message.text.slice(0, 6000) }))
+      const body = { ...request, stories, history }
+      const size = () => new TextEncoder().encode(JSON.stringify(body)).byteLength
+      // Drop oldest context before exceeding the server byte boundary, retaining the selected story.
+      while (size() > 68_000 && body.history.length > 0) body.history.shift()
+      while (size() > 68_000 && body.stories.length > 1) {
+        const removable = body.stories.findIndex(story => story.id !== request.selectedStoryId)
+        if (removable < 0) break
+        body.stories.splice(removable, 1)
+      }
+      while (size() > 68_000 && body.stories[0]?.account.length > 1)
+        body.stories[0] = { ...body.stories[0], account: body.stories[0].account.slice(0, -1) }
+      while (size() > 68_000 && body.stories[0]?.sources.length > 1)
+        body.stories[0] = { ...body.stories[0], sources: body.stories[0].sources.slice(0, -1) }
       const result = decode(
         CompletedAnswer,
-        await poll(
-          "chat",
-          {
-            requestId,
-            question,
-            location: latest.location,
-            stories: stories.map(value => decode(ResearchStory, value)),
-            history: [],
-            ...(story ? { selectedStoryId: story.id } : {}),
-          },
-          { requestId },
-        ),
+        await poll("chat", body, { ...options, requestId: request.requestId }),
       )
-      return {
-        text: result.answer.text,
-        source: result.answer.sources.map(source => source.name).join("; ") || undefined,
-      }
+      return { text: result.answer.text, sources: [...result.answer.sources] }
     },
   }
 }
@@ -139,7 +139,7 @@ function decode<A, I>(schema: Schema.Schema<A, I>, input: unknown): A {
   try {
     return Schema.decodeUnknownSync(schema)(input)
   } catch {
-    throw new Error(ERRORS.malformed)
+    throw new ResearchClientError("malformed", ERRORS.malformed)
   }
 }
 
@@ -176,11 +176,11 @@ const CompletedAnswer = Schema.Struct({
 const ERRORS: Record<string, string> = {
   busy: "Research is busy. Try again shortly.",
   auth: "The research service needs attention before it can continue.",
-  timeout: "Research took too long. Try refreshing to start another search.",
+  timeout: "Research took too long. Try again to start a new request.",
   malformed: "The research service did not return a valid result. Try again.",
   unavailable:
     "Research is unavailable right now. Try again to reconnect, or refresh to start another search.",
-  expired: "This research has expired. Refresh to start another search.",
+  expired: "This research has expired. Try again to start a new request.",
   invalid: "This request could not be used. Try another location or refresh.",
   location_not_found:
     "That place could not be located precisely. Enter a street or landmark and city.",

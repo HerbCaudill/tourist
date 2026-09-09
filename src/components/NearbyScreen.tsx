@@ -175,7 +175,7 @@ export function NearbyScreen(
           </a>
         </p>
       )}
-      <Prompt placeholder="ask about this place" onAsk={onAsk} />
+      <Prompt placeholder="ask about this place" onAsk={onAsk} disabled={!location} />
     </>
   )
 }

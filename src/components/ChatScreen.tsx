@@ -14,6 +14,10 @@ export function ChatScreen(
     contextLabel,
     messages,
     answering,
+    error,
+    onRetry,
+    onRestart,
+    restartRequired,
     suggestions,
     onBack,
     onAsk,
@@ -49,6 +53,22 @@ export function ChatScreen(
             </span>
             <span className="min-w-0 flex-1 text-neutral-800">
               {message.text}
+              {message.sources && message.sources.length > 0 && (
+                <span className="mt-1.5 block text-[12px] text-neutral-500">
+                  {message.sources.map((source, index) => (
+                    <a
+                      key={`${source.url}/${index}`}
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-1 block underline decoration-neutral-400 underline-offset-2"
+                    >
+                      <span className="text-red-700">[{index + 1}]</span> {source.name} ·{" "}
+                      {source.org}
+                    </a>
+                  ))}
+                </span>
+              )}
               {message.source && (
                 <span className="mt-1.5 block text-[12px] text-neutral-500">
                   <span className="text-red-700">[src]</span> {message.source.toLowerCase()}
@@ -63,7 +83,20 @@ export function ChatScreen(
             <Cursor />
           </div>
         )}
-        {!answering && suggestions.length > 0 && (
+        {error && (
+          <div role="alert" className="mb-3 text-red-700">
+            <p>{error}</p>
+            <button type="button" onClick={onRetry} className="mt-1 underline">
+              Retry answer
+            </button>
+            {!restartRequired && (
+              <button type="button" onClick={onRestart} className="mt-1 ml-3 underline">
+                Start answer again
+              </button>
+            )}
+          </div>
+        )}
+        {!answering && !error && suggestions.length > 0 && (
           <div className="border-t border-neutral-300 pt-2">
             {suggestions.map(q => (
               <button
@@ -79,7 +112,7 @@ export function ChatScreen(
         )}
         <div ref={bottom} />
       </div>
-      <Prompt placeholder="ask a follow-up" onAsk={onAsk} disabled={answering} />
+      <Prompt placeholder="ask a follow-up" onAsk={onAsk} disabled={answering || !!error} />
     </>
   )
 }
@@ -95,6 +128,14 @@ type Props = {
   messages: Message[]
   /** Whether a reply is pending. */
   answering: boolean
+  /** Recoverable failure for this conversation only. */
+  error?: string
+  /** Resend the exact failed request without duplicating the user turn. */
+  onRetry: () => void
+  /** Explicitly start a fresh job when reconnection cannot recover it. */
+  onRestart: () => void
+  /** Whether the retry already starts a fresh job. */
+  restartRequired?: boolean
   /** Questions the user can tap to ask. */
   suggestions: string[]
   /** Return to the previous screen. */

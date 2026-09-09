@@ -45,6 +45,7 @@ describe("App", () => {
   it("starts a general chat about the location from the nearby screen", async () => {
     const user = userEvent.setup()
     render(<App research={research} />)
+    await screen.findByText(/candlemaker row/)
     await user.type(
       await screen.findByPlaceholderText("ask about this place"),
       "Why is it called Candlemaker Row?{enter}",
