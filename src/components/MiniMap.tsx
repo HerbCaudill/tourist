@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { createMapGeometry } from "./createMapGeometry"
 import { useElementWidth } from "../hooks/useElementWidth"
 import { formatDistance } from "../lib/formatDistance"
 import type { Coordinates } from "../types"
@@ -9,42 +11,60 @@ export function MiniMap(
     you,
     markers,
     radiusMeters,
-    zoom = 16,
+    zoom,
+    accuracyMeters,
     height = 200,
   }: Props,
 ) {
   const [ref, width] = useElementWidth<HTMLDivElement>()
-  const center = centroid([you, ...markers.map(m => m.coordinates)])
-  const c = project(center, zoom)
-  const origin = { x: c.x - width / 2, y: c.y - height / 2 }
-  const toLocal = (p: Coordinates) => {
-    const w = project(p, zoom)
-    return { x: w.x - origin.x, y: w.y - origin.y }
-  }
-  const tiles = width > 0 ? tilesCovering(origin, width, height) : []
-  const youPx = toLocal(you)
-  const radiusPx = radiusMeters / metersPerPixel(you.lat, zoom)
+  const [failedTile, setFailedTile] = useState<string>()
+  const map = createMapGeometry({
+    you,
+    markers: markers.map(m => m.coordinates),
+    radiusMeters,
+    accuracyMeters,
+    width,
+    height,
+    zoom,
+  })
+  const { tiles, toLocal, you: youPx, radius: radiusPx } = map
+  const viewport = `${you.lat}/${you.lon}/${radiusMeters}/${width}/${height}/${map.zoom}`
 
   return (
     <div
       ref={ref}
       role="img"
-      aria-label={`Map of stories within ${formatDistance(radiusMeters)}`}
+      aria-label={`Map of stories within ${formatDistance(radiusMeters)}${accuracyMeters ? `; location accuracy approximately ${formatDistance(accuracyMeters)}` : ""}`}
       className="relative overflow-hidden border border-neutral-300 bg-neutral-200"
       style={{ height }}
     >
       {tiles.map(tile => (
         <img
-          key={`${tile.x}/${tile.y}`}
-          src={`https://tile.openstreetmap.org/${zoom}/${tile.x}/${tile.y}.png`}
+          key={`${map.zoom}/${tile.left}/${tile.top}`}
+          src={`https://tile.openstreetmap.org/${map.zoom}/${tile.x}/${tile.y}.png`}
           alt=""
           draggable={false}
+          onError={event => {
+            event.currentTarget.style.visibility = "hidden"
+            setFailedTile(viewport)
+          }}
           className="absolute size-64 max-w-none opacity-80 grayscale select-none"
-          style={{ left: tile.x * TILE - origin.x, top: tile.y * TILE - origin.y }}
+          style={{ left: tile.left, top: tile.top }}
         />
       ))}
       {width > 0 && (
         <svg className="absolute inset-0" width={width} height={height} aria-hidden="true">
+          {map.accuracy > 0 && (
+            <circle
+              cx={youPx.x}
+              cy={youPx.y}
+              r={map.accuracy}
+              fill="#525252"
+              fillOpacity={0.12}
+              stroke="#737373"
+              strokeDasharray="2 3"
+            />
+          )}
           <circle
             cx={youPx.x}
             cy={youPx.y}
@@ -76,8 +96,17 @@ export function MiniMap(
           <circle cx={youPx.x} cy={youPx.y} r={5} fill="#111" stroke="#fff" strokeWidth={2} />
         </svg>
       )}
+      {failedTile === viewport && (
+        <span
+          role="status"
+          className="absolute top-1 left-1.5 bg-neutral-100/90 px-1 text-[10px] text-neutral-700"
+        >
+          Map tiles unavailable · locations still shown
+        </span>
+      )}
       <span className="absolute bottom-1 left-1.5 text-[10px] text-neutral-700">
         r = {formatDistance(radiusMeters)}
+        {accuracyMeters ? ` · GPS ±${formatDistance(accuracyMeters)}` : ""}
       </span>
       <a
         href="https://www.openstreetmap.org/copyright"
@@ -91,39 +120,6 @@ export function MiniMap(
   )
 }
 
-/** Web Mercator projection of a point to world pixel space at a zoom level. */
-const project = (p: Coordinates, zoom: number) => {
-  const n = 2 ** zoom * TILE
-  const φ = (p.lat * Math.PI) / 180
-  return {
-    x: ((p.lon + 180) / 360) * n,
-    y: ((1 - Math.log(Math.tan(φ) + 1 / Math.cos(φ)) / Math.PI) / 2) * n,
-  }
-}
-
-/** Ground resolution of one pixel at a latitude and zoom level. */
-const metersPerPixel = (lat: number, zoom: number) =>
-  (156_543.03 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom
-
-/** Average of a set of points, good enough for a neighbourhood. */
-const centroid = (points: Coordinates[]): Coordinates => ({
-  lat: points.reduce((sum, p) => sum + p.lat, 0) / points.length,
-  lon: points.reduce((sum, p) => sum + p.lon, 0) / points.length,
-})
-
-/** Tile indices needed to cover a viewport whose top-left is at `origin` in world pixels. */
-const tilesCovering = (origin: { x: number; y: number }, width: number, height: number) => {
-  const x0 = Math.floor(origin.x / TILE)
-  const x1 = Math.floor((origin.x + width) / TILE)
-  const y0 = Math.floor(origin.y / TILE)
-  const y1 = Math.floor((origin.y + height) / TILE)
-  const tiles = []
-  for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) tiles.push({ x, y })
-  return tiles
-}
-
-const TILE = 256
-
 type Props = {
   /** Where the user is. */
   you: Coordinates
@@ -131,7 +127,9 @@ type Props = {
   markers: { label: string; coordinates: Coordinates }[]
   /** Search radius to draw around the user. */
   radiusMeters: number
-  /** Slippy-map zoom level. */
+  /** GPS uncertainty radius in meters, when supplied. */
+  accuracyMeters?: number
+  /** Optional maximum zoom; searches still fit the viewport. */
   zoom?: number
   /** Height in pixels. */
   height?: number
