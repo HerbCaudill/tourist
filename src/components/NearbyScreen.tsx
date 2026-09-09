@@ -35,11 +35,6 @@ export function NearbyScreen(
   const [query, setQuery] = useState("")
   const stories = discovery?.stories ?? []
   const origin = discovery?.location ?? location
-  const updated = discovery?.researchedAt.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })
 
   return (
     <>
@@ -78,18 +73,15 @@ export function NearbyScreen(
           </form>
         }
         right={
-          <>
-            {updated && `${updated} `}
-            <button
-              type="button"
-              aria-label="Refresh"
-              onClick={onRefresh}
-              disabled={researching || offline}
-              className={cn("text-red-700", researching && "animate-pulse")}
-            >
-              <IconRefresh size={16} stroke={1.5} aria-hidden="true" />
-            </button>
-          </>
+          <button
+            type="button"
+            aria-label="Refresh"
+            onClick={onRefresh}
+            disabled={researching || offline}
+            className={cn("text-red-700", researching && "animate-pulse")}
+          >
+            <IconRefresh size={16} stroke={1.5} aria-hidden="true" />
+          </button>
         }
       />
 
