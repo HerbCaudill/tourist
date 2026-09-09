@@ -190,9 +190,10 @@ export function useDiscovery(
     }
   }, [resume, stop])
 
-  /** Explicit refresh starts new research even when cached reading is still fresh. */
+  /** Clear displayed results and start new research even when cached reading is still fresh. */
   const refresh = () => {
     if (operation.current || !navigator.onLine) return
+    setDiscovery(undefined)
     if (active.current?.manual)
       void discover(active.current.location, begin(active.current.location.name))
     else void locate(undefined, false)

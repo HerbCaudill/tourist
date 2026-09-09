@@ -125,7 +125,31 @@ describe("live discovery states", () => {
     )
   })
 
-  it("keeps old origins during movement and ignores superseded results", async () => {
+  it("clears existing results immediately while refresh is locating", async () => {
+    const user = userEvent.setup()
+    const fake = createFakeResearch({ delayMs: 0 })
+    let finishLocation!: (value: Location) => void
+    const research = {
+      ...fake,
+      locate: vi
+        .fn()
+        .mockResolvedValueOnce(location)
+        .mockImplementationOnce(
+          () =>
+            new Promise<Location>(resolve => {
+              finishLocation = resolve
+            }),
+        ),
+    }
+    render(<App research={research} />)
+    expect(await screen.findByRole("button", { name: /worst poet/ })).toBeVisible()
+    await user.click(screen.getByRole("button", { name: "Refresh" }))
+    expect(screen.queryByRole("button", { name: /worst poet/ })).not.toBeInTheDocument()
+    await act(async () => finishLocation(location))
+    expect(await screen.findByRole("button", { name: /worst poet/ })).toBeVisible()
+  })
+
+  it("ignores superseded results after refresh and movement", async () => {
     const user = userEvent.setup()
     const fake = createFakeResearch({ delayMs: 0 })
     const first = await fake.discover(location)
@@ -163,7 +187,6 @@ describe("live discovery states", () => {
     }
     rerender(<App research={replacement} />)
     await waitFor(() => expect(replacement.discover).toHaveBeenCalled())
-    expect(screen.getByRole("button", { name: /worst poet/ })).toBeVisible()
     await act(async () =>
       finishNew({ ...first, location: newLocation, stories: [], radiusMeters: 1000 }),
     )
