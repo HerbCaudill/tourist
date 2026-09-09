@@ -78,7 +78,7 @@ export function NearbyScreen(
             aria-label="Refresh"
             onClick={onRefresh}
             disabled={researching || offline}
-            className={cn("text-red-700", researching && "animate-pulse")}
+            className={cn("text-red-700", researching && "motion-safe:animate-spin")}
           >
             <IconRefresh size={16} stroke={1.5} aria-hidden="true" />
           </button>
