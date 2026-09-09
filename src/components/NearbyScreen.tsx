@@ -28,7 +28,7 @@ export function NearbyScreen(
     onOpenStory,
     onAsk,
     chatPending,
-    onOpenChat,
+    conversation,
     savedReading,
   }: Props,
 ) {
@@ -83,7 +83,7 @@ export function NearbyScreen(
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-[18px] pb-2">
+      <div className="shrink-0 px-[18px]">
         {error && (
           <div role="alert" className="my-2 text-red-700">
             <p>{error}</p>
@@ -119,6 +119,11 @@ export function NearbyScreen(
             )}
           </div>
         )}
+      </div>
+      <div
+        aria-label="Stories and conversation"
+        className="min-h-0 flex-1 overflow-y-auto px-[18px] pb-2"
+      >
         {researching && (
           <p role="status" className={origin ? "sr-only" : "py-1 text-neutral-500"}>
             {progress
@@ -145,17 +150,9 @@ export function NearbyScreen(
         {offline && !discovery && (
           <p className="py-2 text-neutral-500">No saved stories on this device.</p>
         )}
+        {conversation}
         <div hidden>{savedReading}</div>
       </div>
-      {onOpenChat && (
-        <button
-          type="button"
-          onClick={onOpenChat}
-          className="px-[18px] py-2 text-left text-red-700 underline"
-        >
-          Open conversation
-        </button>
-      )}
       <Prompt placeholder="Ask me anything" onAsk={onAsk} disabled={!location || chatPending} />
     </>
   )
@@ -192,8 +189,8 @@ type Props = {
   onAsk: (question: string) => void
   /** Whether the existing general conversation has an unanswered question. */
   chatPending?: boolean
-  /** Reopen the existing general conversation. */
-  onOpenChat?: () => void
+  /** General conversation displayed after the nearby stories. */
+  conversation?: ReactNode
   /** Saved records displayed within the scrollable ledger. */
   savedReading?: ReactNode
 }

@@ -158,7 +158,7 @@ describe("contextual chat", () => {
     expect(research.ask).toHaveBeenCalledOnce()
   })
 
-  it("keeps general entry disabled after failure and reopens the failed question", async () => {
+  it("keeps the failed general question inline with retry available", async () => {
     const user = userEvent.setup()
     const research = {
       ...createFakeResearch({ delayMs: 0 }),
@@ -168,9 +168,7 @@ describe("contextual chat", () => {
     await screen.findByRole("button", { name: /worst poet/ })
     await user.type(screen.getByPlaceholderText("Ask me anything"), "First question{enter}")
     await screen.findByRole("alert")
-    await user.click(screen.getByRole("button", { name: /nearby/ }))
     expect(screen.getByPlaceholderText("Ask me anything")).toBeDisabled()
-    await user.click(screen.getByRole("button", { name: "Open conversation" }))
     expect(screen.getByText("First question")).toBeVisible()
     expect(screen.getByRole("button", { name: "Retry answer" })).toBeVisible()
   })

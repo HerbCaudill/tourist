@@ -41,6 +41,40 @@ async function setup() {
 }
 
 describe("saved reading", () => {
+  it("reopens an index conversation below saved stories after an offline reload", async () => {
+    const user = userEvent.setup()
+    const { fake, discovery, store, storage } = await setup()
+    store.saveDiscovery(discovery)
+    const research = {
+      ...fake,
+      ask: vi.fn().mockResolvedValue({ text: "A saved location answer.", sources: [] }),
+    }
+    const mounted = render(<App research={research} history={store} />)
+    await waitFor(() => expect(screen.getByPlaceholderText("Ask me anything")).toBeEnabled())
+    await user.type(
+      screen.getByPlaceholderText("Ask me anything"),
+      "Tell me about this area{enter}",
+    )
+    expect(await screen.findByText("A saved location answer.")).toBeVisible()
+    expect(window.location.pathname).toBe("/")
+    mounted.unmount()
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false)
+    const restored = render(<App research={research} history={createHistoryStore({ storage })} />)
+    expect(screen.getByRole("button", { name: /worst poet/ })).toBeVisible()
+    expect(screen.getByText("A saved location answer.")).toBeVisible()
+    expect(screen.getByPlaceholderText("Ask me anything")).toBeDisabled()
+    restored.unmount()
+    const context = store.read().conversations[0].context
+    window.history.replaceState(
+      null,
+      "",
+      `/chats/${encodeURIComponent(context.researchedAt)}/general`,
+    )
+    render(<App research={research} history={createHistoryStore({ storage })} />)
+    expect(screen.getByRole("button", { name: /worst poet/ })).toBeVisible()
+    expect(screen.getByText("A saved location answer.")).toBeVisible()
+  })
+
   it("reopens full stories offline", async () => {
     const user = userEvent.setup()
     const { fake, discovery, store, storage } = await setup()

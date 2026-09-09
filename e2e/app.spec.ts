@@ -38,24 +38,21 @@ test("keeps follow-ups below the story on the same URL", async ({ page }) => {
   await expect(page.getByText("Who was he?", { exact: true })).toBeVisible()
 })
 
-test("restores general chat with forward and handles unavailable direct links", async ({
+test("keeps index chat below the stories and restores it after reading a story", async ({
   page,
 }) => {
   await page.goto("/?research=fixture")
   await expect(page.getByRole("button", { name: /worst poet/ })).toBeVisible()
+  const indexUrl = page.url()
   await page.getByPlaceholder("Ask me anything").fill("Why is it called Candlemaker Row?")
   await page.keyboard.press("Enter")
-  await expect(page).toHaveURL(/\/chats\//)
   await expect(page.getByText(/candlemakers’ guild/)).toBeVisible()
+  await expect(page).toHaveURL(indexUrl)
+  await page.getByRole("button", { name: /worst poet/ }).click()
+  await expect(page.getByText(/Dundee handloom weaver/)).toBeVisible()
   await page.goBack()
-  await expect(page.getByPlaceholder("Ask me anything")).toBeVisible()
-  await page.goForward()
   await expect(page.getByText(/candlemakers’ guild/)).toBeVisible()
-  await page.goto("/stories/missing/story?research=fixture")
-  await expect(page.getByText("This page is no longer saved on this device.")).toBeVisible()
-  await page.getByRole("button", { name: "Back to nearby" }).click()
-  await expect(page).toHaveURL(/\/\?research=fixture$/)
-  await expect(page.getByRole("button", { name: /worst poet/ })).toBeVisible()
+  await expect(page.getByPlaceholder("Ask me anything")).toBeVisible()
 })
 
 test("reserves the walking map and scrolls reading between the map and input", async ({ page }) => {

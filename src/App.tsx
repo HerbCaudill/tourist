@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
 import { ChatTranscript } from "./components/ChatTranscript"
-import { ChatScreen } from "./components/ChatScreen"
 import { NearbyScreen } from "./components/NearbyScreen"
 import { SavedReading } from "./components/SavedReading"
 import { StoryScreen } from "./components/StoryScreen"
@@ -43,11 +42,6 @@ export function App(
     navigation.clear()
   }
 
-  const stories = discovery?.stories ?? []
-  const generalContext = location
-    ? conversationContext(discovery?.location ?? location, discovery)
-    : undefined
-  const generalConversation = generalContext && chat.conversations[generalContext.id]
   const contexts = [
     ...[...(discovery ? [discovery] : []), ...(saved?.discoveries ?? [])].flatMap(item => [
       conversationContext(item.location, item),
@@ -59,11 +53,27 @@ export function App(
   ]
   const navigation = useNavigation(contexts)
   const { view, navigate: setView } = navigation
+  const archivedContext =
+    view?.kind === "chat" && !view.context.selectedStoryId ? view.context : undefined
+  const displayedDiscovery = archivedContext
+    ? ([discovery, ...(saved?.discoveries ?? [])].find(
+        item => item?.researchedAt.toISOString() === archivedContext.researchedAt,
+      ) ?? {
+        location: archivedContext.originLocation,
+        stories: archivedContext.stories,
+        researchedAt: new Date(archivedContext.researchedAt),
+        radiusMeters: RADIUS_METERS,
+      })
+    : discovery
+  const stories = displayedDiscovery?.stories ?? []
+  const origin = displayedDiscovery?.location ?? location
+  const generalContext =
+    archivedContext ?? (origin ? conversationContext(origin, displayedDiscovery) : undefined)
+  const generalConversation = generalContext && chat.conversations[generalContext.id]
 
   /** Send a question while retaining this conversation's originating context. */
   const ask = (question: string, context: ConversationContext) => {
     if (!location || !online) return
-    if (!context.selectedStoryId) setView({ kind: "chat", context })
     chat.ask(context, question, location)
   }
 
@@ -117,19 +127,12 @@ export function App(
             onAsk={conversationProps.onAsk}
           />
         )
-      return (
-        <ChatScreen
-          {...conversationProps}
-          contextLabel={context.originLocation.name}
-          onBack={() => navigation.back({ kind: "nearby" })}
-        />
-      )
     }
     return (
       <NearbyScreen
-        discovery={discovery}
+        discovery={displayedDiscovery}
         location={location}
-        radiusMeters={discovery?.radiusMeters ?? RADIUS_METERS}
+        radiusMeters={displayedDiscovery?.radiusMeters ?? RADIUS_METERS}
         researching={busy}
         offline={!online}
         mapProvider={research.mapProvider}
@@ -137,8 +140,14 @@ export function App(
         error={error}
         locationError={locationError}
         onRetry={retry}
-        onChoosePlace={choosePlace}
-        onRefresh={refresh}
+        onChoosePlace={query => {
+          if (archivedContext) setView({ kind: "nearby" }, true)
+          choosePlace(query)
+        }}
+        onRefresh={() => {
+          if (archivedContext) setView({ kind: "nearby" }, true)
+          refresh()
+        }}
         savedReading={
           saved && (
             <SavedReading
@@ -155,23 +164,35 @@ export function App(
         }
         onOpenStory={id => {
           const index = stories.findIndex(story => story.id === id)
-          if (index >= 0 && discovery)
+          if (index >= 0 && displayedDiscovery)
             setView({
               kind: "story",
               story: stories[index],
               context: conversationContext(
-                discovery.location,
-                discovery,
+                displayedDiscovery.location,
+                displayedDiscovery,
                 stories[index],
                 index + 1,
               ),
             })
         }}
-        chatPending={!online || !!generalConversation?.pending}
-        onOpenChat={
-          generalContext && generalConversation
-            ? () => setView({ kind: "chat", context: generalContext })
-            : undefined
+        chatPending={!online || !!generalConversation?.pending || !!generalConversation?.error}
+        conversation={
+          generalContext && (
+            <ChatTranscript
+              key={generalContext.id}
+              messages={generalConversation?.messages ?? []}
+              answering={!!generalConversation?.pending && !generalConversation.error}
+              error={generalConversation?.error}
+              onRetry={() => chat.retry(generalContext.id)}
+              onRestart={() => chat.retry(generalContext.id, true)}
+              restartRequired={generalConversation?.restartRequired}
+              offline={!online}
+              questionDisabled={!location}
+              suggestions={[]}
+              onAsk={question => ask(question, generalContext)}
+            />
+          )
         }
         onAsk={question => {
           if (generalContext) ask(question, generalContext)
