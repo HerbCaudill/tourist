@@ -29,7 +29,7 @@ export function Prompt(
     >
       <span className="text-red-700">&gt;</span>
       <input
-        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-400/60"
+        className="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-neutral-400/60"
         placeholder={placeholder}
         value={text}
         onChange={e => setText(e.target.value)}
