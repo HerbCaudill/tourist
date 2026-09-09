@@ -66,7 +66,7 @@ export function NearbyScreen(
               maxLength={200}
               value={query}
               onChange={event => setQuery(event.target.value)}
-              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-500 focus:border-b focus:border-neutral-400"
+              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-400/60 focus:border-b focus:border-neutral-400"
             />
             {query.trim() && (
               <button
