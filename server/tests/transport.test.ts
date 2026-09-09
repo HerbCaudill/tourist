@@ -160,6 +160,7 @@ it("does not allow chat tickets to be used as discovery tickets", async () => {
     requestId: "13516742-4173-49c5-ae65-376e147c4dad",
     question: "What happened?",
     location: { name: "Here", area: "", coordinates: point, accuracyMeters: 10 },
+    originLocation: { name: "Here", area: "", coordinates: point, accuracyMeters: 10 },
     stories: [],
     history: [],
   })

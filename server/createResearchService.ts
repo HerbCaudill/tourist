@@ -240,6 +240,7 @@ const ChatRequest = Schema.Union(
       Schema.filter(value => !!value.trim()),
     ),
     location: ResearchLocation,
+    originLocation: ResearchLocation,
     stories: Schema.Array(ResearchStory).pipe(Schema.maxItems(3)),
     history: Schema.Array(ChatMessage).pipe(Schema.maxItems(12)),
     selectedStoryId: Schema.optional(Schema.String.pipe(Schema.maxLength(100))),

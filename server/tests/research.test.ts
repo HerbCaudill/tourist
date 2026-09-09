@@ -161,6 +161,7 @@ it("passes bounded selected-story and conversation context into a follow-up, wit
     requestId,
     question: "What happened next?",
     location,
+    originLocation: { ...location, name: "Original churchyard" },
     stories: [{ ...story, coordinates: location.coordinates, distanceMeters: 0, bearing: "N" }],
     selectedStoryId: story.id,
     history: [
@@ -174,6 +175,7 @@ it("passes bounded selected-story and conversation context into a follow-up, wit
   expect(answer).toMatchObject({ status: "completed", answer: { sources: story.sources } })
   expect(start.mock.calls[0]?.[1]).toContain("Who was here?")
   expect(start.mock.calls[0]?.[1]).toContain(story.id)
+  expect(start.mock.calls[0]?.[1]).toContain("Original churchyard")
   await expect(
     service.chat({ ...input, history: Array.from({ length: 13 }, () => input.history[0]) }),
   ).rejects.toMatchObject({ code: "invalid" })
@@ -245,6 +247,13 @@ it.each([
     runner: { get: async id => ({ id, status: "failed", error }), start: vi.fn() },
   })
   await expect(
-    service.chat({ requestId, question: "What happened?", location, stories: [], history: [] }),
+    service.chat({
+      requestId,
+      question: "What happened?",
+      location,
+      originLocation: location,
+      stories: [],
+      history: [],
+    }),
   ).rejects.toMatchObject({ code })
 })
