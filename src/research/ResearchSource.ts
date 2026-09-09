@@ -11,11 +11,16 @@ export const ResearchSource = Schema.Struct({
   url: boundedText(2048).pipe(Schema.filter(isSourceUrl)),
 })
 
-/** Permit only HTTP(S) evidence links without embedded credentials. */
+/** Require a specific HTTP(S) evidence page rather than an institution's homepage. */
 function isSourceUrl(value: string) {
   try {
     const url = new URL(value)
-    return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password
+    return (
+      ["http:", "https:"].includes(url.protocol) &&
+      !url.username &&
+      !url.password &&
+      (url.pathname !== "/" || url.search.length > 1)
+    )
   } catch {
     return false
   }
