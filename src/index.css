@@ -8,11 +8,11 @@
 
 @keyframes location-ripple {
   from {
-    r: 4;
+    r: 4px;
     opacity: 0.7;
   }
   to {
-    r: 96;
+    r: 96px;
     opacity: 0;
   }
 }
@@ -20,7 +20,7 @@
 @media (prefers-reduced-motion: reduce) {
   .location-ripple {
     animation: none;
-    r: 24;
+    r: 24px;
     opacity: 0.3;
   }
 }
