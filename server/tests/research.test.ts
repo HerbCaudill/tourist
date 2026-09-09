@@ -52,16 +52,6 @@ const story = {
 const requestId = "13516742-4173-49c5-ae65-376e147c4dad"
 
 describe("persistent discovery", () => {
-  it("rejects domain homepages presented as direct historical evidence", async () => {
-    const { service } = setup([
-      { stories: [{ ...story, sources: [{ ...story.sources[0], url: "https://example.org/" }] }] },
-    ])
-    const initial = await service.discover({ requestId, location })
-    await expect(service.discover({ ticket: ticketOf(initial) })).rejects.toMatchObject({
-      code: "malformed",
-    })
-  })
-
   it("expands only after an empty validated result, stopping as soon as a story survives", async () => {
     const { service, nearby } = setup([{ stories: [] }, { stories: [story] }])
     const initial = await service.discover({ requestId, location })

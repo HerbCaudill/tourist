@@ -139,7 +139,7 @@ export function createResearchService(
           radiusMeters: context.radiusMeters,
           researchedAt: now().toISOString(),
           coordinatesExpireAt: new Date(now().getTime() + 29 * 86_400_000).toISOString(),
-          promptVersion: "ledger-1",
+          promptVersion: "ledger-2",
         },
       }
     },

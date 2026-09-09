@@ -25,7 +25,7 @@ test("recovers from denied location, follows live research progress, and opens a
     })),
     researchedAt: fixture.researchedAt.toISOString(),
     coordinatesExpireAt: new Date(Date.now() + 29 * 86_400_000).toISOString(),
-    promptVersion: "ledger-1",
+    promptVersion: "ledger-2",
     radiusMeters: 500,
   }
   await page.addInitScript(() => {

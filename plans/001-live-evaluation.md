@@ -2,6 +2,8 @@
 
 Evaluation date: 9 September 2026. Public deployment: <https://tourist.herbcaudill.com>. This records observed results from the implementation of plan 001; automated checks and actual iPhone acceptance are separate.
 
+Later on September 9, Herb clarified that Tourist is a fun walking companion and that the original sourcing and precision requirements were excessive. The historical checks below record the earlier evaluation, not the current acceptance standard. Current prompts favor a quick search, one useful source per story, short engaging accounts, and natural labels for legends. See `002-research-latency.md` for the measured cost and follow-up changes.
+
 ## Runtime and deployment checks
 
 The isolated Cloudflare runner uses Codex CLI 0.149.1 and explicitly selects GPT-5.5. The CLI's default model requires Code Mode, which the restricted runtime disables; its first completed request could not search. An exact container probe with GPT-5.5 recorded eight completed native web-search calls while preserving the existing shell, app, browser, skill and private-state restrictions. The reviewed configuration was deployed as worker version `c014f78c-61c7-469c-aa38-a1cc7329776b`.

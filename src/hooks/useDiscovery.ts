@@ -62,7 +62,7 @@ export function useDiscovery(
             history.findSuitableDiscovery({
               location: where,
               radiusMeters,
-              promptVersion: "ledger-1",
+              promptVersion: "ledger-2",
             }),
           )
           .find(Boolean)

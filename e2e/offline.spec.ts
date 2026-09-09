@@ -27,7 +27,7 @@ test("reopens a cached production app offline, retains its pending question, and
     })),
     researchedAt: original.researchedAt.toISOString(),
     coordinatesExpireAt: new Date(Date.now() + 29 * 86_400_000).toISOString(),
-    promptVersion: "ledger-1",
+    promptVersion: "ledger-2",
   }
   await page.addInitScript(({ coordinates, accuracyMeters }) => {
     Object.defineProperty(navigator, "geolocation", {
