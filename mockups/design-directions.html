@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tourist · design directions</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        background: #f0efec;
+        color: #1e2024;
+      }
+      header {
+        padding: 20px 28px 0 28px;
+      }
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+      }
+      .sub {
+        font-size: 13px;
+        color: #77756f;
+        margin: 0 0 16px 0;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 28px 16px 28px;
+      }
+      .tab {
+        font: inherit;
+        font-size: 13px;
+        padding: 7px 14px;
+        border-radius: 7px;
+        border: 1px solid #d8d6d0;
+        background: #ffffff;
+        color: #45443f;
+        cursor: pointer;
+      }
+      .tab:hover {
+        border-color: #b9b7b0;
+      }
+      .tab.active {
+        background: #1e2024;
+        border-color: #1e2024;
+        color: #ffffff;
+      }
+      main {
+        padding: 0 28px 28px 28px;
+      }
+      .meta {
+        max-width: 900px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: #45443f;
+        margin-bottom: 14px;
+      }
+      .meta p {
+        margin: 0 0 4px 0;
+      }
+      .frame-wrap {
+        width: 100%;
+        max-width: calc(var(--w) * 1px);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(25, 25, 30, 0.1);
+        background: #ffffff;
+      }
+      .frame-wrap iframe {
+        border: 0;
+        display: block;
+        transform-origin: top left;
+      }
+      footer {
+        padding: 0 28px 24px 28px;
+        font-size: 12.5px;
+        color: #77756f;
+      }
+      kbd {
+        font-family: inherit;
+        background: #e3e1dc;
+        border-radius: 4px;
+        padding: 1px 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Tourist · design directions</h1>
+      <p class="sub">
+        Six directions for the nearby-stories app in plan 001, all showing the same fictional
+        moment: Herb on Candlemaker Row, Edinburgh, at 16:42 with three stories within 200 m.
+        Compare shape, not content.
+      </p>
+    </header>
+    <nav>
+      <!-- One button per option, in order. data-i matches the panel's data-i. -->
+      <!-- <button class="tab" data-i="0">A · Option name</button> -->
+      <button class="tab" data-i="0">A · Feed</button>
+      <button class="tab" data-i="1">B · Postcard</button>
+      <button class="tab" data-i="2">C · Radar</button>
+      <button class="tab" data-i="3">D · Thread</button>
+      <button class="tab" data-i="4">E · Ledger</button>
+      <button class="tab" data-i="5">Bonus · Glance</button>
+    </nav>
+    <main>
+      <!-- One section per option. Structure:
+
+  <section class="panel" data-i="0" hidden>
+    <div class="meta">
+      <p><strong>Why:</strong> One sentence on the philosophy of this direction and what it's best at.</p>
+      <p><strong>Tradeoff:</strong> One honest sentence on the cost.</p>
+    </div>
+    <div class="frame-wrap" style="--w: 1280; --h: 840">
+      <iframe title="A · Option name" width="1280" height="840" loading="lazy" srcdoc="ESCAPED STANDALONE HTML"></iframe>
+    </div>
+  </section>
+
+  -->
+
+      <section class="panel" data-i="0" hidden>
+        <div class="meta">
+          <p>
+            <strong>Why:</strong> A conventional card feed with a persistent ask bar: previews stack
+            top to bottom, strongest first, and every screen ends in the same input.
+          </p>
+          <p>
+            <strong>Tradeoff:</strong> It looks like every other app, and the third card is already
+            below the fold on a phone.
+          </p>
+        </div>
+        <div class="frame-wrap" style="--w: 1280; --h: 840">
+          <iframe
+            title="A · Feed"
+            width="1280"
+            height="840"
+            loading="lazy"
+            srcdoc='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"><style>body{margin:0;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}</style></head><body><div style="width:1280px;height:840px;background:#dfe2e8;display:flex;justify-content:center;align-items:flex-start;gap:60px;padding-top:34px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a8f99">Nearby</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#f4f5f7;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#15181d">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#15181d"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#15181d"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#15181d"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#15181d"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #15181d;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#15181d;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;padding:6px 20px 10px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;align-items:center;gap:7px;font:600 18px &apos;IBM Plex Sans&apos;;color:#15181d"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f5fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M12 12m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0"/><path d="M12 2l0 2"/><path d="M12 20l0 2"/><path d="M20 12l2 0"/><path d="M2 12l2 0"/></svg>Candlemaker Row</div>
+    <span style="width:34px;height:34px;border-radius:99px;background:#fff;border:1px solid #e3e5ea;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg></span>
+  </div>
+  <div style="font:400 12.5px &apos;IBM Plex Sans&apos;;color:#6b7280;margin-top:3px">Old Town, Edinburgh · ±12 m · updated 16:42</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:0 14px;display:flex;flex-direction:column;gap:10px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;;color:#6b7280;padding:2px 4px 0;text-transform:uppercase;letter-spacing:.06em">3 stories within 200 m</div>
+  
+<div style="background:#fff;border:1px solid #e3e5ea;border-radius:16px;padding:14px 16px 12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;font:500 12.5px &apos;IBM Plex Sans&apos;;color:#6b7280">
+    <span style="display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>Greyfriars Kirkyard</span>
+    <span>90 m</span>
+  </div>
+  <div style="font:600 16px/1.3 &apos;IBM Plex Sans&apos;;color:#15181d;margin:7px 0 6px">The worst poet in the world is buried here</div>
+  <div style="font:400 13.5px/1.5 &apos;IBM Plex Sans&apos;;color:#3e434b">William McGonagall, whose verse was so bad that audiences pelted him with fish, lies in an unmarked pauper’s grave a few steps past the gate. He believed to the end that he was Scotland’s greatest living poet.</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="font:500 11.5px &apos;IBM Plex Sans&apos;;padding:3px 9px;border-radius:99px;color:#15693c;background:#e3f4ea">Documented</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0b5bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 6l6 6l-6 6"/></svg></div>
+</div>
+<div style="background:#fff;border:1px solid #e3e5ea;border-radius:16px;padding:14px 16px 12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;font:500 12.5px &apos;IBM Plex Sans&apos;;color:#6b7280">
+    <span style="display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>Greyfriars Bobby fountain</span>
+    <span>40 m</span>
+  </div>
+  <div style="font:600 16px/1.3 &apos;IBM Plex Sans&apos;;color:#15181d;margin:7px 0 6px">Bobby’s nose, and a dog that may have been two dogs</div>
+  <div style="font:400 13.5px/1.5 &apos;IBM Plex Sans&apos;;color:#3e434b">Visitors rub the statue’s nose for luck, which has worn it to bare bronze. Several local historians argue the loyal terrier was quietly replaced with a younger dog around 1867 to keep the story going.</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="font:500 11.5px &apos;IBM Plex Sans&apos;;padding:3px 9px;border-radius:99px;color:#8a5200;background:#fbefd9">Disputed</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0b5bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 6l6 6l-6 6"/></svg></div>
+</div>
+<div style="background:#fff;border:1px solid #e3e5ea;border-radius:16px;padding:14px 16px 12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;font:500 12.5px &apos;IBM Plex Sans&apos;;color:#6b7280">
+    <span style="display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>George Heriot’s School</span>
+    <span>180 m</span>
+  </div>
+  <div style="font:600 16px/1.3 &apos;IBM Plex Sans&apos;;color:#15181d;margin:7px 0 6px">Jinglin’ Geordie’s school for fatherless boys</div>
+  <div style="font:400 13.5px/1.5 &apos;IBM Plex Sans&apos;;color:#3e434b">James VI’s goldsmith left his fortune in 1624 to house and teach “puir faitherless bairns”. The turreted building behind the kirkyard wall is still a school, and locals will tell you it inspired Hogwarts. Rowling has never confirmed it.</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="font:500 11.5px &apos;IBM Plex Sans&apos;;padding:3px 9px;border-radius:99px;color:#5b34a8;background:#ede7fb">Folklore</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0b5bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 6l6 6l-6 6"/></svg></div>
+</div>
+</div>
+
+<div style="flex:none;padding:10px 16px 26px;background:#f4f5f7;border-top:1px solid #e3e5ea">
+  <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3e5ea;border-radius:99px;padding:11px 8px 11px 16px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg>
+    <span style="flex:1;font:400 14.5px &apos;IBM Plex Sans&apos;;color:#9aa0aa">Ask about this place…</span>
+    <span style="width:32px;height:32px;border-radius:99px;background:#1f5fd6;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg></span>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a8f99">Story</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#f4f5f7;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#15181d">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#15181d"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#15181d"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#15181d"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#15181d"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #15181d;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#15181d;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;display:flex;align-items:center;gap:10px;padding:6px 16px 10px;font:500 14px &apos;IBM Plex Sans&apos;;color:#1f5fd6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f5fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>Nearby</div>
+<div style="flex:1;overflow:hidden;padding:0 20px">
+  <div style="display:flex;align-items:center;gap:8px;font:500 12.5px &apos;IBM Plex Sans&apos;;color:#6b7280"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>Greyfriars Kirkyard · 90 m</div>
+  <h1 style="font:600 23px/1.2 &apos;IBM Plex Sans&apos;;color:#15181d;margin:8px 0 10px">The worst poet in the world is buried here</h1>
+  <div style="margin-bottom:14px"><span style="font:500 11.5px &apos;IBM Plex Sans&apos;;padding:3px 9px;border-radius:99px;color:#15693c;background:#e3f4ea">Documented</span></div>
+  <p style="font:400 14.5px/1.55 &apos;IBM Plex Sans&apos;;color:#2b3037;margin:0 0 12px">William Topaz McGonagall (1825–1902) was a Dundee handloom weaver who, at 52, felt what he called “a strange kind of feeling stealing over me” and decided he was a poet. He toured pubs and music halls reciting works like The Tay Bridge Disaster, and audiences came mainly to throw things at him.</p><p style="font:400 14.5px/1.55 &apos;IBM Plex Sans&apos;;color:#2b3037;margin:0 0 12px">He spent his last years in Edinburgh, poor and mostly forgotten, and died in a rented room on South College Street in September 1902. He was buried here in a pauper’s grave with no stone. The plaque near the north wall was added in 1999.</p><p style="font:400 14.5px/1.55 &apos;IBM Plex Sans&apos;;color:#2b3037;margin:0 0 12px">The fish-throwing is well documented in the contemporary press. The claim that he never realised he was being mocked is more debated: some biographers think he understood exactly what was happening and played along for the fee.</p>
+  <div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Sources</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid #e3e5ea">
+    <div><div style="font:500 13.5px &apos;IBM Plex Sans&apos;;color:#15181d">Notable burials</div><div style="font:400 12px &apos;IBM Plex Sans&apos;;color:#6b7280">Greyfriars Kirkyard Trust</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b0b5bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid #e3e5ea">
+    <div><div style="font:500 13.5px &apos;IBM Plex Sans&apos;;color:#15181d">McGonagall Online</div><div style="font:400 12px &apos;IBM Plex Sans&apos;;color:#6b7280">National Library of Scotland</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b0b5bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid #e3e5ea">
+    <div><div style="font:500 13.5px &apos;IBM Plex Sans&apos;;color:#15181d">Obituary, 30 September 1902</div><div style="font:400 12px &apos;IBM Plex Sans&apos;;color:#6b7280">Dundee Courier</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b0b5bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg></div>
+</div>
+
+<div style="flex:none;padding:10px 16px 26px;background:#f4f5f7;border-top:1px solid #e3e5ea">
+  <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3e5ea;border-radius:99px;padding:11px 8px 11px 16px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg>
+    <span style="flex:1;font:400 14.5px &apos;IBM Plex Sans&apos;;color:#9aa0aa">Ask a follow-up…</span>
+    <span style="width:32px;height:32px;border-radius:99px;background:#1f5fd6;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg></span>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a8f99">Chat</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#f4f5f7;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#15181d">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#15181d"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#15181d"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#15181d"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#15181d"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #15181d;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#15181d;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;padding:6px 16px 10px;border-bottom:1px solid #e3e5ea">
+  <div style="display:flex;align-items:center;gap:10px;font:500 14px &apos;IBM Plex Sans&apos;;color:#1f5fd6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f5fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>Story</div>
+  <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e3e5ea;border-radius:99px;padding:5px 11px 5px 8px;font:500 12px &apos;IBM Plex Sans&apos;;color:#15181d"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6l0 13"/><path d="M12 6l0 13"/><path d="M21 6l0 13"/></svg>The worst poet in the world is buried here</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:12px">
+  <div style="align-self:flex-end;max-width:82%;background:#1f5fd6;color:#fff;border-radius:18px 18px 4px 18px;padding:10px 14px;font:400 14.5px/1.45 &apos;IBM Plex Sans&apos;">Did he really not know people were laughing at him?</div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e3e5ea;border-radius:18px 18px 18px 4px;padding:12px 14px;font:400 14.5px/1.5 &apos;IBM Plex Sans&apos;;color:#2b3037">Probably he knew, at least some of the time. His 1890 autobiographical preface complains bitterly about the abuse and names the pubs where it happened, which is not the writing of someone who missed it. But he kept performing for the fee, and he never once conceded that a poem was bad. A fair summary: he heard the laughter and refused to accept the verdict.
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e3e5ea;display:flex;align-items:center;gap:6px;font:400 12px &apos;IBM Plex Sans&apos;;color:#6b7280"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg>McGonagall, Poetic Gems (1890), autobiographical preface</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+    <span style="font:500 12.5px &apos;IBM Plex Sans&apos;;color:#1f5fd6;border:1px solid #c9d7f5;background:#eef3fd;border-radius:99px;padding:6px 11px">Where exactly is the plaque?</span><span style="font:500 12.5px &apos;IBM Plex Sans&apos;;color:#1f5fd6;border:1px solid #c9d7f5;background:#eef3fd;border-radius:99px;padding:6px 11px">Read The Tay Bridge Disaster</span><span style="font:500 12.5px &apos;IBM Plex Sans&apos;;color:#1f5fd6;border:1px solid #c9d7f5;background:#eef3fd;border-radius:99px;padding:6px 11px">What else is in the kirkyard?</span>
+  </div>
+</div>
+
+<div style="flex:none;padding:10px 16px 26px;background:#f4f5f7;border-top:1px solid #e3e5ea">
+  <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3e5ea;border-radius:99px;padding:11px 8px 11px 16px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg>
+    <span style="flex:1;font:400 14.5px &apos;IBM Plex Sans&apos;;color:#9aa0aa">Ask a follow-up…</span>
+    <span style="width:32px;height:32px;border-radius:99px;background:#1f5fd6;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg></span>
+  </div>
+</div>
+    </div>
+  </div>
+</div></div></body></html>'
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="panel" data-i="1" hidden>
+        <div class="meta">
+          <p>
+            <strong>Why:</strong> One story per screen at magazine scale, so the preview teaches
+            without a tap and the distance reads like a headline; swipe sideways for the next.
+          </p>
+          <p>
+            <strong>Tradeoff:</strong> You cannot see the three previews together, so choosing
+            between them means paging through all of them.
+          </p>
+        </div>
+        <div class="frame-wrap" style="--w: 1280; --h: 840">
+          <iframe
+            title="B · Postcard"
+            width="1280"
+            height="840"
+            loading="lazy"
+            srcdoc='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"><style>body{margin:0;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}</style></head><body><div style="width:1280px;height:840px;background:#c9bda6;display:flex;justify-content:center;align-items:flex-start;gap:60px;padding-top:34px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a6a55">Cover</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#f4ecdd;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#2a2118">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#2a2118"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#2a2118"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#2a2118"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#2a2118"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #2a2118;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#2a2118;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 26px 0"><span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64">Candlemaker Row · ±12 m</span><span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64">1 / 3</span></div>
+<div style="flex:1;overflow:hidden;padding:0 26px;display:flex;flex-direction:column">
+  <div style="margin-top:44px;font:400 64px/1 &apos;IBM Plex Serif&apos;;color:#a8452a;letter-spacing:-.02em">90<span style="font-size:26px;margin-left:4px">m</span></div>
+  <div style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64;margin-top:8px">Greyfriars Kirkyard · northeast</div>
+  <h1 style="font:500 31px/1.12 &apos;IBM Plex Serif&apos;;color:#2a2118;margin:22px 0 18px;letter-spacing:-.01em">The worst poet in the world is buried here</h1>
+  <div style="width:48px;height:2px;background:#a8452a;margin-bottom:16px"></div>
+  <p style="font:400 16.5px/1.55 &apos;IBM Plex Serif&apos;;color:#3c3128;margin:0"><span style="float:left;font:500 50px/40px &apos;IBM Plex Serif&apos;;color:#2a2118;margin:4px 8px 0 0">W</span>illiam McGonagall, whose verse was so bad that audiences pelted him with fish, lies in an unmarked pauper’s grave a few steps past the gate. He believed to the end that he was Scotland’s greatest living poet.</p>
+  <p style="font:italic 400 13.5px &apos;IBM Plex Serif&apos;;color:#8a7a64;margin:14px 0 0">Documented in the contemporary press and by the kirkyard trust.</p>
+  <div style="flex:1"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:14px">
+    <span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64;color:#2a2118">Read on →</span>
+    <div style="display:flex;gap:7px;justify-content:center"><span style="width:7px;height:7px;border-radius:99px;background:#2a2118"></span><span style="width:7px;height:7px;border-radius:99px;background:#d8cbb3"></span><span style="width:7px;height:7px;border-radius:99px;background:#d8cbb3"></span></div>
+    <span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64;color:#2a2118">Next ›</span>
+  </div>
+</div>
+<div style="flex:none;border-top:1px solid #d8cbb3;padding:14px 26px 26px;display:flex;justify-content:space-between;align-items:center">
+  <span style="font:italic 400 15px &apos;IBM Plex Serif&apos;;color:#8a7a64">Ask about anywhere near here…</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a7a64" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a6a55">Story</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#f4ecdd;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#2a2118">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#2a2118"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#2a2118"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#2a2118"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#2a2118"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #2a2118;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#2a2118;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 26px 0"><span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64;color:#2a2118">‹ Back</span><span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64">Greyfriars Kirkyard · 90 m</span></div>
+<div style="flex:1;overflow:hidden;padding:0 26px">
+  <h1 style="font:500 25px/1.15 &apos;IBM Plex Serif&apos;;color:#2a2118;margin:30px 0 16px">The worst poet in the world is buried here</h1>
+  <p style="font:400 15.5px/1.6 &apos;IBM Plex Serif&apos;;color:#3c3128;margin:0 0 12px">William Topaz McGonagall (1825–1902) was a Dundee handloom weaver who, at 52, felt what he called “a strange kind of feeling stealing over me” and decided he was a poet. He toured pubs and music halls reciting works like The Tay Bridge Disaster, and audiences came mainly to throw things at him.</p>
+  <p style="font:400 15.5px/1.6 &apos;IBM Plex Serif&apos;;color:#3c3128;margin:0 0 12px">He spent his last years in Edinburgh, poor and mostly forgotten, and died in a rented room on South College Street in September 1902. He was buried here in a pauper’s grave with no stone. The plaque near the north wall was added in 1999.<sup style="font-size:10px;color:#a8452a;margin-left:1px">2</sup></p>
+  <p style="font:400 15.5px/1.6 &apos;IBM Plex Serif&apos;;color:#3c3128;margin:0 0 12px">The fish-throwing is well documented in the contemporary press. The claim that he never realised he was being mocked is more debated: some biographers think he understood exactly what was happening and played along for the fee.<sup style="font-size:10px;color:#a8452a;margin-left:1px">3</sup></p>
+  <div style="border-top:1px solid #d8cbb3;margin-top:18px;padding-top:12px">
+    <div style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64;margin-bottom:8px">Notes and sources</div>
+    <div style="display:flex;gap:10px;font:400 12.5px/1.45 &apos;IBM Plex Serif&apos;;color:#5a4d3e;margin-bottom:5px"><span style="color:#a8452a">1.</span><span>Greyfriars Kirkyard Trust, <i>Notable burials</i> ↗</span></div><div style="display:flex;gap:10px;font:400 12.5px/1.45 &apos;IBM Plex Serif&apos;;color:#5a4d3e;margin-bottom:5px"><span style="color:#a8452a">2.</span><span>National Library of Scotland, <i>McGonagall Online</i> ↗</span></div><div style="display:flex;gap:10px;font:400 12.5px/1.45 &apos;IBM Plex Serif&apos;;color:#5a4d3e;margin-bottom:5px"><span style="color:#a8452a">3.</span><span>Dundee Courier, <i>Obituary, 30 September 1902</i> ↗</span></div>
+  </div>
+</div>
+<div style="flex:none;padding:14px 26px 26px"><div style="border:1.5px solid #2a2118;border-radius:3px;padding:12px;text-align:center;font:500 13px &apos;IBM Plex Sans&apos;;letter-spacing:.12em;text-transform:uppercase;color:#2a2118">Ask about this</div></div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a6a55">Chat</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#f4ecdd;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#2a2118">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#2a2118"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#2a2118"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#2a2118"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#2a2118"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #2a2118;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#2a2118;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 26px 0"><span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64;color:#2a2118">‹ Story</span><span style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64">Correspondence</span></div>
+<div style="flex:1;overflow:hidden;padding:0 26px">
+  <div style="margin-top:28px;font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64">You asked</div>
+  <p style="font:italic 400 19px/1.4 &apos;IBM Plex Serif&apos;;color:#2a2118;margin:8px 0 22px;padding-left:14px;border-left:2px solid #a8452a">Did he really not know people were laughing at him?</p>
+  <div style="font:500 11px &apos;IBM Plex Sans&apos;;letter-spacing:.14em;text-transform:uppercase;color:#8a7a64">Tourist</div>
+  <p style="font:400 15.5px/1.6 &apos;IBM Plex Serif&apos;;color:#3c3128;margin:8px 0 10px">Probably he knew, at least some of the time. His 1890 autobiographical preface complains bitterly about the abuse and names the pubs where it happened, which is not the writing of someone who missed it. But he kept performing for the fee, and he never once conceded that a poem was bad. A fair summary: he heard the laughter and refused to accept the verdict.</p>
+  <p style="font:400 12.5px/1.45 &apos;IBM Plex Serif&apos;;color:#5a4d3e;margin:0"><span style="color:#a8452a">1.</span> McGonagall, Poetic Gems (1890), autobiographical preface ↗</p>
+  <div style="border-top:1px solid #d8cbb3;margin-top:22px;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+    <span style="font:italic 400 14px &apos;IBM Plex Serif&apos;;color:#8a7a64">→ Where exactly is the plaque?</span><span style="font:italic 400 14px &apos;IBM Plex Serif&apos;;color:#8a7a64">→ Read The Tay Bridge Disaster</span><span style="font:italic 400 14px &apos;IBM Plex Serif&apos;;color:#8a7a64">→ What else is in the kirkyard?</span>
+  </div>
+</div>
+<div style="flex:none;border-top:1px solid #d8cbb3;padding:14px 26px 26px;display:flex;justify-content:space-between;align-items:center">
+  <span style="font:italic 400 15px &apos;IBM Plex Serif&apos;;color:#8a7a64">Reply…</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a7a64" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg>
+</div>
+    </div>
+  </div>
+</div></div></body></html>'
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="panel" data-i="2" hidden>
+        <div class="meta">
+          <p>
+            <strong>Why:</strong> Distance and direction come first: a compass plot shows where each
+            story sits relative to you before the list explains what it is.
+          </p>
+          <p>
+            <strong>Tradeoff:</strong> It promises spatial precision the plan explicitly says not to
+            imply, and the plot eats half the screen before any prose appears.
+          </p>
+        </div>
+        <div class="frame-wrap" style="--w: 1280; --h: 840">
+          <iframe
+            title="C · Radar"
+            width="1280"
+            height="840"
+            loading="lazy"
+            srcdoc='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"><style>body{margin:0;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}</style></head><body><div style="width:1280px;height:840px;background:#05080b;display:flex;justify-content:center;align-items:flex-start;gap:60px;padding-top:34px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6d7a88">Radar</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#0b0f14;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#e6edf3">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#e6edf3"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#e6edf3"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#e6edf3"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#e6edf3"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #e6edf3;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#e6edf3;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;padding:2px 20px 4px;display:flex;justify-content:space-between;align-items:flex-end">
+  <div><div style="font:500 10.5px &apos;IBM Plex Mono&apos;;letter-spacing:.14em;color:#7c8a9a">NEARBY · ±12 M · 16:42</div><div style="font:600 17px &apos;IBM Plex Sans&apos;;color:#e6edf3;margin-top:2px">Candlemaker Row</div></div>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c8a9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+</div>
+<div style="flex:none;padding:6px 0 0">
+<svg width="300" height="300" viewBox="0 0 300 300" style="display:block;margin:0 auto">
+  <circle cx="150" cy="150" r="135" fill="#131a23" stroke="#22303d"/>
+  <circle cx="150" cy="150" r="90" fill="none" stroke="#22303d"/>
+  <circle cx="150" cy="150" r="45" fill="none" stroke="#22303d"/>
+  <line x1="150" y1="15" x2="150" y2="285" stroke="#22303d" stroke-dasharray="2 4"/>
+  <line x1="15" y1="150" x2="285" y2="150" stroke="#22303d" stroke-dasharray="2 4"/>
+  <text x="156" y="109" font-family="IBM Plex Mono" font-size="9" fill="#7c8a9a">50 m</text>
+  <text x="156" y="64" font-family="IBM Plex Mono" font-size="9" fill="#7c8a9a">100 m</text>
+  <text x="156" y="22" font-family="IBM Plex Mono" font-size="9" fill="#7c8a9a">200 m</text>
+  <text x="150" y="9" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#e6edf3">N</text>
+  <circle cx="150" cy="150" r="14" fill="#2dd4bf" opacity=".15"/>
+  <circle cx="150" cy="150" r="5" fill="#2dd4bf"/>
+  
+<circle cx="194" cy="108" r="11" fill="#2dd4bf"/>
+<text x="194" y="112" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="600" fill="#0b0f14">1</text>
+  
+<circle cx="123" cy="146" r="11" fill="#f4b84a"/>
+<text x="123" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="600" fill="#0b0f14">2</text>
+  
+<circle cx="176" cy="268" r="11" fill="#c084fc"/>
+<text x="176" y="272" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="600" fill="#0b0f14">3</text>
+</svg></div>
+<div style="flex:1;overflow:hidden;padding:6px 20px 0">
+<div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid #22303d">
+  <div style="width:22px;height:22px;border-radius:99px;background:#2dd4bf;color:#0b0f14;font:600 11px &apos;IBM Plex Mono&apos;;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">1</div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:500 11px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span>GREYFRIARS KIRKYARD</span><span style="color:#2dd4bf">90 m NE · DOC</span></div>
+    <div style="font:600 14px/1.3 &apos;IBM Plex Sans&apos;;color:#e6edf3;margin:3px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The worst poet in the world is buried here</div>
+    <div style="font:400 12.5px/1.4 &apos;IBM Plex Sans&apos;;color:#a3b0bf;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">William McGonagall, whose verse was so bad that audiences pelted him with fish, lies in an unmarked pauper’s grave a few steps past the gate. He believed to the end that he was Scotland’s greatest living poet.</div>
+  </div>
+</div>
+<div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid #22303d">
+  <div style="width:22px;height:22px;border-radius:99px;background:#f4b84a;color:#0b0f14;font:600 11px &apos;IBM Plex Mono&apos;;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">2</div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:500 11px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span>GREYFRIARS BOBBY FOUNTAIN</span><span style="color:#f4b84a">40 m W · DISP</span></div>
+    <div style="font:600 14px/1.3 &apos;IBM Plex Sans&apos;;color:#e6edf3;margin:3px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bobby’s nose, and a dog that may have been two dogs</div>
+    <div style="font:400 12.5px/1.4 &apos;IBM Plex Sans&apos;;color:#a3b0bf;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Visitors rub the statue’s nose for luck, which has worn it to bare bronze. Several local historians argue the loyal terrier was quietly replaced with a younger dog around 1867 to keep the story going.</div>
+  </div>
+</div>
+<div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid #22303d">
+  <div style="width:22px;height:22px;border-radius:99px;background:#c084fc;color:#0b0f14;font:600 11px &apos;IBM Plex Mono&apos;;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">3</div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:500 11px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span>GEORGE HERIOT’S SCHOOL</span><span style="color:#c084fc">180 m S · FOLK</span></div>
+    <div style="font:600 14px/1.3 &apos;IBM Plex Sans&apos;;color:#e6edf3;margin:3px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Jinglin’ Geordie’s school for fatherless boys</div>
+    <div style="font:400 12.5px/1.4 &apos;IBM Plex Sans&apos;;color:#a3b0bf;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">James VI’s goldsmith left his fortune in 1624 to house and teach “puir faitherless bairns”. The turreted building behind the kirkyard wall is still a school, and locals will tell you it inspired Hogwarts. Rowling has never confirmed it.</div>
+  </div>
+</div></div>
+
+<div style="flex:none;padding:10px 16px 24px;background:#0b0f14;border-top:1px solid #22303d">
+  <div style="display:flex;align-items:center;gap:10px;background:#131a23;border:1px solid #22303d;border-radius:10px;padding:11px 12px;font:400 13px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span style="color:#2dd4bf">›</span><span style="flex:1">ask about this place</span><span style="width:8px;height:15px;background:#2dd4bf"></span></div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6d7a88">Story</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#0b0f14;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#e6edf3">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#e6edf3"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#e6edf3"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#e6edf3"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#e6edf3"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #e6edf3;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#e6edf3;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:4px 20px 8px">
+  <div style="display:flex;align-items:center;gap:8px;font:500 12px &apos;IBM Plex Mono&apos;;color:#2dd4bf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>NEARBY</div>
+  <div style="font:500 11px &apos;IBM Plex Mono&apos;;color:#7c8a9a">01 · 90 M · NE · <span style="color:#2dd4bf">DOC</span></div>
+</div>
+<div style="flex:1;overflow:hidden;padding:0 20px">
+  <div style="font:500 11px &apos;IBM Plex Mono&apos;;letter-spacing:.12em;color:#7c8a9a">GREYFRIARS KIRKYARD</div>
+  <h1 style="font:600 22px/1.2 &apos;IBM Plex Sans&apos;;color:#e6edf3;margin:8px 0 14px">The worst poet in the world is buried here</h1>
+  <p style="font:400 14px/1.55 &apos;IBM Plex Sans&apos;;color:#c2cdd9;margin:0 0 12px">William Topaz McGonagall (1825–1902) was a Dundee handloom weaver who, at 52, felt what he called “a strange kind of feeling stealing over me” and decided he was a poet. He toured pubs and music halls reciting works like The Tay Bridge Disaster, and audiences came mainly to throw things at him.</p><p style="font:400 14px/1.55 &apos;IBM Plex Sans&apos;;color:#c2cdd9;margin:0 0 12px">He spent his last years in Edinburgh, poor and mostly forgotten, and died in a rented room on South College Street in September 1902. He was buried here in a pauper’s grave with no stone. The plaque near the north wall was added in 1999.</p><p style="font:400 14px/1.55 &apos;IBM Plex Sans&apos;;color:#c2cdd9;margin:0 0 12px">The fish-throwing is well documented in the contemporary press. The claim that he never realised he was being mocked is more debated: some biographers think he understood exactly what was happening and played along for the fee.</p>
+  <div style="margin-top:16px;border-top:1px solid #22303d;padding-top:10px">
+    <div style="font:400 12px/1.5 &apos;IBM Plex Mono&apos;;color:#7c8a9a;margin-bottom:4px"><span style="color:#2dd4bf">[1]</span> Greyfriars Kirkyard Trust — Notable burials</div><div style="font:400 12px/1.5 &apos;IBM Plex Mono&apos;;color:#7c8a9a;margin-bottom:4px"><span style="color:#2dd4bf">[2]</span> National Library of Scotland — McGonagall Online</div><div style="font:400 12px/1.5 &apos;IBM Plex Mono&apos;;color:#7c8a9a;margin-bottom:4px"><span style="color:#2dd4bf">[3]</span> Dundee Courier — Obituary, 30 September 1902</div>
+  </div>
+</div>
+
+<div style="flex:none;padding:10px 16px 24px;background:#0b0f14;border-top:1px solid #22303d">
+  <div style="display:flex;align-items:center;gap:10px;background:#131a23;border:1px solid #22303d;border-radius:10px;padding:11px 12px;font:400 13px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span style="color:#2dd4bf">›</span><span style="flex:1">ask a follow-up</span><span style="width:8px;height:15px;background:#2dd4bf"></span></div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6d7a88">Chat</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#0b0f14;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#e6edf3">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#e6edf3"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#e6edf3"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#e6edf3"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#e6edf3"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #e6edf3;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#e6edf3;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:4px 20px 8px;border-bottom:1px solid #22303d">
+  <div style="display:flex;align-items:center;gap:8px;font:500 12px &apos;IBM Plex Mono&apos;;color:#2dd4bf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>STORY 01</div>
+  <div style="font:500 11px &apos;IBM Plex Mono&apos;;color:#7c8a9a">CONTEXT: MCGONAGALL</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:12px">
+  <div style="align-self:flex-end;max-width:84%;background:#2dd4bf;color:#0b0f14;border-radius:14px 14px 3px 14px;padding:10px 14px;font:500 14px/1.45 &apos;IBM Plex Sans&apos;">Did he really not know people were laughing at him?</div>
+  <div style="align-self:flex-start;max-width:92%;background:#131a23;border:1px solid #22303d;border-radius:14px 14px 14px 3px;padding:12px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#c2cdd9">Probably he knew, at least some of the time. His 1890 autobiographical preface complains bitterly about the abuse and names the pubs where it happened, which is not the writing of someone who missed it. But he kept performing for the fee, and he never once conceded that a poem was bad. A fair summary: he heard the laughter and refused to accept the verdict.
+    <div style="margin-top:10px;font:400 11.5px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span style="color:#2dd4bf">[1]</span> McGonagall, Poetic Gems (1890), autobiographical preface</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+    <span style="font:400 12.5px &apos;IBM Plex Mono&apos;;color:#2dd4bf">› Where exactly is the plaque?</span><span style="font:400 12.5px &apos;IBM Plex Mono&apos;;color:#2dd4bf">› Read The Tay Bridge Disaster</span><span style="font:400 12.5px &apos;IBM Plex Mono&apos;;color:#2dd4bf">› What else is in the kirkyard?</span>
+  </div>
+</div>
+
+<div style="flex:none;padding:10px 16px 24px;background:#0b0f14;border-top:1px solid #22303d">
+  <div style="display:flex;align-items:center;gap:10px;background:#131a23;border:1px solid #22303d;border-radius:10px;padding:11px 12px;font:400 13px &apos;IBM Plex Mono&apos;;color:#7c8a9a"><span style="color:#2dd4bf">›</span><span style="flex:1">ask a follow-up</span><span style="width:8px;height:15px;background:#2dd4bf"></span></div>
+</div>
+    </div>
+  </div>
+</div></div></body></html>'
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="panel" data-i="3" hidden>
+        <div class="meta">
+          <p>
+            <strong>Why:</strong> The whole app is one conversation: discoveries arrive as messages,
+            stories expand in place, and asking a question is the same gesture as everything else.
+          </p>
+          <p>
+            <strong>Tradeoff:</strong> Reading a long story inside a chat bubble is cramped, and old
+            discoveries scroll away into the transcript.
+          </p>
+        </div>
+        <div class="frame-wrap" style="--w: 1280; --h: 840">
+          <iframe
+            title="D · Thread"
+            width="1280"
+            height="840"
+            loading="lazy"
+            srcdoc='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"><style>body{margin:0;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}</style></head><body><div style="width:1280px;height:840px;background:#d9d5cb;display:flex;justify-content:center;align-items:flex-start;gap:60px;padding-top:34px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a877f">Thread</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#faf9f6;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#1d1c1a">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#1d1c1a"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#1d1c1a"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#1d1c1a"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#1d1c1a"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #1d1c1a;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#1d1c1a;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+
+<div style="flex:none;text-align:center;padding:2px 20px 10px;border-bottom:1px solid #e6e3dc">
+  <div style="font:600 16px &apos;IBM Plex Sans&apos;;color:#1d1c1a">Tourist</div>
+  <div style="font:400 12px &apos;IBM Plex Sans&apos;;color:#8a877f">Candlemaker Row · ±12 m · 16:42</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:12px 14px 0;display:flex;flex-direction:column;gap:9px">
+  <div style="align-self:center;font:400 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f;background:#efece5;border-radius:99px;padding:4px 12px">Today 16:42 · Located you at Candlemaker Row</div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;">You’re standing between a kirkyard and a school. Three things worth knowing, closest first is not always best, so here they are in order of interest:</div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;width:90%"><div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f">Greyfriars Kirkyard · 90 m · Documented</div>
+       <div style="font:600 15px/1.3 &apos;IBM Plex Sans&apos;;color:#1d1c1a;margin:4px 0 5px">The worst poet in the world is buried here</div>
+       <div style="color:#33312d">William McGonagall, whose verse was so bad that audiences pelted him with fish, lies in an unmarked pauper’s grave a few steps past the gate. He believed to the end that he was Scotland’s greatest living poet.</div><div style="font:500 13px &apos;IBM Plex Sans&apos;;color:#2f5d50;margin-top:7px">Read the full story</div></div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;width:90%"><div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f">Greyfriars Bobby fountain · 40 m · Disputed</div>
+       <div style="font:600 15px/1.3 &apos;IBM Plex Sans&apos;;color:#1d1c1a;margin:4px 0 5px">Bobby’s nose, and a dog that may have been two dogs</div>
+       <div style="color:#33312d">Visitors rub the statue’s nose for luck, which has worn it to bare bronze. Several local historians argue the loyal terrier was quietly replaced with a younger dog around 1867 to keep the story going.</div><div style="font:500 13px &apos;IBM Plex Sans&apos;;color:#2f5d50;margin-top:7px">Read the full story</div></div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;width:90%"><div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f">George Heriot’s School · 180 m · Folklore</div>
+       <div style="font:600 15px/1.3 &apos;IBM Plex Sans&apos;;color:#1d1c1a;margin:4px 0 5px">Jinglin’ Geordie’s school for fatherless boys</div>
+       <div style="color:#33312d">James VI’s goldsmith left his fortune in 1624 to house and teach “puir faitherless bairns”. The turreted building behind the kirkyard wall is still a school, and locals will tell you it inspired Hogwarts. Rowling has never confirmed it.</div><div style="font:500 13px &apos;IBM Plex Sans&apos;;color:#2f5d50;margin-top:7px">Read the full story</div></div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;">Ask me about any of these, or about somewhere else within a couple of blocks.</div>
+</div>
+
+<div style="flex:none;padding:10px 14px 24px;border-top:1px solid #e6e3dc;display:flex;align-items:center;gap:10px">
+  <span style="width:34px;height:34px;border-radius:99px;background:#efece5;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a877f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg></span>
+  <span style="flex:1;border:1px solid #e6e3dc;border-radius:99px;padding:9px 16px;font:400 14px &apos;IBM Plex Sans&apos;;color:#a9a69e;background:#fff">Message</span>
+  <span style="width:34px;height:34px;border-radius:99px;background:#2f5d50;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg></span>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a877f">Story opened inline</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#faf9f6;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#1d1c1a">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#1d1c1a"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#1d1c1a"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#1d1c1a"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#1d1c1a"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #1d1c1a;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#1d1c1a;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+
+<div style="flex:none;text-align:center;padding:2px 20px 10px;border-bottom:1px solid #e6e3dc">
+  <div style="font:600 16px &apos;IBM Plex Sans&apos;;color:#1d1c1a">Tourist</div>
+  <div style="font:400 12px &apos;IBM Plex Sans&apos;;color:#8a877f">Candlemaker Row · ±12 m · 16:42</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:12px 14px 0;display:flex;flex-direction:column;gap:9px">
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;width:90%"><div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f">Greyfriars Kirkyard · 90 m · Documented</div>
+       <div style="font:600 15px/1.3 &apos;IBM Plex Sans&apos;;color:#1d1c1a;margin:4px 0 5px">The worst poet in the world is buried here</div>
+       <p style="margin:0 0 9px;color:#33312d">William Topaz McGonagall (1825–1902) was a Dundee handloom weaver who, at 52, felt what he called “a strange kind of feeling stealing over me” and decided he was a poet. He toured pubs and music halls reciting works like The Tay Bridge Disaster, and audiences came mainly to throw things at him.</p><p style="margin:0 0 9px;color:#33312d">He spent his last years in Edinburgh, poor and mostly forgotten, and died in a rented room on South College Street in September 1902. He was buried here in a pauper’s grave with no stone. The plaque near the north wall was added in 1999.</p><p style="margin:0 0 9px;color:#33312d">The fish-throwing is well documented in the contemporary press. The claim that he never realised he was being mocked is more debated: some biographers think he understood exactly what was happening and played along for the fee.</p><div style="border-top:1px solid #e6e3dc;padding-top:8px;margin-top:2px"><div style="font:400 12px/1.5 &apos;IBM Plex Sans&apos;;color:#8a877f">↗ Greyfriars Kirkyard Trust: Notable burials</div><div style="font:400 12px/1.5 &apos;IBM Plex Sans&apos;;color:#8a877f">↗ National Library of Scotland: McGonagall Online</div><div style="font:400 12px/1.5 &apos;IBM Plex Sans&apos;;color:#8a877f">↗ Dundee Courier: Obituary, 30 September 1902</div></div>
+              <div style="font:500 13px &apos;IBM Plex Sans&apos;;color:#2f5d50;margin-top:8px">Show less</div></div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;width:90%"><div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f">Greyfriars Bobby fountain · 40 m · Disputed</div>
+       <div style="font:600 15px/1.3 &apos;IBM Plex Sans&apos;;color:#1d1c1a;margin:4px 0 5px">Bobby’s nose, and a dog that may have been two dogs</div>
+       <div style="color:#33312d">Visitors rub the statue’s nose for luck, which has worn it to bare bronze. Several local historians argue the loyal terrier was quietly replaced with a younger dog around 1867 to keep the story going.</div><div style="font:500 13px &apos;IBM Plex Sans&apos;;color:#2f5d50;margin-top:7px">Read the full story</div></div>
+</div>
+
+<div style="flex:none;padding:10px 14px 24px;border-top:1px solid #e6e3dc;display:flex;align-items:center;gap:10px">
+  <span style="width:34px;height:34px;border-radius:99px;background:#efece5;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a877f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg></span>
+  <span style="flex:1;border:1px solid #e6e3dc;border-radius:99px;padding:9px 16px;font:400 14px &apos;IBM Plex Sans&apos;;color:#a9a69e;background:#fff">Message</span>
+  <span style="width:34px;height:34px;border-radius:99px;background:#2f5d50;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg></span>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a877f">Follow-up</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#faf9f6;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#1d1c1a">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#1d1c1a"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#1d1c1a"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#1d1c1a"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#1d1c1a"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #1d1c1a;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#1d1c1a;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+
+<div style="flex:none;text-align:center;padding:2px 20px 10px;border-bottom:1px solid #e6e3dc">
+  <div style="font:600 16px &apos;IBM Plex Sans&apos;;color:#1d1c1a">Tourist</div>
+  <div style="font:400 12px &apos;IBM Plex Sans&apos;;color:#8a877f">Candlemaker Row · ±12 m · 16:42</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:12px 14px 0;display:flex;flex-direction:column;gap:9px">
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;"><div style="font:500 11.5px &apos;IBM Plex Sans&apos;;color:#8a877f">Greyfriars Kirkyard · 90 m</div><div style="font:600 14px &apos;IBM Plex Sans&apos;;margin-top:3px">The worst poet in the world is buried here</div></div>
+  <div style="align-self:flex-end;max-width:82%;background:#2f5d50;color:#fff;border-radius:18px 18px 4px 18px;padding:10px 14px;font:400 14px/1.45 &apos;IBM Plex Sans&apos;">Did he really not know people were laughing at him?</div>
+  <div style="align-self:flex-start;max-width:90%;background:#fff;border:1px solid #e6e3dc;border-radius:18px 18px 18px 4px;padding:11px 14px;font:400 14px/1.5 &apos;IBM Plex Sans&apos;;color:#1d1c1a;">Probably he knew, at least some of the time. His 1890 autobiographical preface complains bitterly about the abuse and names the pubs where it happened, which is not the writing of someone who missed it. But he kept performing for the fee, and he never once conceded that a poem was bad. A fair summary: he heard the laughter and refused to accept the verdict.<div style="margin-top:8px;font:400 12px &apos;IBM Plex Sans&apos;;color:#8a877f">↗ McGonagall, Poetic Gems (1890), autobiographical preface</div></div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-top:2px">
+    <span style="font:500 12.5px &apos;IBM Plex Sans&apos;;color:#2f5d50;border:1px solid #2f5d50;border-radius:99px;padding:6px 11px">Where exactly is the plaque?</span><span style="font:500 12.5px &apos;IBM Plex Sans&apos;;color:#2f5d50;border:1px solid #2f5d50;border-radius:99px;padding:6px 11px">Read The Tay Bridge Disaster</span><span style="font:500 12.5px &apos;IBM Plex Sans&apos;;color:#2f5d50;border:1px solid #2f5d50;border-radius:99px;padding:6px 11px">What else is in the kirkyard?</span>
+  </div>
+</div>
+
+<div style="flex:none;padding:10px 14px 24px;border-top:1px solid #e6e3dc;display:flex;align-items:center;gap:10px">
+  <span style="width:34px;height:34px;border-radius:99px;background:#efece5;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a877f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg></span>
+  <span style="flex:1;border:1px solid #e6e3dc;border-radius:99px;padding:9px 16px;font:400 14px &apos;IBM Plex Sans&apos;;color:#a9a69e;background:#fff">Message</span>
+  <span style="width:34px;height:34px;border-radius:99px;background:#2f5d50;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg></span>
+</div>
+    </div>
+  </div>
+</div></div></body></html>'
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="panel" data-i="4" hidden>
+        <div class="meta">
+          <p>
+            <strong>Why:</strong> A dense monospace list that fits all three stories, their tags,
+            and the prompt on one screen with no chrome, for reading while walking.
+          </p>
+          <p>
+            <strong>Tradeoff:</strong> The plain-text look makes folklore and documented fact feel
+            equally flat, and it will not charm anyone who is not Herb.
+          </p>
+        </div>
+        <div class="frame-wrap" style="--w: 1280; --h: 840">
+          <iframe
+            title="E · Ledger"
+            width="1280"
+            height="840"
+            loading="lazy"
+            srcdoc='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"><style>body{margin:0;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}</style></head><body><div style="width:1280px;height:840px;background:#cfcfcb;display:flex;justify-content:center;align-items:flex-start;gap:60px;padding-top:34px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6f6f6a">List</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#eeeeec;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#121212">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#121212"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#121212"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#121212"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#121212"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #121212;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#121212;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:1;overflow:hidden;padding:0 18px">
+  <div style="display:flex;justify-content:space-between;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212"><span><b>tourist</b> <span style="color:#6f6f6a">@</span> candlemaker row</span><span style="color:#6f6f6a">±12m 16:42 <span style="color:#c8321c">[r]</span></span></div>
+  <div style="border-top:1px solid #c9c9c4;margin:8px 0"></div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#6f6f6a">3 stories within 200m. nothing expanded.</div>
+  <div style="height:6px"></div>
+  
+<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid #c9c9c4">
+  <div style="font:500 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#c8321c;width:40px;text-align:right;flex:none">90m</div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#6f6f6a"><span>greyfriars kirkyard</span><span>[doc]</span></div>
+    <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;font-weight:600">The worst poet in the world is buried here</div>
+    <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#3a3a36;font-size:12px">William McGonagall, whose verse was so bad that audiences pelted him with fish, lies in an unmarked pauper’s grave a few steps past the gate. He believed to the end that he was Scotland’s greatest living poet.</div>
+  </div>
+</div>
+<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid #c9c9c4">
+  <div style="font:500 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#c8321c;width:40px;text-align:right;flex:none">40m</div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#6f6f6a"><span>greyfriars bobby fountain</span><span>[disp]</span></div>
+    <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;font-weight:600">Bobby’s nose, and a dog that may have been two dogs</div>
+    <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#3a3a36;font-size:12px">Visitors rub the statue’s nose for luck, which has worn it to bare bronze. Several local historians argue the loyal terrier was quietly replaced with a younger dog around 1867 to keep the story going.</div>
+  </div>
+</div>
+<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid #c9c9c4">
+  <div style="font:500 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#c8321c;width:40px;text-align:right;flex:none">180m</div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#6f6f6a"><span>george heriot’s school</span><span>[folk]</span></div>
+    <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;font-weight:600">Jinglin’ Geordie’s school for fatherless boys</div>
+    <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#3a3a36;font-size:12px">James VI’s goldsmith left his fortune in 1624 to house and teach “puir faitherless bairns”. The turreted building behind the kirkyard wall is still a school, and locals will tell you it inspired Hogwarts. Rowling has never confirmed it.</div>
+  </div>
+</div>
+</div>
+
+<div style="flex:none;padding:10px 18px 26px;border-top:1px solid #c9c9c4;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;display:flex;gap:6px"><span style="color:#c8321c">&amp;gt;</span><span style="color:#6f6f6a">ask about this place</span><span style="width:7px;height:15px;background:#121212;display:inline-block;margin-top:2px"></span></div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6f6f6a">Story</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#eeeeec;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#121212">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#121212"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#121212"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#121212"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#121212"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #121212;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#121212;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:1;overflow:hidden;padding:0 18px">
+  <div style="display:flex;justify-content:space-between;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;"><span style="color:#c8321c">&amp;lt; back</span><span style="color:#6f6f6a">#1 90m NE [doc]</span></div>
+  <div style="border-top:1px solid #c9c9c4;margin:8px 0"></div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#6f6f6a">greyfriars kirkyard</div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;font-weight:600;font-size:14px;margin:4px 0 12px">The worst poet in the world is buried here</div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;margin-bottom:10px;color:#2a2a27">William Topaz McGonagall (1825–1902) was a Dundee handloom weaver who, at 52, felt what he called “a strange kind of feeling stealing over me” and decided he was a poet. He toured pubs and music halls reciting works like The Tay Bridge Disaster, and audiences came mainly to throw things at him. <span style="color:#c8321c">[1]</span></div><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;margin-bottom:10px;color:#2a2a27">He spent his last years in Edinburgh, poor and mostly forgotten, and died in a rented room on South College Street in September 1902. He was buried here in a pauper’s grave with no stone. The plaque near the north wall was added in 1999. <span style="color:#c8321c">[2]</span></div><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;margin-bottom:10px;color:#2a2a27">The fish-throwing is well documented in the contemporary press. The claim that he never realised he was being mocked is more debated: some biographers think he understood exactly what was happening and played along for the fee. <span style="color:#c8321c">[3]</span></div>
+  <div style="border-top:1px solid #c9c9c4;margin:8px 0"></div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#6f6f6a;font-size:12px"><span style="color:#c8321c">[1]</span> greyfriars kirkyard trust — notable burials ↗</div><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#6f6f6a;font-size:12px"><span style="color:#c8321c">[2]</span> national library of scotland — mcgonagall online ↗</div><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#6f6f6a;font-size:12px"><span style="color:#c8321c">[3]</span> dundee courier — obituary, 30 september 1902 ↗</div>
+</div>
+
+<div style="flex:none;padding:10px 18px 26px;border-top:1px solid #c9c9c4;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;display:flex;gap:6px"><span style="color:#c8321c">&amp;gt;</span><span style="color:#6f6f6a">ask a follow-up</span><span style="width:7px;height:15px;background:#121212;display:inline-block;margin-top:2px"></span></div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6f6f6a">Transcript</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#eeeeec;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#121212">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#121212"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#121212"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#121212"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#121212"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #121212;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#121212;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="flex:1;overflow:hidden;padding:0 18px">
+  <div style="display:flex;justify-content:space-between;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;"><span style="color:#c8321c">&amp;lt; story</span><span style="color:#6f6f6a">ctx: #1 mcgonagall</span></div>
+  <div style="border-top:1px solid #c9c9c4;margin:8px 0"></div>
+  <div style="display:flex;gap:8px;margin-bottom:12px"><span style="font:600 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#c8321c;flex:none">you&amp;gt;</span><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;">Did he really not know people were laughing at him?</div></div>
+  <div style="display:flex;gap:8px"><span style="font:600 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#6f6f6a;flex:none">tour&amp;gt;</span><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#2a2a27">Probably he knew, at least some of the time. His 1890 autobiographical preface complains bitterly about the abuse and names the pubs where it happened, which is not the writing of someone who missed it. But he kept performing for the fee, and he never once conceded that a poem was bad. A fair summary: he heard the laughter and refused to accept the verdict. <span style="color:#c8321c">[1]</span></div></div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#6f6f6a;font-size:12px;margin:10px 0 0 52px"><span style="color:#c8321c">[1]</span> mcgonagall, poetic gems (1890), autobiographical preface ↗</div>
+  <div style="border-top:1px solid #c9c9c4;margin:8px 0"></div>
+  <div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#121212"><span style="color:#6f6f6a">?</span> where exactly is the plaque?</div><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#121212"><span style="color:#6f6f6a">?</span> read the tay bridge disaster</div><div style="font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;color:#121212"><span style="color:#6f6f6a">?</span> what else is in the kirkyard?</div>
+</div>
+
+<div style="flex:none;padding:10px 18px 26px;border-top:1px solid #c9c9c4;font:400 12.5px/1.5 &apos;IBM Plex Mono&apos;;color:#121212;display:flex;gap:6px"><span style="color:#c8321c">&amp;gt;</span><span style="color:#6f6f6a"></span><span style="width:7px;height:15px;background:#121212;display:inline-block;margin-top:2px"></span></div>
+    </div>
+  </div>
+</div></div></body></html>'
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="panel" data-i="5" hidden>
+        <div class="meta">
+          <p>
+            <strong>Why:</strong> Off-plan: a lock-screen notification and a home-screen widget
+            deliver the top preview without opening anything, which is the purest form of “teach
+            without a tap”.
+          </p>
+          <p>
+            <strong>Tradeoff:</strong> It depends on proactive location and notifications, which the
+            plan defers, and a PWA cannot ship a real iOS widget today.
+          </p>
+        </div>
+        <div class="frame-wrap" style="--w: 1280; --h: 840">
+          <iframe
+            title="Bonus · Glance"
+            width="1280"
+            height="840"
+            loading="lazy"
+            srcdoc='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"><style>body{margin:0;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}</style></head><body><div style="width:1280px;height:840px;background:#2b2f38;display:flex;justify-content:center;align-items:flex-start;gap:60px;padding-top:34px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a8f99">Lock screen</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#1c2a3a;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#fff">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#fff"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#fff"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#fff"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#fff"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #fff;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#fff;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="position:absolute;inset:0;background:linear-gradient(160deg,#1c2a3a 0%,#3a2f4a 55%,#6b3b3b 100%)"></div>
+<div style="position:relative;flex:1;display:flex;flex-direction:column">
+  <div style="text-align:center;margin-top:34px;font:400 17px &apos;IBM Plex Sans&apos;;color:rgba(255,255,255,.85)">Tuesday 9 September</div>
+  <div style="text-align:center;font:500 82px/1 &apos;IBM Plex Sans&apos;;color:#fff;letter-spacing:-.02em;margin-top:2px">16:42</div>
+  <div style="margin-top:34px">
+<div style="margin:0 14px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-radius:22px;padding:12px 14px;display:flex;gap:11px">
+  <div style="width:38px;height:38px;border-radius:10px;background:#1f5fd6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M8 16l2 -6l6 -2l-2 6l-6 2"/><path d="M12 3l0 2"/><path d="M12 19l0 2"/><path d="M3 12l2 0"/><path d="M19 12l2 0"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg></div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;justify-content:space-between;font:400 12px &apos;IBM Plex Sans&apos;;color:#6b7280"><span style="font-weight:600;color:#15181d">Tourist</span><span>now</span></div>
+    <div style="font:600 14px/1.3 &apos;IBM Plex Sans&apos;;color:#15181d;margin-top:2px">90 m · The worst poet in the world is buried here</div>
+    <div style="font:400 13px/1.4 &apos;IBM Plex Sans&apos;;color:#3e434b;margin-top:2px">William McGonagall lies in an unmarked grave just past the kirkyard gate. Two more stories nearby.</div>
+  </div>
+</div></div>
+  <div style="flex:1"></div>
+  <div style="display:flex;justify-content:space-between;padding:0 44px 30px">
+    <span style="width:48px;height:48px;border-radius:99px;background:rgba(255,255,255,.18);backdrop-filter:blur(10px)"></span>
+    <span style="width:48px;height:48px;border-radius:99px;background:rgba(255,255,255,.18);backdrop-filter:blur(10px)"></span>
+  </div>
+  <div style="align-self:center;width:130px;height:5px;border-radius:99px;background:rgba(255,255,255,.7);margin-bottom:10px"></div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+  <div style="font:500 12px &apos;IBM Plex Sans&apos;,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a8f99">Home screen widget</div>
+  <div style="width:360px;height:740px;border-radius:46px;background:#0c0c0e;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.28)">
+    <div style="width:340px;height:720px;border-radius:38px;overflow:hidden;background:#1c2a3a;position:relative;display:flex;flex-direction:column">
+      
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font:600 13px &apos;IBM Plex Sans&apos;,sans-serif;color:#fff">
+  <span>16:42</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#fff"/><rect x="4.3" y="5.5" width="3" height="6.5" rx="1" fill="#fff"/><rect x="8.6" y="3" width="3" height="9" rx="1" fill="#fff"/><rect x="13" y="0" width="3" height="12" rx="1" fill="#fff"/></svg>
+    <span style="width:24px;height:11px;border:1.5px solid #fff;border-radius:3.5px;padding:1.5px;display:block;opacity:.9"><span style="display:block;width:70%;height:100%;background:#fff;border-radius:1.5px"></span></span>
+  </span>
+</div>
+      
+<div style="position:absolute;inset:0;background:linear-gradient(160deg,#1c2a3a 0%,#3a2f4a 55%,#6b3b3b 100%)"></div>
+<div style="position:relative;flex:1;display:flex;flex-direction:column;padding:12px 18px 0;gap:22px">
+  <div style="background:rgba(255,255,255,.93);border-radius:22px;padding:14px 16px;height:158px;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;font:500 11.5px &apos;IBM Plex Sans&apos;;color:#6b7280;text-transform:uppercase;letter-spacing:.06em"><span style="display:flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f5fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block"><path d="M8 16l2 -6l6 -2l-2 6l-6 2"/><path d="M12 3l0 2"/><path d="M12 19l0 2"/><path d="M3 12l2 0"/><path d="M19 12l2 0"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg>Near you</span><span>Candlemaker Row</span></div>
+    <div style="font:600 15px/1.3 &apos;IBM Plex Sans&apos;;color:#15181d;margin-top:8px">The worst poet in the world is buried here</div>
+    <div style="font:400 12.5px/1.4 &apos;IBM Plex Sans&apos;;color:#3e434b;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">William McGonagall, whose verse was so bad that audiences pelted him with fish, lies in an unmarked pauper’s grave a few steps past the gate. He believed to the end that he was Scotland’s greatest living poet.</div>
+    <div style="flex:1"></div>
+    <div style="display:flex;justify-content:space-between;font:500 12px &apos;IBM Plex Sans&apos;;color:#6b7280"><span>Greyfriars Kirkyard · 90 m</span><span style="color:#1f5fd6">2 more →</span></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;padding:0 6px"><div style="width:60px;height:60px;border-radius:14px;background:#4c8bf5"></div><div style="width:60px;height:60px;border-radius:14px;background:#34c759"></div><div style="width:60px;height:60px;border-radius:14px;background:#ff9f0a"></div><div style="width:60px;height:60px;border-radius:14px;background:#af52de"></div></div>
+  <div style="display:flex;justify-content:space-between;padding:0 6px"><div style="width:60px;height:60px;border-radius:14px;background:#ff3b30"></div><div style="width:60px;height:60px;border-radius:14px;background:#5ac8fa"></div><div style="width:60px;height:60px;border-radius:14px;background:#ffcc00"></div><div style="width:60px;height:60px;border-radius:14px;background:#8e8e93"></div></div>
+  <div style="display:flex;justify-content:space-between;padding:0 6px"><div style="width:60px;height:60px;border-radius:14px;background:#30b0c7"></div><div style="width:60px;height:60px;border-radius:14px;background:#ff2d55"></div><div style="width:60px;height:60px;border-radius:14px;background:#a2845e"></div><div style="width:60px;height:60px;border-radius:14px;background:#1f5fd6"></div></div>
+  <div style="flex:1"></div>
+  <div style="background:rgba(255,255,255,.22);backdrop-filter:blur(20px);border-radius:28px;padding:12px 14px;margin:0 -2px 12px"><div style="display:flex;justify-content:space-between;padding:0 6px"><div style="width:60px;height:60px;border-radius:14px;background:#34c759"></div><div style="width:60px;height:60px;border-radius:14px;background:#4c8bf5"></div><div style="width:60px;height:60px;border-radius:14px;background:#ff9f0a"></div><div style="width:60px;height:60px;border-radius:14px;background:#1f5fd6"></div></div></div>
+</div>
+    </div>
+  </div>
+</div></div></body></html>'
+          ></iframe>
+        </div>
+      </section>
+    </main>
+    <footer>
+      Switch options with <kbd>←</kbd> <kbd>→</kbd> or the tabs above. Mockups scale to fit the
+      window.
+    </footer>
+    <script>
+      const tabs = [...document.querySelectorAll(".tab")]
+      const panels = [...document.querySelectorAll(".panel")]
+      let current = 0
+
+      const select = i => {
+        current = (i + tabs.length) % tabs.length
+        tabs.forEach((t, j) => t.classList.toggle("active", j === current))
+        panels.forEach((p, j) => (p.hidden = j !== current))
+        history.replaceState(null, "", "#" + (current + 1))
+        fit()
+      }
+
+      const fit = () => {
+        const panel = panels[current]
+        const wrap = panel.querySelector(".frame-wrap")
+        const iframe = panel.querySelector("iframe")
+        const w = Number(wrap.style.getPropertyValue("--w"))
+        const h = Number(wrap.style.getPropertyValue("--h"))
+        const scale = Math.min(1, wrap.clientWidth / w)
+        iframe.style.transform = "scale(" + scale + ")"
+        wrap.style.height = h * scale + "px"
+      }
+
+      tabs.forEach((t, i) => t.addEventListener("click", () => select(i)))
+      addEventListener("keydown", e => {
+        if (e.key === "ArrowRight") select(current + 1)
+        if (e.key === "ArrowLeft") select(current - 1)
+      })
+      addEventListener("resize", fit)
+
+      const fromHash = parseInt(location.hash.slice(1), 10)
+      select(Number.isInteger(fromHash) ? fromHash - 1 : 0)
+    </script>
+  </body>
+</html>
