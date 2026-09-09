@@ -14,7 +14,7 @@ export function useDiscovery(
   const [locationError, setLocationError] = useState(false)
   const operation = useRef<Operation | undefined>(undefined)
   const active = useRef<{ location: Location; manual: boolean } | undefined>(undefined)
-  const failed = useRef<{ location: Location; requestId: string } | undefined>(undefined)
+  const failed = useRef<FailedOperation | undefined>(undefined)
 
   /** Start a superseding operation and stop polling its predecessor. */
   const begin = useCallback((query?: string) => {
@@ -31,7 +31,7 @@ export function useDiscovery(
   /** Research a resolved location, keeping its request ID if a connection failed. */
   const discover = useCallback(
     async (where: Location, current: Operation, requestId: string = crypto.randomUUID()) => {
-      failed.current = { location: where, requestId }
+      failed.current = { kind: "discovery", location: where, requestId }
       setProgress({ status: "queued", radiusMeters: 200 })
       try {
         const result = await research.discover(where, {
@@ -77,7 +77,7 @@ export function useDiscovery(
         await discover(where, current)
       } catch (failure) {
         if (operation.current !== current || current.controller.signal.aborted) return
-        failed.current = undefined
+        failed.current = { kind: "location", query }
         setError(
           failure instanceof Error
             ? failure.message
@@ -110,8 +110,9 @@ export function useDiscovery(
   /** Reconnect to the interrupted research or retry browser location. */
   const retry = () => {
     if (operation.current) return
-    if (failed.current) void discover(failed.current.location, begin(), failed.current.requestId)
-    else void locate()
+    if (failed.current?.kind === "discovery")
+      void discover(failed.current.location, begin(), failed.current.requestId)
+    else void locate(failed.current?.query)
   }
 
   return {
@@ -133,3 +134,8 @@ type Operation = {
   /** Cancel local polling without canceling the persisted server job. */
   controller: AbortController
 }
+
+/** Exact operation to replay after a recoverable failure. */
+type FailedOperation =
+  | { kind: "location"; query?: string }
+  | { kind: "discovery"; location: Location; requestId: string }

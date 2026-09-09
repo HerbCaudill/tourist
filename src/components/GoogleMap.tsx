@@ -36,6 +36,7 @@ export function GoogleMap(
         const blob = await response.blob()
         if (controller.signal.aborted) return
         objectUrl = URL.createObjectURL(blob)
+        setFailed(undefined)
         setImage({ request, url: objectUrl })
       } catch {
         if (!controller.signal.aborted) setFailed(request)

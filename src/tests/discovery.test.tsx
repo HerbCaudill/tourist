@@ -134,4 +134,28 @@ describe("live discovery states", () => {
     await user.type(screen.getByRole("textbox", { name: "Enter a place" }), "{enter}")
     expect(research.discover).toHaveBeenCalledTimes(1)
   })
+  it("retries a failed typed location without returning to denied GPS", async () => {
+    const user = userEvent.setup()
+    const fake = createFakeResearch({ delayMs: 0 })
+    const research = {
+      ...fake,
+      locate: vi.fn().mockRejectedValue(new Error("Location denied")),
+      resolveLocation: vi
+        .fn()
+        .mockRejectedValueOnce(new Error("Location service unavailable"))
+        .mockResolvedValue(location),
+    }
+    render(<App research={research} />)
+    await screen.findByRole("alert")
+    await user.type(
+      screen.getByRole("textbox", { name: "Enter a place" }),
+      "Candlemaker Row{enter}",
+    )
+    expect(await screen.findByRole("alert")).toHaveTextContent("Location service unavailable")
+    await user.click(screen.getByRole("button", { name: "Try again" }))
+    expect(await screen.findByRole("button", { name: /worst poet/ })).toBeVisible()
+    expect(research.resolveLocation).toHaveBeenCalledTimes(2)
+    expect(research.resolveLocation).toHaveBeenLastCalledWith("Candlemaker Row")
+    expect(research.locate).toHaveBeenCalledTimes(1)
+  })
 })
