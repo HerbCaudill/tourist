@@ -53,9 +53,13 @@ export function createHistoryStore(
   /** Discard whole snapshots at their geographic deadline; all their prose is readable until then. */
   function prune() {
     const previous = JSON.stringify(history)
-    const previousCount = history.discoveries.length + history.conversations.length
+    const previousCount =
+      history.discoveries.length + history.conversations.length + Number(!!history.pendingDiscovery)
     history = {
       version: 1,
+      ...(history.pendingDiscovery && pendingIsCurrent(history.pendingDiscovery, now())
+        ? { pendingDiscovery: history.pendingDiscovery }
+        : {}),
       discoveries: history.discoveries.filter(item =>
         retained(item.researchedAt, item.coordinatesExpireAt, now()),
       ),
@@ -76,7 +80,12 @@ export function createHistoryStore(
         ),
     }
     if (JSON.stringify(history) !== previous)
-      persist(history.discoveries.length + history.conversations.length < previousCount)
+      persist(
+        history.discoveries.length +
+          history.conversations.length +
+          Number(!!history.pendingDiscovery) <
+          previousCount,
+      )
   }
 
   /** Fit the whole archive by dropping the oldest complete records first. */
@@ -105,7 +114,25 @@ export function createHistoryStore(
       return {
         discoveries: history.discoveries.map(toDiscovery),
         conversations: structuredClone(history.conversations) as Conversation[],
+        ...(history.pendingDiscovery
+          ? { pendingDiscovery: structuredClone(history.pendingDiscovery) }
+          : {}),
       }
+    },
+    /** Retain only the current discovery request so reload can reconnect with the same UUID. */
+    savePendingDiscovery(request: PendingDiscovery): boolean {
+      const value = decode(PendingDiscovery, request)
+      if (!value || !pendingIsCurrent(value, now())) return false
+      prune()
+      history = { ...history, pendingDiscovery: structuredClone(value) }
+      bound()
+      return persist()
+    },
+    /** Forget a finished or abandoned request without deleting reading history. */
+    clearPendingDiscovery(): boolean {
+      prune()
+      history = { ...history, pendingDiscovery: undefined }
+      return persist()
     },
     /** Save one validated discovery; false means it was invalid or could not be persisted. */
     saveDiscovery(discovery: Discovery): boolean {
@@ -249,6 +276,12 @@ function byteLength(value: string) {
   return new TextEncoder().encode(value).byteLength
 }
 
+/** Match the durable runner's one-day lifetime and reject an implausible future timestamp. */
+function pendingIsCurrent(request: PendingDiscovery, now: number) {
+  const started = Date.parse(request.startedAt)
+  return Number.isFinite(started) && started <= now + 300_000 && now - started < DAY
+}
+
 const KEY = "tourist.history.v1"
 const MAX_BYTES = 1_500_000
 const HOUR = 3_600_000
@@ -300,10 +333,21 @@ const StoredConversation = Schema.Struct({
   error: Schema.optional(boundedText(2000)),
   updatedAt: Timestamp,
 })
+const PendingDiscovery = Schema.Struct({
+  /** Stable UUID used to recover the same initial job. */
+  requestId: Schema.String.pipe(
+    Schema.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
+  ),
+  /** The original search center, never replaced with newer GPS while reconnecting. */
+  location: ResearchLocation,
+  /** Original submission time used to expire this one recovery record. */
+  startedAt: Timestamp,
+})
 const StoredHistory = Schema.Struct({
   version: Schema.Literal(1),
   discoveries: Schema.Array(StoredDiscovery).pipe(Schema.maxItems(12)),
   conversations: Schema.Array(StoredConversation).pipe(Schema.maxItems(12)),
+  pendingDiscovery: Schema.optional(PendingDiscovery),
 })
 
 /** Browser-independent storage boundary. */
@@ -319,6 +363,8 @@ type HistorySnapshot = {
   discoveries: Discovery[]
   /** Most recently changed first. */
   conversations: Conversation[]
+  /** The sole current discovery operation, available for at most one day. */
+  pendingDiscovery?: PendingDiscovery
 }
 /** Criteria for showing a previous discovery as current nearby research. */
 type CacheQuery = {
@@ -331,3 +377,4 @@ type CacheQuery = {
 }
 type StoredDiscovery = typeof StoredDiscovery.Type
 type StoredHistory = typeof StoredHistory.Type
+type PendingDiscovery = typeof PendingDiscovery.Type

@@ -234,3 +234,52 @@ it("keeps the previous browser archive if a later save hits quota", () => {
   expect(blocked.saveConversation(conversation)).toBe(false)
   expect(createHistoryStore({ storage: local, now: () => now }).read().discoveries).toHaveLength(1)
 })
+
+it("reopens the same pending discovery without accumulating a location trail", () => {
+  const local = storage()
+  const store = createHistoryStore({ storage: local, now: () => now })
+  const pending = {
+    requestId: "13516742-4173-49c5-ae65-376e147c4dad",
+    location: discovery.location,
+    startedAt: new Date(now).toISOString(),
+  }
+  expect(store.savePendingDiscovery(pending)).toBe(true)
+  expect(createHistoryStore({ storage: local, now: () => now }).read().pendingDiscovery).toEqual(
+    pending,
+  )
+  const replacement = {
+    ...pending,
+    requestId: "a62b1dc9-37bf-4198-98ad-585c8a1b755d",
+    location: { ...pending.location, name: "Another place" },
+  }
+  store.savePendingDiscovery(replacement)
+  expect(createHistoryStore({ storage: local, now: () => now }).read().pendingDiscovery).toEqual(
+    replacement,
+  )
+  expect([...local.values.values()].join()).not.toContain(pending.requestId)
+  expect(store.clearPendingDiscovery()).toBe(true)
+  expect(
+    createHistoryStore({ storage: local, now: () => now }).read().pendingDiscovery,
+  ).toBeUndefined()
+})
+
+it("expires pending discovery after a day, validates its fields, and clears it with reading history", () => {
+  const local = storage()
+  const store = createHistoryStore({ storage: local, now: () => now })
+  const pending = {
+    requestId: "13516742-4173-49c5-ae65-376e147c4dad",
+    location: discovery.location,
+    startedAt: new Date(now).toISOString(),
+  }
+  expect(store.savePendingDiscovery({ ...pending, requestId: "invalid" })).toBe(false)
+  store.savePendingDiscovery(pending)
+  expect(
+    createHistoryStore({ storage: local, now: () => now + 24 * 3_600_000 }).read().pendingDiscovery,
+  ).toBeUndefined()
+  expect([...local.values.values()].join()).not.toContain(pending.requestId)
+  store.savePendingDiscovery(pending)
+  store.clear()
+  expect(
+    createHistoryStore({ storage: local, now: () => now }).read().pendingDiscovery,
+  ).toBeUndefined()
+})
