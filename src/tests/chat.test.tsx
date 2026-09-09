@@ -76,16 +76,14 @@ describe("contextual chat", () => {
     render(<App research={research} />)
     await user.click(await screen.findByRole("button", { name: /worst poet/ }))
     await user.type(screen.getByPlaceholderText("ask a follow-up"), "Poet question{enter}")
-    await user.click(screen.getByRole("button", { name: /story/ }))
     await user.click(screen.getByRole("button", { name: /back/ }))
-    await user.click(screen.getByRole("button", { name: /Bobby/ }))
+    await user.click(await screen.findByRole("button", { name: /Bobby/ }))
     await user.type(screen.getByPlaceholderText("ask a follow-up"), "Dog question{enter}")
     expect(await screen.findByText("Bobby answer")).toBeVisible()
     await act(async () => finish({ text: "Poet answer", sources: [] }))
     expect(screen.queryByText("Poet answer")).not.toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: /story/ }))
     await user.click(screen.getByRole("button", { name: /back/ }))
-    await user.click(screen.getByRole("button", { name: /worst poet/ }))
+    await user.click(await screen.findByRole("button", { name: /worst poet/ }))
     await user.type(screen.getByPlaceholderText("ask a follow-up"), "Another poet question{enter}")
     expect(screen.getByText("Poet answer")).toBeVisible()
   })
@@ -123,7 +121,7 @@ describe("contextual chat", () => {
       originLocation: location,
       selectedStoryId: "mcgonagall",
     })
-    expect(screen.getByText(/greyfriars kirkyard/)).toBeVisible()
+    expect(screen.getByText("greyfriars kirkyard", { exact: true })).toBeVisible()
   })
   it("starts a fresh job for an expired answer without adding another user turn", async () => {
     const user = userEvent.setup()
@@ -146,7 +144,7 @@ describe("contextual chat", () => {
     )
     expect(research.ask.mock.calls[1][0].question).toBe(research.ask.mock.calls[0][0].question)
   })
-  it("keeps story entry disabled while its answer is pending and can reopen that conversation", async () => {
+  it("keeps the inline question visible and entry disabled while its answer is pending", async () => {
     const user = userEvent.setup()
     const research = {
       ...createFakeResearch({ delayMs: 0 }),
@@ -155,9 +153,7 @@ describe("contextual chat", () => {
     render(<App research={research} />)
     await user.click(await screen.findByRole("button", { name: /worst poet/ }))
     await user.type(screen.getByPlaceholderText("ask a follow-up"), "First question{enter}")
-    await user.click(screen.getByRole("button", { name: /story/ }))
     expect(screen.getByPlaceholderText("ask a follow-up")).toBeDisabled()
-    await user.click(screen.getByRole("button", { name: "Open conversation" }))
     expect(screen.getByText("First question")).toBeVisible()
     expect(research.ask).toHaveBeenCalledOnce()
   })

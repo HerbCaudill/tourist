@@ -61,7 +61,7 @@ function viewPath(
   if (view.kind === "nearby") return "/"
   const snapshot = encodeURIComponent(view.context.researchedAt)
   const story = encodeURIComponent(view.context.selectedStoryId ?? "general")
-  return `/${view.kind === "story" ? "stories" : "chats"}/${snapshot}/${story}`
+  return `/${view.context.selectedStoryId ? "stories" : "chats"}/${snapshot}/${story}`
 }
 
 /** A screen with its original research context. */

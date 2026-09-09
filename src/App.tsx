@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
+import { ChatTranscript } from "./components/ChatTranscript"
 import { ChatScreen } from "./components/ChatScreen"
 import { NearbyScreen } from "./components/NearbyScreen"
 import { SavedReading } from "./components/SavedReading"
@@ -62,7 +63,7 @@ export function App(
   /** Send a question while retaining this conversation's originating context. */
   const ask = (question: string, context: ConversationContext) => {
     if (!location || !online) return
-    setView({ kind: "chat", context })
+    if (!context.selectedStoryId) setView({ kind: "chat", context })
     chat.ask(context, question, location)
   }
 
@@ -82,23 +83,7 @@ export function App(
           </button>
         </div>
       )
-    if (view.kind === "story") {
-      const { story, context } = view
-      return (
-        <StoryScreen
-          story={story}
-          number={context.number ?? 1}
-          origin={location ?? context.originLocation}
-          chatPending={!online || !location || !!chat.conversations[context.id]?.pending}
-          onOpenChat={
-            chat.conversations[context.id] ? () => setView({ kind: "chat", context }) : undefined
-          }
-          onBack={() => navigation.back({ kind: "nearby" })}
-          onAsk={question => ask(question, context)}
-        />
-      )
-    }
-    if (view.kind === "chat") {
+    if (view.kind === "story" || view.kind === "chat") {
       const { context } = view
       const story = context.stories.find(item => item.id === context.selectedStoryId)
       const conversation = chat.conversations[context.id]
@@ -107,24 +92,36 @@ export function App(
       const suggestions =
         story?.suggestedQuestions ??
         context.stories.flatMap(item => item.suggestedQuestions ?? []).slice(0, 3)
+      const conversationProps = {
+        messages,
+        answering: !!conversation?.pending && !conversation.error,
+        error: conversation?.error,
+        onRetry: () => chat.retry(context.id),
+        onRestart: () => chat.retry(context.id, true),
+        restartRequired: conversation?.restartRequired,
+        offline: !online,
+        questionDisabled: !location,
+        suggestions: suggestions.filter(question => !asked.has(question)),
+        onAsk: (question: string) => ask(question, context),
+      }
+      if (story)
+        return (
+          <StoryScreen
+            key={context.id}
+            story={story}
+            number={context.number ?? 1}
+            origin={location ?? context.originLocation}
+            chatPending={!online || !location || !!conversation?.pending || !!conversation?.error}
+            conversation={<ChatTranscript {...conversationProps} />}
+            onBack={() => navigation.back({ kind: "nearby" })}
+            onAsk={conversationProps.onAsk}
+          />
+        )
       return (
         <ChatScreen
-          story={story}
-          number={context.number}
-          contextLabel={story?.place ?? context.originLocation.name}
-          messages={messages}
-          answering={!!conversation?.pending && !conversation.error}
-          error={conversation?.error}
-          onRetry={() => chat.retry(context.id)}
-          onRestart={() => chat.retry(context.id, true)}
-          restartRequired={conversation?.restartRequired}
-          offline={!online}
-          questionDisabled={!location}
-          suggestions={suggestions.filter(question => !asked.has(question))}
-          onBack={() =>
-            navigation.back(story ? { kind: "story", story, context } : { kind: "nearby" })
-          }
-          onAsk={question => ask(question, context)}
+          {...conversationProps}
+          contextLabel={context.originLocation.name}
+          onBack={() => navigation.back({ kind: "nearby" })}
         />
       )
     }

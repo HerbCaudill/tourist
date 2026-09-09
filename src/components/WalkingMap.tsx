@@ -65,23 +65,25 @@ export function WalkingMap(
   const current = result?.request === request && failed !== request ? result : undefined
   return (
     <figure className="-mx-[18px] my-3">
-      {current ? (
-        <img
-          src={current.url}
-          alt={`Walking route to ${place}`}
-          className="block h-auto w-full"
-          onError={() => setFailed(request)}
-        />
-      ) : (
-        <p role="status" className="px-[18px] py-4 text-neutral-500">
-          {!origin
-            ? "Choose a starting location to see the walking route."
-            : failed === request
-              ? "Walking map unavailable."
-              : "Finding a walking route…"}
-        </p>
-      )}
-      <figcaption className="flex items-center justify-between gap-2 px-[18px] py-2 text-neutral-500">
+      <div className="aspect-[640/300] overflow-hidden bg-neutral-200">
+        {current ? (
+          <img
+            src={current.url}
+            alt={`Walking route to ${place}`}
+            className="block h-full w-full"
+            onError={() => setFailed(request)}
+          />
+        ) : (
+          <p role="status" className="px-[18px] py-4 text-neutral-500">
+            {!origin
+              ? "Choose a starting location to see the walking route."
+              : failed === request
+                ? "Walking map unavailable."
+                : "Finding a walking route…"}
+          </p>
+        )}
+      </div>
+      <figcaption className="flex min-h-9 items-center justify-between gap-2 px-[18px] py-2 text-neutral-500">
         {current && (
           <span className="inline-flex items-center gap-1">
             <IconWalk size={16} aria-hidden="true" />

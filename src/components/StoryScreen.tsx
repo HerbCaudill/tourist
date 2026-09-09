@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { WalkingMap } from "./WalkingMap"
 import { formatDistance } from "../lib/formatDistance"
 import type { Location, Story } from "../types"
@@ -16,7 +17,7 @@ export function StoryScreen(
     onBack,
     onAsk,
     chatPending,
-    onOpenChat,
+    conversation,
   }: Props,
 ) {
   return (
@@ -29,7 +30,7 @@ export function StoryScreen(
           </>
         }
       />
-      <article className="flex-1 overflow-y-auto px-[18px] pt-2 pb-3">
+      <div className="shrink-0 px-[18px] pt-2">
         <p className="text-neutral-500">{story.place.toLowerCase()}</p>
         <h1 className="mt-1 mb-3 text-[14px] font-semibold">{story.title}</h1>
         <WalkingMap
@@ -38,22 +39,19 @@ export function StoryScreen(
           destination={story.coordinates}
           place={story.place}
         />
+      </div>
+      <article
+        aria-label="Story and conversation"
+        className="min-h-0 flex-1 overflow-y-auto px-[18px] pb-3"
+      >
         {story.account.map((paragraph, i) => (
           <p key={i} className="mb-2.5 text-neutral-800">
             {paragraph}
           </p>
         ))}
         <Footnotes sources={story.sources} />
+        {conversation}
       </article>
-      {onOpenChat && (
-        <button
-          type="button"
-          onClick={onOpenChat}
-          className="px-[18px] py-2 text-left text-red-700 underline"
-        >
-          Open conversation
-        </button>
-      )}
       <Prompt placeholder="ask a follow-up" onAsk={onAsk} disabled={chatPending} />
     </>
   )
@@ -72,6 +70,6 @@ type Props = {
   onAsk: (question: string) => void
   /** Prevent a second question from being lost while the previous answer waits. */
   chatPending?: boolean
-  /** Reopen the existing transcript without sending another question. */
-  onOpenChat?: () => void
+  /** Follow-up conversation rendered after the story and its sources. */
+  conversation: ReactNode
 }
