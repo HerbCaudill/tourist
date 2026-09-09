@@ -49,7 +49,7 @@ export function GoogleMap(
   }, [request])
 
   return (
-    <div className="min-h-[180px] border border-neutral-300 bg-neutral-200">
+    <div className="bg-neutral-200">
       {image?.request === request && failed !== request ? (
         <img
           src={image.url}
@@ -58,7 +58,7 @@ export function GoogleMap(
           onError={() => setFailed(request)}
         />
       ) : (
-        <p className="px-3 py-4 text-neutral-600">
+        <p className="min-h-[160px] px-[18px] py-4 text-neutral-600">
           {failed === request
             ? "Map unavailable. The stories are still available below."
             : "Loading map…"}

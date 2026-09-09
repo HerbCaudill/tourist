@@ -139,6 +139,23 @@ describe("narrow Google adapter", () => {
     expect(JSON.stringify(result)).not.toMatch(/Provider-only|private-place/)
   })
 
+  it("frames nearby markers tightly while keeping distant markers visible", async () => {
+    const center = { lat: 55.95, lon: -3.18 }
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(
+      async () =>
+        new Response(new Uint8Array([137, 80, 78, 71]), {
+          headers: { "Content-Type": "image/png" },
+        }),
+    )
+    const places = createPlacesAdapter("key", fetcher)
+    await places.map(center, [center], 1000)
+    await places.map(center, [{ lat: 55.958, lon: -3.18 }], 1000)
+    const close = new URL(String(fetcher.mock.calls[0]?.[0]))
+    const far = new URL(String(fetcher.mock.calls[1]?.[0]))
+    expect(Number(close.searchParams.get("zoom"))).toBeGreaterThanOrEqual(16)
+    expect(Number(far.searchParams.get("zoom"))).toBeLessThanOrEqual(13)
+  })
+
   it("returns whole attributed image bytes, leaving the key only on the private provider request", async () => {
     const bytes = new Uint8Array([137, 80, 78, 71])
     const fetcher = vi

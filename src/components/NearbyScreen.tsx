@@ -35,11 +35,6 @@ export function NearbyScreen(
   const [query, setQuery] = useState("")
   const stories = discovery?.stories ?? []
   const origin = discovery?.location ?? location
-  const moved =
-    location &&
-    origin &&
-    (location.coordinates.lat !== origin.coordinates.lat ||
-      location.coordinates.lon !== origin.coordinates.lon)
   const updated = discovery?.researchedAt.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -113,19 +108,8 @@ export function NearbyScreen(
             </button>
           </div>
         )}
-        {!location && discovery && (
-          <p className="my-2 text-neutral-500">
-            Saved stories near {discovery.location.name.toLowerCase()}.
-          </p>
-        )}
-        {moved && (
-          <p className="my-2 text-neutral-500">
-            Showing earlier stories near {origin.name.toLowerCase()}. Distances and map use that
-            location.
-          </p>
-        )}
         {origin && (
-          <div className="my-2.5">
+          <div className="-mx-[18px] my-2.5">
             {(discovery?.mapProvider ?? mapProvider) === "google" ? (
               <GoogleMap location={origin} stories={stories} radiusMeters={radiusMeters} />
             ) : (
@@ -138,11 +122,6 @@ export function NearbyScreen(
                 radiusMeters={radiusMeters}
               />
             )}
-            <p className="mt-1 text-neutral-500">
-              {radiusMeters > 200 ? "Expanded search" : "Search area"}:{" "}
-              {formatDistance(radiusMeters)}
-              {origin.accuracyMeters > 0 && ` · location ±${Math.round(origin.accuracyMeters)} m`}
-            </p>
           </div>
         )}
         {researching && (

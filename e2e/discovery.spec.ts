@@ -86,7 +86,6 @@ test("recovers from denied location, follows live research progress, and opens a
   const row = page.getByRole("button", { name: /worst poet/ })
   await expect(row).toBeVisible()
   expect(submissions).toBe(1)
-  await expect(page.getByText(/Expanded search: 500 m/)).toBeVisible()
   await expect(page.getByText(/Map unavailable. The stories are still available/)).toBeVisible()
   await row.click()
   await expect(page.getByText(/Dundee handloom weaver/)).toBeVisible()

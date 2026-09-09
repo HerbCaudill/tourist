@@ -93,6 +93,9 @@ export function createPlacesAdapter(
     },
     /** Proxy a whole image, retaining the embedded Google logo and attribution. */
     async map(center, markers, radiusMeters) {
+      const extent = markers.length
+        ? Math.max(75, ...markers.map(marker => distanceBetween(center, marker) * 1.15))
+        : radiusMeters / 2
       const zoom = Math.max(
         0,
         Math.min(
@@ -102,7 +105,7 @@ export function createPlacesAdapter(
               (156543.03392 *
                 Math.cos((Math.min(85, Math.abs(center.lat)) * Math.PI) / 180) *
                 190) /
-                (radiusMeters * 2),
+                (extent * 2),
             ),
           ),
         ),

@@ -107,7 +107,7 @@ describe("live discovery states", () => {
       ),
     }
     rerender(<App research={replacement} />)
-    expect(await screen.findByText(/Showing earlier stories near candlemaker row/)).toBeVisible()
+    await waitFor(() => expect(replacement.discover).toHaveBeenCalled())
     expect(screen.getByRole("button", { name: /worst poet/ })).toBeVisible()
     await act(async () =>
       finishNew({ ...first, location: newLocation, stories: [], radiusMeters: 1000 }),
