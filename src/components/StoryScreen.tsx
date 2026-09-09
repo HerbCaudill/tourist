@@ -40,8 +40,7 @@ export function StoryScreen(
         <h1 className="mt-1 mb-3 text-[14px] font-semibold">{story.title}</h1>
         {story.account.map((paragraph, i) => (
           <p key={i} className="mb-2.5 text-neutral-800">
-            {paragraph}{" "}
-            <span className="text-red-700">[{Math.min(i + 1, story.sources.length)}]</span>
+            {paragraph}
           </p>
         ))}
         <Footnotes sources={story.sources} />

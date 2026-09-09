@@ -67,6 +67,12 @@ export function useDiscovery(
           )
           .find(Boolean)
         if (cached) {
+          failed.current = undefined
+          setError(undefined)
+          setLocationError(false)
+          const cleared = history.clearPendingDiscovery()
+          setStorageError(previous => previous || !cleared)
+          onHistoryChange?.()
           setDiscovery(cached)
           stop()
           return
@@ -78,6 +84,7 @@ export function useDiscovery(
         const saved = history.savePendingDiscovery({
           requestId,
           location: where,
+          manual: active.current?.manual ?? false,
           startedAt: prior?.requestId === requestId ? prior.startedAt : new Date().toISOString(),
         })
         setStorageError(!saved)
@@ -149,7 +156,7 @@ export function useDiscovery(
     if (!navigator.onLine || operation.current) return
     const pending = history?.read().pendingDiscovery
     if (pending) {
-      active.current = { location: pending.location, manual: true }
+      active.current = { location: pending.location, manual: pending.manual ?? false }
       setLocation(pending.location)
       void discover(pending.location, begin(), pending.requestId)
     } else if (active.current?.manual) {

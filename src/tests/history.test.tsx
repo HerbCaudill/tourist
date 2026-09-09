@@ -1,6 +1,7 @@
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, render, renderHook, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { useDiscovery } from "../hooks/useDiscovery"
 import { App } from "../App"
 import { createFakeResearch } from "../lib/createFakeResearch"
 import { createHistoryStore } from "../lib/createHistoryStore"
@@ -93,6 +94,63 @@ describe("saved reading", () => {
     expect(next.locate).not.toHaveBeenCalled()
     expect(createHistoryStore({ storage }).read().pendingDiscovery).toBeUndefined()
   })
+
+  it.each([false, true])("restores pending location mode (manual: %s)", async manual => {
+    const { fake, discovery, store, storage } = await setup()
+    const first = {
+      ...fake,
+      discover: vi.fn().mockImplementation(() => new Promise<Discovery>(() => {})),
+    }
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false)
+    const original = renderHook(() => useDiscovery(first, store))
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(true)
+    await act(async () => {
+      void original.result.current.choosePlace(manual ? "Dundee" : undefined)
+    })
+    await waitFor(() => expect(first.discover).toHaveBeenCalledOnce())
+    original.unmount()
+    const next = {
+      ...fake,
+      locate: vi.fn().mockResolvedValue(location),
+      discover: vi.fn().mockResolvedValue(discovery),
+    }
+    const archive = createHistoryStore({ storage })
+    const restored = renderHook(() => useDiscovery(next, archive))
+    await waitFor(() => expect(restored.result.current.busy).toBe(false))
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")))
+    expect(next.locate).toHaveBeenCalledTimes(manual ? 0 : 1)
+    restored.unmount()
+  })
+
+  it.each([false, true])(
+    "abandons failed discovery on cache selection while preserving storage errors (%s)",
+    async storageFails => {
+      const { fake, discovery, store } = await setup()
+      store.saveDiscovery(discovery)
+      if (storageFails) {
+        const save = store.savePendingDiscovery
+        vi.spyOn(store, "savePendingDiscovery").mockImplementation(request => {
+          save(request)
+          return false
+        })
+      }
+      const elsewhere = { ...location, coordinates: { lat: 41, lon: 2 } }
+      const research = {
+        ...fake,
+        locate: vi.fn().mockResolvedValue(elsewhere),
+        resolveLocation: vi.fn().mockResolvedValue(location),
+        discover: vi.fn().mockRejectedValue(new Error("Disconnected")),
+      }
+      const hook = renderHook(() => useDiscovery(research, store))
+      await waitFor(() => expect(hook.result.current.error).toBe("Disconnected"))
+      await act(async () => hook.result.current.choosePlace("Dundee"))
+      expect(store.read().pendingDiscovery).toBeUndefined()
+      expect(hook.result.current.error).toBeUndefined()
+      expect(hook.result.current.storageError).toBe(storageFails)
+      await act(async () => document.dispatchEvent(new Event("visibilitychange")))
+      expect(research.discover).toHaveBeenCalledOnce()
+    },
+  )
 
   it("does not restore cleared history when a pending discovery finishes late", async () => {
     const user = userEvent.setup()

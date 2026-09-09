@@ -334,6 +334,8 @@ const StoredConversation = Schema.Struct({
   updatedAt: Timestamp,
 })
 const PendingDiscovery = Schema.Struct({
+  /** Whether the search center was entered manually rather than obtained from GPS. */
+  manual: Schema.optional(Schema.Boolean),
   /** Stable UUID used to recover the same initial job. */
   requestId: Schema.String.pipe(
     Schema.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),

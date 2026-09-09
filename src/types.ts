@@ -203,6 +203,8 @@ export type Conversation = {
 
 /** One resumable discovery retained across reopening, without a continuous location log. */
 export type PendingDiscovery = {
+  /** Whether this search uses a manually chosen place instead of foreground GPS. */
+  manual?: boolean
   /** Original idempotent client UUID. */
   requestId: string
   /** Location associated with this one request. */
