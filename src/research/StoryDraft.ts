@@ -8,7 +8,7 @@ export const StoryDraft = Schema.Struct({
   id: boundedText(100),
   /** An exact identifier from the supplied geographic candidates. */
   placeId: boundedText(300),
-  /** Place label established through independent research. */
+  /** Place label recognized from the supplied candidate. */
   place: boundedText(200),
   /** Informative headline. */
   title: boundedText(200),
@@ -18,8 +18,8 @@ export const StoryDraft = Schema.Struct({
   account: Schema.Array(boundedText(3000)).pipe(Schema.minItems(1), Schema.maxItems(8)),
   /** How the narrative distinguishes its evidence. */
   kind: Schema.Literal("documented", "disputed", "folklore"),
-  /** Evidence supporting the account. */
-  sources: Schema.Array(ResearchSource).pipe(Schema.minItems(1), Schema.maxItems(8)),
+  /** Optional sources supplied in context; empty for accounts from model knowledge. */
+  sources: Schema.Array(ResearchSource).pipe(Schema.maxItems(8)),
   /** Optional starting points for conversation. */
   suggestedQuestions: Schema.Array(boundedText(300)).pipe(Schema.maxItems(3)),
   /** Whether the story needs a shorter cache lifetime. */

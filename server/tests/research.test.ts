@@ -279,3 +279,15 @@ it("correlates discovery submission timing without logging location or prompt co
     log.mockRestore()
   }
 })
+
+it("returns stories from model knowledge without requiring source links", async () => {
+  const { service } = setup([{ stories: [{ ...story, sources: [] }] }])
+  const initial = await service.discover({ requestId, location })
+  const result = await service.discover({ ticket: ticketOf(initial) })
+  expect(result).toMatchObject({
+    status: "completed",
+    discovery: {
+      stories: [{ title: story.title, sources: [], coordinates: location.coordinates }],
+    },
+  })
+})

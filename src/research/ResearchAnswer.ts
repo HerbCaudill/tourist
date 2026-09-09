@@ -2,11 +2,11 @@ import { Schema } from "effect"
 import { ResearchSource } from "./ResearchSource.ts"
 import { boundedText } from "./boundedText.ts"
 
-/** A sourced chat response. */
+/** A chat response with optional sources. */
 export const ResearchAnswer = Schema.Struct({
   /** Plain text response. */
   text: boundedText(12_000),
-  /** Sources supporting factual claims; may be empty for a clarification. */
+  /** Sources supplied in context; may be empty for answers from model knowledge. */
   sources: Schema.Array(ResearchSource).pipe(Schema.maxItems(8)),
 })
 
