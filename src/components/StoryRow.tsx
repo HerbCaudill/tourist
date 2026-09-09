@@ -15,7 +15,7 @@ export function StoryRow(
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-full items-baseline gap-2.5 border-t border-neutral-300 py-2 text-left first:border-t-0 active:bg-neutral-200"
+      className="flex w-full items-baseline gap-2.5 border-t border-neutral-300 py-3 text-left first:border-t-0 active:bg-neutral-200"
     >
       <span className="w-10 shrink-0 text-right font-medium text-red-700">
         {formatDistance(story.distanceMeters).replace(" ", "")}
