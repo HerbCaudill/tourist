@@ -3,7 +3,6 @@ import type { Location, Story } from "../types"
 import { BackButton } from "./BackButton"
 import { Footnotes } from "./Footnotes"
 import { HeaderLine } from "./HeaderLine"
-import { KindTag } from "./KindTag"
 import { Prompt } from "./Prompt"
 
 /** A story's full account with numbered footnotes. */
@@ -24,8 +23,7 @@ export function StoryScreen(
         left={<BackButton label="back" onClick={onBack} />}
         right={
           <>
-            #{number} {formatDistance(story.distanceMeters).replace(" ", "")} {story.bearing}{" "}
-            <KindTag kind={story.kind} />
+            #{number} {formatDistance(story.distanceMeters).replace(" ", "")} {story.bearing}
           </>
         }
       />
