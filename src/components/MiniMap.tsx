@@ -14,7 +14,7 @@ export function MiniMap(
     radiusMeters,
     zoom,
     accuracyMeters,
-    height = 200,
+    height = 350,
     researching,
   }: Props,
 ) {

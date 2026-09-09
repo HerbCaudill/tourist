@@ -1,4 +1,4 @@
-import { IconRefresh } from "@tabler/icons-react"
+import { IconCircleCheckFilled, IconRefresh } from "@tabler/icons-react"
 import { useState, type ReactNode } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
@@ -72,7 +72,7 @@ export function NearbyScreen(
                 }
                 className="shrink-0 text-red-700 disabled:text-neutral-400"
               >
-                ↵
+                <IconCircleCheckFilled size={18} aria-hidden="true" />
               </button>
             )}
           </form>

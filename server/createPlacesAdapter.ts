@@ -104,7 +104,7 @@ export function createPlacesAdapter(
             Math.log2(
               (156543.03392 *
                 Math.cos((Math.min(85, Math.abs(center.lat)) * Math.PI) / 180) *
-                190) /
+                370) /
                 (extent * 2),
             ),
           ),
@@ -115,7 +115,7 @@ export function createPlacesAdapter(
         key,
         center: `${center.lat},${center.lon}`,
         zoom: String(zoom),
-        size: "640x240",
+        size: "640x420",
         scale: "2",
         maptype: "roadmap",
         format: "png",

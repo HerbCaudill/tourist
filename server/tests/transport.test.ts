@@ -148,12 +148,21 @@ describe("narrow Google adapter", () => {
         }),
     )
     const places = createPlacesAdapter("key", fetcher)
-    await places.map(center, [center], 1000)
+    await places.map(
+      center,
+      [
+        { lat: 55.9509, lon: -3.18 },
+        { lat: 55.9495, lon: -3.181 },
+        { lat: 55.9495, lon: -3.1805 },
+      ],
+      1000,
+    )
     await places.map(center, [{ lat: 55.958, lon: -3.18 }], 1000)
     const close = new URL(String(fetcher.mock.calls[0]?.[0]))
     const far = new URL(String(fetcher.mock.calls[1]?.[0]))
-    expect(Number(close.searchParams.get("zoom"))).toBeGreaterThanOrEqual(16)
-    expect(Number(far.searchParams.get("zoom"))).toBeLessThanOrEqual(13)
+    expect(close.searchParams.get("size")).toBe("640x420")
+    expect(Number(close.searchParams.get("zoom"))).toBe(17)
+    expect(Number(far.searchParams.get("zoom"))).toBeLessThanOrEqual(14)
   })
 
   it("returns whole attributed image bytes, leaving the key only on the private provider request", async () => {

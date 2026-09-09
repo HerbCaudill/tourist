@@ -63,7 +63,7 @@ export function GoogleMap(
           <LocationMarker researching={researching} />
         </>
       ) : (
-        <p className="min-h-[160px] px-[18px] py-4 text-neutral-600">
+        <p className="aspect-[640/420] px-[18px] py-4 text-neutral-600">
           {failed === request
             ? "Map unavailable. The stories are still available below."
             : "Loading map…"}
