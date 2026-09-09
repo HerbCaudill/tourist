@@ -5,8 +5,32 @@ import { App } from "../App"
 import { location } from "../data/location"
 import type { Discovery, Location } from "../types"
 import { createFakeResearch } from "../lib/createFakeResearch"
+import { ResearchClientError } from "../lib/ResearchClientError"
 
 describe("live discovery states", () => {
+  it.each(["malformed", "expired", "timeout", "auth"])(
+    "starts fresh research when retrying a %s result",
+    async code => {
+      const user = userEvent.setup()
+      const fake = createFakeResearch({ delayMs: 0 })
+      const research = {
+        ...fake,
+        discover: vi
+          .fn()
+          .mockRejectedValueOnce(new ResearchClientError(code, "Research failed"))
+          .mockImplementation(fake.discover),
+      }
+      render(<App research={research} />)
+      await screen.findByRole("alert")
+      await user.click(screen.getByRole("button", { name: "Try again" }))
+      expect(await screen.findByRole("button", { name: /worst poet/ })).toBeVisible()
+      expect(research.discover.mock.calls[1][1].requestId).not.toBe(
+        research.discover.mock.calls[0][1].requestId,
+      )
+      expect(research.discover.mock.calls[1][0]).toEqual(research.discover.mock.calls[0][0])
+    },
+  )
+
   it("accepts a typed place during GPS lookup and ignores its late result", async () => {
     const user = userEvent.setup()
     let finishGps!: (value: Location) => void

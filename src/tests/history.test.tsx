@@ -5,10 +5,28 @@ import { useDiscovery } from "../hooks/useDiscovery"
 import { App } from "../App"
 import { createFakeResearch } from "../lib/createFakeResearch"
 import { createHistoryStore } from "../lib/createHistoryStore"
+import { ResearchClientError } from "../lib/ResearchClientError"
 import { location } from "../data/location"
 import type { Discovery } from "../types"
 
 afterEach(() => vi.restoreAllMocks())
+
+it("does not restore an invalid research job after reopening", async () => {
+  const { fake, discovery, store } = await setup()
+  const research = {
+    ...fake,
+    discover: vi.fn().mockRejectedValue(new ResearchClientError("malformed", "Invalid result")),
+  }
+  const first = renderHook(() => useDiscovery(research, store))
+  await waitFor(() => expect(first.result.current.error).toBe("Invalid result"))
+  const failedId = research.discover.mock.calls[0][1].requestId
+  expect(store.read().pendingDiscovery).toBeUndefined()
+  first.unmount()
+  const next = { ...fake, discover: vi.fn().mockResolvedValue(discovery) }
+  const reopened = renderHook(() => useDiscovery(next, store))
+  await waitFor(() => expect(reopened.result.current.discovery).toBeDefined())
+  expect(next.discover.mock.calls[0][1].requestId).not.toBe(failedId)
+})
 
 /** Provide independently stored, valid live-shaped reading data. */
 async function setup() {

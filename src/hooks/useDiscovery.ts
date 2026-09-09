@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Discovery, Location, Research, ResearchProgress } from "../types"
 import type { createHistoryStore } from "../lib/createHistoryStore"
+import { ResearchClientError } from "../lib/ResearchClientError"
 
 /** Manage resumable discovery while preserving readable results and their original geography. */
 export function useDiscovery(
@@ -110,6 +111,14 @@ export function useDiscovery(
         failed.current = undefined
       } catch (failure) {
         if (operation.current !== current || current.controller.signal.aborted) return
+        if (failure instanceof ResearchClientError && failure.restartRequired) {
+          failed.current = { kind: "discovery", location: where, requestId: crypto.randomUUID() }
+          if (history) {
+            const cleared = history.clearPendingDiscovery()
+            setStorageError(previous => previous || !cleared)
+            onHistoryChange?.()
+          }
+        }
         setError(
           failure instanceof Error ? failure.message : "Research could not finish. Try again.",
         )
