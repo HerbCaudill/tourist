@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
 import type { Discovery, Location, ResearchProgress } from "../types"
@@ -17,6 +17,7 @@ export function NearbyScreen(
     location,
     radiusMeters,
     researching,
+    offline,
     mapProvider,
     progress,
     error,
@@ -28,6 +29,7 @@ export function NearbyScreen(
     onAsk,
     chatPending,
     onOpenChat,
+    savedReading,
   }: Props,
 ) {
   const [query, setQuery] = useState("")
@@ -61,7 +63,7 @@ export function NearbyScreen(
               type="button"
               aria-label="Refresh"
               onClick={onRefresh}
-              disabled={researching}
+              disabled={researching || offline}
               className={cn("text-red-700", researching && "animate-pulse")}
             >
               [r]
@@ -77,7 +79,7 @@ export function NearbyScreen(
             <button
               type="button"
               onClick={onRetry}
-              disabled={researching}
+              disabled={researching || offline}
               className="mt-1 underline"
             >
               Try again
@@ -98,6 +100,7 @@ export function NearbyScreen(
           >
             <input
               aria-label="Enter a place"
+              disabled={offline}
               placeholder="Street or landmark, city"
               maxLength={200}
               value={query}
@@ -107,7 +110,9 @@ export function NearbyScreen(
             <button
               type="submit"
               disabled={
-                !query.trim() || (researching && (!progress || query.trim() === location?.name))
+                offline ||
+                !query.trim() ||
+                (researching && (!progress || query.trim() === location?.name))
               }
               className="text-red-700 disabled:text-neutral-400"
             >
@@ -115,6 +120,11 @@ export function NearbyScreen(
             </button>
           </form>
         </details>
+        {!location && discovery && (
+          <p className="my-2 text-neutral-500">
+            Saved stories near {discovery.location.name.toLowerCase()}.
+          </p>
+        )}
         {moved && (
           <p className="my-2 text-neutral-500">
             Showing earlier stories near {origin.name.toLowerCase()}. Distances and map use that
@@ -165,6 +175,10 @@ export function NearbyScreen(
             />
           ))}
         </div>
+        {offline && !discovery && (
+          <p className="py-2 text-neutral-500">No saved stories on this device.</p>
+        )}
+        {savedReading}
       </div>
       {mapProvider === "google" && (
         <p className="px-[18px] pb-1 text-[10px] text-neutral-500">
@@ -204,6 +218,8 @@ type Props = {
   radiusMeters: number
   /** Whether location or research is pending. */
   researching: boolean
+  /** Saved reading stays available while new requests are disabled. */
+  offline?: boolean
   /** Maps provider required by the active research adapter. */
   mapProvider?: "google"
   /** Server progress, when research has started. */
@@ -226,4 +242,6 @@ type Props = {
   chatPending?: boolean
   /** Reopen the existing general conversation. */
   onOpenChat?: () => void
+  /** Saved records displayed within the scrollable ledger. */
+  savedReading?: ReactNode
 }

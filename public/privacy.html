@@ -61,9 +61,8 @@
       <h1>Privacy</h1>
       <p class="date">Updated 9 September 2026</p>
       <p>
-        Tourist uses a location and your questions to research nearby stories. The live research
-        features described here are being introduced into the prototype. A demonstration using fixed
-        sample stories does not submit a live research request.
+        Tourist uses a location and your questions to research nearby stories. Recent discoveries
+        and conversations are saved on this device so they remain readable when you lose connection.
       </p>
       <h2>Location and Google Maps</h2>
       <p>
@@ -104,13 +103,18 @@
       </p>
       <h2>Data in your browser</h2>
       <p>
-        Tourist caches app files for reopening. Local reading history and a clear-history control
-        are being added. When that feature is available, recent discoveries and conversations will
-        be saved in this browser for offline reading, with bounded retention. Google map images and
-        raw nearby-place results will not be included in that archive.
+        Tourist caches app files for reopening and saves recent discoveries and conversations in
+        this browser for offline reading. The archive holds at most twelve discoveries and twelve
+        conversations, with a total size limit. It also retains one pending discovery and the exact
+        unanswered question needed to reconnect after an interruption. Google map images and raw
+        nearby-place results are not included in this archive.
       </p>
       <p>
-        You can remove Tourist's local data through your browser's clear-site-data controls. This
+        Saved reading is removed by its geographic retention deadline, never later than thirty days
+        after the original research. Recent-event results are reused for at most one hour; other
+        results are reused for at most one day when the location and research version still fit.
+        Older retained material remains available for offline reading. Use Clear history under Saved
+        reading to remove the local archive, or use your browser's clear-site-data controls. This
         does not erase research already sent to service providers or cancel a submitted job.
         Research job expiry is separate from browser storage.
       </p>

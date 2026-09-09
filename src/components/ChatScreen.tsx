@@ -14,6 +14,8 @@ export function ChatScreen(
     contextLabel,
     messages,
     answering,
+    offline,
+    questionDisabled,
     error,
     onRetry,
     onRestart,
@@ -86,17 +88,22 @@ export function ChatScreen(
         {error && (
           <div role="alert" className="mb-3 text-red-700">
             <p>{error}</p>
-            <button type="button" onClick={onRetry} className="mt-1 underline">
+            <button type="button" onClick={onRetry} disabled={offline} className="mt-1 underline">
               Retry answer
             </button>
             {!restartRequired && (
-              <button type="button" onClick={onRestart} className="mt-1 ml-3 underline">
+              <button
+                type="button"
+                onClick={onRestart}
+                disabled={offline}
+                className="mt-1 ml-3 underline"
+              >
                 Start answer again
               </button>
             )}
           </div>
         )}
-        {!answering && !error && suggestions.length > 0 && (
+        {!offline && !questionDisabled && !answering && !error && suggestions.length > 0 && (
           <div className="border-t border-neutral-300 pt-2">
             {suggestions.map(q => (
               <button
@@ -112,7 +119,11 @@ export function ChatScreen(
         )}
         <div ref={bottom} />
       </div>
-      <Prompt placeholder="ask a follow-up" onAsk={onAsk} disabled={answering || !!error} />
+      <Prompt
+        placeholder="ask a follow-up"
+        onAsk={onAsk}
+        disabled={offline || questionDisabled || answering || !!error}
+      />
     </>
   )
 }
@@ -128,6 +139,10 @@ type Props = {
   messages: Message[]
   /** Whether a reply is pending. */
   answering: boolean
+  /** Whether new requests are unavailable while offline. */
+  offline?: boolean
+  /** A new question needs a current location; retry can use its original request. */
+  questionDisabled?: boolean
   /** Recoverable failure for this conversation only. */
   error?: string
   /** Resend the exact failed request without duplicating the user turn. */

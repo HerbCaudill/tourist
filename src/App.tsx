@@ -1,11 +1,14 @@
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { ChatScreen } from "./components/ChatScreen"
 import { NearbyScreen } from "./components/NearbyScreen"
+import { SavedReading } from "./components/SavedReading"
 import { StoryScreen } from "./components/StoryScreen"
 import { RADIUS_METERS } from "./constants"
 import { useConversations } from "./hooks/useConversations"
+import { useOnline } from "./hooks/useOnline"
+import { createHistoryStore } from "./lib/createHistoryStore"
 import { useDiscovery } from "./hooks/useDiscovery"
-import { createFakeResearch } from "./lib/createFakeResearch"
+import { createLiveResearch } from "./lib/createLiveResearch"
 import type { ConversationContext, Discovery, Location, Research, Story } from "./types"
 
 /** The Tourist app: nearby stories, a story reader, and contextual chat. */
@@ -13,12 +16,32 @@ export function App(
   /** Explicit adapter injection for development and tests. */
   {
     research = defaultResearch,
+    history: suppliedHistory,
   }: Props,
 ) {
   const [view, setView] = useState<View>({ kind: "nearby" })
+  const online = useOnline()
+  const [history] = useState(
+    () => suppliedHistory ?? (research.mapProvider === "google" ? createHistoryStore() : undefined),
+  )
+  const [historyRevision, setHistoryRevision] = useState(0)
+  const changed = useCallback(() => setHistoryRevision(value => value + 1), [])
+  const saved = useMemo(() => history?.read(), [history, historyRevision])
+  const nearby = useDiscovery(research, history, changed)
   const { location, discovery, busy, progress, error, locationError, refresh, retry, choosePlace } =
-    useDiscovery(research)
-  const chat = useConversations(research)
+    nearby
+  const chat = useConversations(research, history, changed)
+  const [clearError, setClearError] = useState(false)
+
+  /** Erase archive and in-memory records, stopping any pending result from saving them again. */
+  const clearHistory = () => {
+    nearby.clear()
+    chat.clear()
+    setClearError(history ? !history.clear() : false)
+    changed()
+    setView({ kind: "nearby" })
+  }
+
   const stories = discovery?.stories ?? []
   const generalContext = location
     ? conversationContext(discovery?.location ?? location, discovery)
@@ -27,7 +50,7 @@ export function App(
 
   /** Send a question while retaining this conversation's originating context. */
   const ask = (question: string, context: ConversationContext) => {
-    if (!location) return
+    if (!location || !online) return
     setView({ kind: "chat", context })
     chat.ask(context, question, location)
   }
@@ -40,7 +63,7 @@ export function App(
           story={story}
           number={context.number ?? 1}
           origin={context.originLocation}
-          chatPending={!!chat.conversations[context.id]?.pending}
+          chatPending={!online || !location || !!chat.conversations[context.id]?.pending}
           onOpenChat={
             chat.conversations[context.id] ? () => setView({ kind: "chat", context }) : undefined
           }
@@ -69,6 +92,8 @@ export function App(
           onRetry={() => chat.retry(context.id)}
           onRestart={() => chat.retry(context.id, true)}
           restartRequired={conversation?.restartRequired}
+          offline={!online}
+          questionDisabled={!location}
           suggestions={suggestions.filter(question => !asked.has(question))}
           onBack={() => setView(story ? { kind: "story", story, context } : { kind: "nearby" })}
           onAsk={question => ask(question, context)}
@@ -81,6 +106,7 @@ export function App(
         location={location}
         radiusMeters={discovery?.radiusMeters ?? RADIUS_METERS}
         researching={busy}
+        offline={!online}
         mapProvider={research.mapProvider}
         progress={progress}
         error={error}
@@ -88,6 +114,20 @@ export function App(
         onRetry={retry}
         onChoosePlace={choosePlace}
         onRefresh={refresh}
+        savedReading={
+          saved && (
+            <SavedReading
+              discoveries={saved.discoveries}
+              conversations={saved.conversations}
+              pending={!!saved.pendingDiscovery}
+              onDiscovery={nearby.showSaved}
+              onConversation={conversation =>
+                setView({ kind: "chat", context: conversation.context })
+              }
+              onClear={clearHistory}
+            />
+          )
+        }
         onOpenStory={id => {
           const index = stories.findIndex(story => story.id === id)
           if (index >= 0 && discovery)
@@ -102,7 +142,7 @@ export function App(
               ),
             })
         }}
-        chatPending={!!generalConversation?.pending}
+        chatPending={!online || !!generalConversation?.pending}
         onOpenChat={
           generalContext && generalConversation
             ? () => setView({ kind: "chat", context: generalContext })
@@ -116,7 +156,19 @@ export function App(
   })()
 
   return (
-    <main className="mx-auto flex h-dvh max-w-md flex-col bg-[#eeeeec] font-mono text-[12.5px] leading-normal text-neutral-900">
+    <main className="mx-auto flex h-dvh max-w-md flex-col bg-[#eeeeec] pt-[env(safe-area-inset-top)] font-mono text-[12.5px] leading-normal text-neutral-900">
+      {!online && (
+        <p role="status" className="px-[18px] py-2 text-neutral-600">
+          You're offline. Saved reading is available; new research and answers need a connection.
+        </p>
+      )}
+      {(nearby.storageError || chat.storageError || clearError) && (
+        <p role="alert" className="px-[18px] py-2 text-red-700">
+          {clearError
+            ? "Browser storage could not be cleared. Use your browser's clear-site-data controls."
+            : "Changes could not be saved on this device. Keep this page open to retain them."}
+        </p>
+      )}
       {screen}
     </main>
   )
@@ -140,12 +192,13 @@ function conversationContext(
     selectedStoryId: story?.id,
     number,
     researchedAt: discovery?.researchedAt.toISOString() ?? new Date().toISOString(),
-    coordinatesExpireAt: discovery?.coordinatesExpireAt,
-    promptVersion: discovery?.promptVersion,
+    coordinatesExpireAt:
+      discovery?.coordinatesExpireAt ?? new Date(Date.now() + 29 * 86_400_000).toISOString(),
+    promptVersion: discovery?.promptVersion ?? "ledger-1",
   }
 }
 
-const defaultResearch = createFakeResearch()
+const defaultResearch = createLiveResearch()
 
 type View =
   | { kind: "nearby" }
@@ -155,4 +208,6 @@ type View =
 type Props = {
   /** Adapter for location and research. */
   research?: Research
+  /** Explicit archive for deterministic reopen and offline tests. */
+  history?: ReturnType<typeof createHistoryStore>
 }

@@ -1,3 +1,4 @@
+import type { createHistoryStore } from "../lib/createHistoryStore"
 import { ResearchClientError } from "../lib/ResearchClientError"
 import { useEffect, useRef, useState } from "react"
 import type { ChatRequest, Conversation, ConversationContext, Location, Research } from "../types"
@@ -6,9 +7,23 @@ import type { ChatRequest, Conversation, ConversationContext, Location, Research
 export function useConversations(
   /** Current fixture or live transport. */
   research: Research,
+  /** Validated archive for reopening transcripts. */
+  history?: ReturnType<typeof createHistoryStore>,
+  /** Notify history controls after a record changes. */
+  onHistoryChange?: () => void,
 ) {
-  const [conversations, setConversations] = useState<Record<string, Conversation>>({})
-  const records = useRef<Record<string, Conversation>>({})
+  const [conversations, setConversations] = useState<Record<string, Conversation>>(() =>
+    Object.fromEntries(
+      (history?.read().conversations ?? []).map(conversation => [
+        conversation.id,
+        conversation.pending && !conversation.error
+          ? { ...conversation, error: "This answer was interrupted. Retry to reconnect." }
+          : conversation,
+      ]),
+    ),
+  )
+  const records = useRef<Record<string, Conversation>>(conversations)
+  const [storageError, setStorageError] = useState(false)
   const running = useRef(new Map<string, AbortController>())
 
   useEffect(
@@ -21,13 +36,17 @@ export function useConversations(
 
   /** Publish a synchronous transcript update so repeated taps see the latest state. */
   const save = (conversation: Conversation) => {
+    if (history) {
+      setStorageError(!history.saveConversation(conversation))
+      onHistoryChange?.()
+    }
     records.current = { ...records.current, [conversation.id]: conversation }
     setConversations(records.current)
   }
 
   /** Deliver an exact persisted request once, updating only its originating transcript. */
   const send = async (id: string, request: ChatRequest) => {
-    if (running.current.has(id)) return
+    if (running.current.has(id) || !navigator.onLine) return
     const controller = new AbortController()
     running.current.set(id, controller)
     save({
@@ -71,7 +90,7 @@ export function useConversations(
         updatedAt: new Date().toISOString(),
       })
     } finally {
-      running.current.delete(id)
+      if (running.current.get(id) === controller) running.current.delete(id)
     }
   }
 
@@ -79,6 +98,7 @@ export function useConversations(
   const ask = (context: ConversationContext, question: string, location: Location) => {
     const current = records.current[context.id]
     if (
+      !navigator.onLine ||
       running.current.has(context.id) ||
       current?.pending ||
       !question.trim() ||
@@ -121,5 +141,14 @@ export function useConversations(
       )
   }
 
-  return { conversations, ask, retry }
+  /** Clear transcripts and stop pending responses from recreating deleted history. */
+  const clear = () => {
+    for (const controller of running.current.values()) controller.abort()
+    running.current.clear()
+    records.current = {}
+    setConversations({})
+    setStorageError(false)
+  }
+
+  return { conversations, ask, retry, clear, storageError }
 }

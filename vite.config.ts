@@ -22,8 +22,8 @@ export default defineConfig({
           { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
         display: "standalone",
-        background_color: "#ffffff",
-        theme_color: "#000000",
+        background_color: "#eeeeec",
+        theme_color: "#eeeeec",
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],

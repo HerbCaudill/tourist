@@ -11,10 +11,11 @@
     "test:pw": "playwright test",
     "test:pw:ui": "playwright test --ui",
     "test:pw:headed": "playwright test --headed",
-    "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1",
+    "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1 && pnpm test:pw:offline",
     "typecheck": "tsc -b",
     "format": "oxfmt .",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "test:pw:offline": "pnpm build && TOURIST_PREVIEW=1 playwright test --max-failures=1"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

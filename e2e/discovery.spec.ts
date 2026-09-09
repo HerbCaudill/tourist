@@ -13,6 +13,13 @@ test("recovers from denied location, follows live research progress, and opens a
     stories: fixture.stories.map(story => ({
       ...story,
       placeId: story.id,
+      sources: story.sources.map(source => ({
+        ...source,
+        url:
+          new URL(source.url).pathname === "/"
+            ? `${source.url}works/the-tay-bridge-disaster`
+            : source.url,
+      })),
       suggestedQuestions: story.suggestedQuestions?.slice(0, 3) ?? [],
       timeSensitive: false,
     })),
@@ -86,7 +93,7 @@ test("recovers from denied location, follows live research progress, and opens a
   await expect(page.getByText(/Distance from candlemaker row/)).toBeVisible()
   await expect(page.getByRole("link", { name: /mcgonagall online/ })).toHaveAttribute(
     "href",
-    "https://www.mcgonagall-online.org.uk/",
+    "https://www.mcgonagall-online.org.uk/works/the-tay-bridge-disaster",
   )
   await page.getByPlaceholder("ask a follow-up").fill("What happened next?")
   await page.keyboard.press("Enter")

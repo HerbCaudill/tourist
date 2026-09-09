@@ -1,20 +1,36 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Discovery, Location, Research, ResearchProgress } from "../types"
+import type { createHistoryStore } from "../lib/createHistoryStore"
 
-/** Manage location and discovery without replacing readable results during an update. */
+/** Manage resumable discovery while preserving readable results and their original geography. */
 export function useDiscovery(
   /** Fixture or live research transport. */
   research: Research,
+  /** Optional validated local archive. */
+  history?: ReturnType<typeof createHistoryStore>,
+  /** Tell the history controls that a saved record changed. */
+  onHistoryChange?: () => void,
 ) {
   const [location, setLocation] = useState<Location>()
-  const [discovery, setDiscovery] = useState<Discovery>()
+  const [discovery, setDiscovery] = useState<Discovery | undefined>(
+    () => history?.read().discoveries[0],
+  )
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState<ResearchProgress>()
   const [error, setError] = useState<string>()
+  const [storageError, setStorageError] = useState(false)
   const [locationError, setLocationError] = useState(false)
   const operation = useRef<Operation | undefined>(undefined)
   const active = useRef<{ location: Location; manual: boolean } | undefined>(undefined)
   const failed = useRef<FailedOperation | undefined>(undefined)
+
+  /** Cancel client polling without canceling the durable server job. */
+  const stop = useCallback(() => {
+    operation.current?.controller.abort()
+    operation.current = undefined
+    setBusy(false)
+    setProgress(undefined)
+  }, [])
 
   /** Start a superseding operation and stop polling its predecessor. */
   const begin = useCallback((query?: string) => {
@@ -28,10 +44,45 @@ export function useDiscovery(
     return current
   }, [])
 
-  /** Research a resolved location, keeping its request ID if a connection failed. */
+  /** Reuse suitable research or resume the same durable request after a disconnection. */
   const discover = useCallback(
-    async (where: Location, current: Operation, requestId: string = crypto.randomUUID()) => {
+    async (
+      where: Location,
+      current: Operation,
+      requestId: string = crypto.randomUUID(),
+      reuse = false,
+    ) => {
+      if (!navigator.onLine) {
+        stop()
+        return
+      }
+      if (reuse && history) {
+        const cached = [200, 500, 1000]
+          .map(radiusMeters =>
+            history.findSuitableDiscovery({
+              location: where,
+              radiusMeters,
+              promptVersion: "ledger-1",
+            }),
+          )
+          .find(Boolean)
+        if (cached) {
+          setDiscovery(cached)
+          stop()
+          return
+        }
+      }
       failed.current = { kind: "discovery", location: where, requestId }
+      if (history) {
+        const prior = history.read().pendingDiscovery
+        const saved = history.savePendingDiscovery({
+          requestId,
+          location: where,
+          startedAt: prior?.requestId === requestId ? prior.startedAt : new Date().toISOString(),
+        })
+        setStorageError(!saved)
+        onHistoryChange?.()
+      }
       setProgress({ status: "queued", radiusMeters: 200 })
       try {
         const result = await research.discover(where, {
@@ -42,6 +93,12 @@ export function useDiscovery(
           },
         })
         if (operation.current !== current) return
+        if (history) {
+          const saved = history.saveDiscovery(result)
+          const cleared = history.clearPendingDiscovery()
+          setStorageError(!saved || !cleared)
+          onHistoryChange?.()
+        }
         setDiscovery(result)
         failed.current = undefined
       } catch (failure) {
@@ -50,19 +107,16 @@ export function useDiscovery(
           failure instanceof Error ? failure.message : "Research could not finish. Try again.",
         )
       } finally {
-        if (operation.current === current) {
-          operation.current = undefined
-          setBusy(false)
-          setProgress(undefined)
-        }
+        if (operation.current === current) stop()
       }
     },
-    [research],
+    [history, onHistoryChange, research, stop],
   )
 
-  /** Resolve a browser location or the user's explicit place choice. */
+  /** Resolve browser location or a typed place before selecting suitable cached research. */
   const locate = useCallback(
-    async (query?: string) => {
+    async (query?: string, reuse = true) => {
+      if (!navigator.onLine) return
       if (query && operation.current?.query === query) return
       const current = begin(query)
       try {
@@ -74,7 +128,7 @@ export function useDiscovery(
           )
         active.current = { location: where, manual: !!query }
         setLocation(where)
-        await discover(where, current)
+        await discover(where, current, undefined, reuse)
       } catch (failure) {
         if (operation.current !== current || current.controller.signal.aborted) return
         failed.current = { kind: "location", query }
@@ -84,35 +138,68 @@ export function useDiscovery(
             : "Location is unavailable. Enter a place instead.",
         )
         setLocationError(true)
-        setBusy(false)
-        operation.current = undefined
+        stop()
       }
     },
-    [begin, discover, research],
+    [begin, discover, research, stop],
   )
 
+  /** Resume the one saved request, or refresh location while retaining any open reader. */
+  const resume = useCallback(() => {
+    if (!navigator.onLine || operation.current) return
+    const pending = history?.read().pendingDiscovery
+    if (pending) {
+      active.current = { location: pending.location, manual: true }
+      setLocation(pending.location)
+      void discover(pending.location, begin(), pending.requestId)
+    } else if (active.current?.manual) {
+      void discover(active.current.location, begin(active.current.location.name), undefined, true)
+    } else void locate()
+  }, [begin, discover, history, locate])
+
   useEffect(() => {
-    void locate()
+    resume()
+    const foreground = () => {
+      if (document.visibilityState === "visible") resume()
+    }
+    window.addEventListener("online", resume)
+    window.addEventListener("offline", stop)
+    document.addEventListener("visibilitychange", foreground)
     return () => {
       operation.current?.controller.abort()
       operation.current = undefined
+      window.removeEventListener("online", resume)
+      window.removeEventListener("offline", stop)
+      document.removeEventListener("visibilitychange", foreground)
     }
-  }, [locate])
+  }, [resume, stop])
 
-  /** Refresh GPS before new research, or retain an explicitly chosen place. */
+  /** Explicit refresh starts new research even when cached reading is still fresh. */
   const refresh = () => {
-    if (operation.current) return
+    if (operation.current || !navigator.onLine) return
     if (active.current?.manual)
       void discover(active.current.location, begin(active.current.location.name))
-    else void locate()
+    else void locate(undefined, false)
   }
 
-  /** Reconnect to the interrupted research or retry browser location. */
+  /** Replay the operation that failed, retaining its original query or request ID. */
   const retry = () => {
-    if (operation.current) return
+    if (operation.current || !navigator.onLine) return
     if (failed.current?.kind === "discovery")
       void discover(failed.current.location, begin(), failed.current.requestId)
     else void locate(failed.current?.query)
+  }
+
+  /** Remove readable state and cancel pending responses so they cannot restore cleared history. */
+  const clear = () => {
+    stop()
+    active.current = undefined
+    failed.current = undefined
+    setDiscovery(undefined)
+    setLocation(undefined)
+    setError(undefined)
+    setStorageError(false)
+    setLocationError(false)
   }
 
   return {
@@ -121,10 +208,13 @@ export function useDiscovery(
     busy,
     progress,
     error,
+    storageError,
     locationError,
     refresh,
     retry,
     choosePlace: locate,
+    clear,
+    showSaved: setDiscovery,
   }
 }
 
@@ -134,7 +224,6 @@ type Operation = {
   /** Cancel local polling without canceling the persisted server job. */
   controller: AbortController
 }
-
 /** Exact operation to replay after a recoverable failure. */
 type FailedOperation =
   | { kind: "location"; query?: string }

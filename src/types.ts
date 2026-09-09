@@ -200,3 +200,13 @@ export type Conversation = {
   /** ISO timestamp of the most recent change. */
   updatedAt: string
 }
+
+/** One resumable discovery retained across reopening, without a continuous location log. */
+export type PendingDiscovery = {
+  /** Original idempotent client UUID. */
+  requestId: string
+  /** Location associated with this one request. */
+  location: Location
+  /** ISO timestamp used to enforce the server job lifetime. */
+  startedAt: string
+}
