@@ -1,4 +1,4 @@
-import { IconChevronDown, IconMapPin, IconRefresh } from "@tabler/icons-react"
+import { IconRefresh } from "@tabler/icons-react"
 import { useState, type ReactNode } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
@@ -37,26 +37,19 @@ export function NearbyScreen(
   }: Props,
 ) {
   const [choosing, setChoosing] = useState(false)
+  const [searchContainer, setSearchContainer] = useState<HTMLDivElement | null>(null)
   const stories = researching ? [] : (discovery?.stories ?? [])
   const origin = researching ? location : (discovery?.location ?? location)
 
   return (
     <>
       <HeaderLine
+        allowOverflow
         left={
           <div className="flex min-w-0 items-center gap-1.5">
             <b>tourist</b>
             <span className="text-neutral-500">@</span>
-            <button
-              type="button"
-              aria-label="Choose a location"
-              disabled={offline}
-              onClick={() => setChoosing(true)}
-              className="flex min-w-0 items-center gap-1 py-2 text-neutral-600 disabled:text-neutral-400"
-            >
-              <span className="truncate">{location?.name.toLowerCase() ?? "choose a place"}</span>
-              <IconChevronDown size={14} className="shrink-0" aria-hidden="true" />
-            </button>
+            <div ref={setSearchContainer} className="relative min-w-0 flex-1" />
           </div>
         }
         right={
@@ -73,7 +66,7 @@ export function NearbyScreen(
       />
 
       <div className="shrink-0 px-[18px]">
-        {error && (
+        {error && !choosing && (
           <div role="alert" className="my-2 text-red-700">
             <p>{error}</p>
             <button
@@ -86,39 +79,41 @@ export function NearbyScreen(
             </button>
           </div>
         )}
-        {origin && (
-          <div className="relative -mx-[18px] my-2.5">
-            <div className="absolute top-2 right-2 z-10">
-              <button
-                type="button"
-                disabled={offline}
-                onClick={() => setChoosing(true)}
-                className="flex min-h-11 items-center gap-1.5 rounded-full bg-white/95 px-3 text-xs text-red-700 shadow-sm disabled:text-neutral-400"
-              >
-                <IconMapPin size={16} />
-                Choose on map
-              </button>
-            </div>
-            {(discovery?.mapProvider ?? mapProvider) === "google" ? (
-              <GoogleMap
-                location={origin}
-                stories={stories}
-                radiusMeters={radiusMeters}
-                researching={researching}
-              />
-            ) : (
-              <MiniMap
-                researching={researching}
-                you={origin.coordinates}
-                markers={stories.map((story, index) => ({
-                  label: String(index + 1),
-                  coordinates: story.coordinates,
-                }))}
-                radiusMeters={radiusMeters}
-              />
+        <div className="-mx-[18px] my-2.5">
+          <LocationPicker
+            initial={origin}
+            searchContainer={searchContainer}
+            onEditingChange={setChoosing}
+            deviceLocation={deviceLocation}
+            locate={locate}
+            resolveLocation={resolveLocation}
+            offline={offline}
+            onConfirm={onChoosePlace}
+          >
+            {origin && (
+              <div>
+                {(discovery?.mapProvider ?? mapProvider) === "google" ? (
+                  <GoogleMap
+                    location={origin}
+                    stories={stories}
+                    radiusMeters={radiusMeters}
+                    researching={researching}
+                  />
+                ) : (
+                  <MiniMap
+                    researching={researching}
+                    you={origin.coordinates}
+                    markers={stories.map((story, index) => ({
+                      label: String(index + 1),
+                      coordinates: story.coordinates,
+                    }))}
+                    radiusMeters={radiusMeters}
+                  />
+                )}
+              </div>
             )}
-          </div>
-        )}
+          </LocationPicker>
+        </div>
       </div>
       <div
         aria-label="Stories and conversation"
@@ -153,20 +148,6 @@ export function NearbyScreen(
         <div hidden>{savedReading}</div>
       </div>
       <Prompt placeholder="Ask me anything" onAsk={onAsk} disabled={!location || chatPending} />
-      {choosing && (
-        <LocationPicker
-          initial={origin}
-          deviceLocation={deviceLocation}
-          locate={locate}
-          resolveLocation={resolveLocation}
-          offline={offline}
-          onCancel={() => setChoosing(false)}
-          onConfirm={where => {
-            setChoosing(false)
-            onChoosePlace(where)
-          }}
-        />
-      )}
     </>
   )
 }

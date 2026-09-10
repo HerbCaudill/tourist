@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState } from "react"
-import { Dialog } from "@base-ui/react/dialog"
-import { IconCurrentLocation, IconMapPinFilled, IconSearch, IconX } from "@tabler/icons-react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
+import {
+  IconCurrentLocation,
+  IconMapPin,
+  IconMapPinFilled,
+  IconCircleCheckFilled,
+  IconX,
+} from "@tabler/icons-react"
 import { cn } from "cn"
 import { createGoogleLocationPicker } from "../lib/createGoogleLocationPicker"
 import { distanceBetween } from "../lib/distanceBetween"
@@ -22,6 +28,9 @@ export function LocationPicker(
     resolveLocation,
     onConfirm,
     onCancel,
+    searchContainer,
+    onEditingChange,
+    children,
     services: suppliedServices,
     offline,
   }: Props,
@@ -31,6 +40,8 @@ export function LocationPicker(
   const draftRef = useRef(initial)
   const [label, setLabel] = useState(initial?.name ?? "Choose a spot on the map")
   const [query, setQuery] = useState("")
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [mapActive, setMapActive] = useState(false)
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([])
   const [highlighted, setHighlighted] = useState(-1)
   const [viewport, setViewport] = useState<PickerViewport | undefined>(
@@ -51,9 +62,27 @@ export function LocationPicker(
   const revision = useRef(0)
   const searchRevision = useRef(0)
   const initialRef = useRef(initial)
+  const returningFocus = useRef(false)
+
+  useEffect(() => {
+    onEditingChange?.(mapActive)
+  }, [mapActive, onEditingChange])
+
+  useEffect(() => {
+    if (mapActive) return
+    initialRef.current = initial
+    draftRef.current = initial
+    gps.current = deviceLocation
+    setDraft(initial)
+    setLabel(initial?.name ?? "Choose a spot on the map")
+    setViewport(initial ? { center: initial.coordinates, radiusMeters: 5000 } : undefined)
+  }, [initial, deviceLocation, mapActive])
 
   useEffect(() => {
     if (!element) return
+    element.focus()
+    setMapReady(false)
+    setMapError(undefined)
     let active = true
     let firstIdle = true
     const controller = new AbortController()
@@ -170,6 +199,7 @@ export function LocationPicker(
     setSuggestions([])
     setHighlighted(-1)
     setQuery(value)
+    setSearchOpen(true)
   }
 
   /** Resolve a tentative position, guarding against late results after newer interactions. */
@@ -181,6 +211,7 @@ export function LocationPicker(
     /** Whether this result also updates the independent GPS dot. */
     device = false,
   ) {
+    setMapActive(true)
     const current = ++revision.current
     searchRevision.current += 1
     setSuggestions([])
@@ -193,6 +224,7 @@ export function LocationPicker(
       setDraft(where)
       setLabel(displayName ?? where.name)
       setQuery("")
+      setSearchOpen(false)
       setSearching(false)
       input.current?.blur()
       if (device) {
@@ -211,167 +243,251 @@ export function LocationPicker(
     }
   }
 
+  /** Finish editing and return focus to the original inline location field. */
+  function closePicker() {
+    revision.current += 1
+    setMapActive(false)
+    setQuery("")
+    setSearchOpen(false)
+    setPending(false)
+    setError(undefined)
+    returningFocus.current = document.activeElement !== input.current
+    input.current?.focus()
+  }
+
   let suggestionMessage = "No suggestions. Try adding a city, or choose on the map."
   if (searching) suggestionMessage = "Finding places…"
   else if (searchError)
     suggestionMessage = "Suggestions unavailable. Press Search to look up the place."
 
-  return (
-    <Dialog.Root
-      open
-      onOpenChange={open => {
-        if (!open) onCancel()
+  const searchControl = (
+    <div
+      className="relative min-w-0 flex-1"
+      onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setSearchOpen(false)
       }}
     >
-      <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/30" />
-        <Dialog.Popup className="bg-background fixed inset-0 z-50 flex min-h-0 flex-col font-mono text-sm outline-none sm:inset-x-6 sm:inset-y-8 sm:mx-auto sm:max-w-2xl sm:overflow-hidden sm:rounded-xl sm:shadow-xl">
-          <div className="flex shrink-0 items-center justify-between border-b border-neutral-300 px-5 pt-[max(12px,env(safe-area-inset-top))] pb-3">
-            <Dialog.Title className="font-semibold">Choose a location</Dialog.Title>
-            <Dialog.Close className="min-h-11 px-2 text-red-700">Cancel</Dialog.Close>
-          </div>
-          <div className="relative z-10 shrink-0 px-5 pt-4 pb-3">
-            <form
-              onSubmit={event => {
+      <form
+        className="flex min-w-0 items-center gap-1"
+        onSubmit={event => {
+          event.preventDefault()
+          if (pending || offline || !query.trim()) return
+          const suggestion = suggestions[highlighted >= 0 ? highlighted : 0]
+          if (suggestion) void preview(suggestion.resolve, suggestion.name)
+          else void preview(() => resolveLocation(query.trim()))
+        }}
+      >
+        <span className="relative h-[1.25em] min-w-0 flex-1">
+          <input
+            ref={input}
+            role="combobox"
+            aria-label="Search for a place"
+            aria-autocomplete="list"
+            aria-expanded={searchOpen}
+            aria-controls="location-suggestions"
+            aria-activedescendant={highlighted >= 0 ? `location-option-${highlighted}` : undefined}
+            placeholder={initial?.name.toLowerCase() ?? "choose a place"}
+            value={query}
+            maxLength={200}
+            autoComplete="off"
+            disabled={offline}
+            onFocus={() => {
+              if (returningFocus.current) returningFocus.current = false
+              else setSearchOpen(true)
+            }}
+            onChange={event => changeQuery(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
                 event.preventDefault()
-                if (pending || offline || !query.trim()) return
-                const suggestion = suggestions[highlighted >= 0 ? highlighted : 0]
-                if (suggestion) void preview(suggestion.resolve, suggestion.name)
-                else void preview(() => resolveLocation(query.trim()))
-              }}
-              className="flex items-center gap-2 rounded-lg border border-neutral-400 bg-white px-3 focus-within:ring-2 focus-within:ring-red-700"
-            >
-              <IconSearch size={18} aria-hidden="true" />
-              <input
-                ref={input}
-                role="combobox"
-                aria-label="Search for a place"
-                aria-autocomplete="list"
-                aria-expanded={suggestions.length > 0}
-                aria-controls="location-suggestions"
-                aria-activedescendant={
-                  highlighted >= 0 ? `location-option-${highlighted}` : undefined
+                const direction = event.key === "ArrowDown" ? 1 : -1
+                setHighlighted(index => {
+                  if (!suggestions.length) return -1
+                  if (index < 0) return direction > 0 ? 0 : suggestions.length - 1
+                  return (index + direction + suggestions.length) % suggestions.length
+                })
+              }
+              if (event.key === "Escape") {
+                event.preventDefault()
+                event.stopPropagation()
+                if (searchOpen || query) {
+                  changeQuery("")
+                  setSearchOpen(false)
+                } else {
+                  closePicker()
+                  onCancel?.()
                 }
-                placeholder="Place, street, or city"
-                value={query}
-                maxLength={200}
-                autoComplete="off"
-                disabled={offline}
-                onChange={event => changeQuery(event.target.value)}
-                onKeyDown={event => {
-                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                    event.preventDefault()
-                    const direction = event.key === "ArrowDown" ? 1 : -1
-                    setHighlighted(index => {
-                      if (!suggestions.length) return -1
-                      if (index < 0) return direction > 0 ? 0 : suggestions.length - 1
-                      return (index + direction + suggestions.length) % suggestions.length
-                    })
-                  }
-                  if (event.key === "Escape" && query) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    changeQuery("")
-                  }
-                }}
-                className="min-w-0 flex-1 py-3 text-base outline-none"
-              />
-              {query && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() => changeQuery("")}
-                  className="min-h-11 px-1"
-                >
-                  <IconX size={18} />
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={pending || offline || !query.trim()}
-                className="min-h-11 text-red-700 disabled:text-neutral-400"
-              >
-                Search
-              </button>
-            </form>
-            {query.trim().length >= 2 && (
-              <div className="absolute inset-x-5 top-[72px] max-h-[35dvh] overflow-y-auto rounded-b-lg border border-neutral-300 bg-white shadow-lg">
-                <ul ref={list} id="location-suggestions" role="listbox" aria-label="Places">
-                  {suggestions.map((suggestion, index) => (
-                    <li
-                      key={suggestion.id}
-                      id={`location-option-${index}`}
-                      role="option"
-                      aria-selected={highlighted === index}
-                      onMouseDown={event => event.preventDefault()}
-                      onClick={() => {
-                        if (!offline) void preview(suggestion.resolve, suggestion.name)
-                      }}
-                      className={cn(
-                        "cursor-pointer border-b border-neutral-200 px-4 py-3 hover:bg-neutral-100",
-                        highlighted === index && "bg-neutral-100",
-                      )}
-                    >
-                      <p className="font-sans text-base font-medium">{suggestion.name}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{suggestion.address}</p>
-                    </li>
-                  ))}
-                </ul>
-                {suggestions.length === 0 && (
-                  <p role="status" className="px-4 py-3 text-xs text-neutral-600">
-                    {suggestionMessage}
-                  </p>
-                )}
-                <p className="px-4 py-2 font-sans text-xs text-neutral-500">Google Maps</p>
-              </div>
-            )}
+              }
+            }}
+            className="absolute top-0 left-0 w-[128%] origin-top-left scale-[0.78125] bg-transparent text-[16px] leading-tight outline-none placeholder:text-neutral-500 focus:border-b focus:border-neutral-400"
+          />
+        </span>
+        {query && (
+          <>
             <button
               type="button"
-              disabled={pending || offline}
-              onClick={() => void preview(locate, "Your current location", true)}
-              className="mt-2 flex min-h-11 items-center gap-2 text-red-700 disabled:text-neutral-400"
+              aria-label="Clear search"
+              onClick={() => changeQuery("")}
+              className="text-neutral-500"
             >
-              <IconCurrentLocation size={18} />
-              Use my current location
+              <IconX size={14} />
             </button>
-          </div>
-          <div className="relative min-h-32 flex-1 bg-neutral-200">
-            <div ref={setElement} aria-label="Location map" className="absolute inset-0" />
+            <button
+              type="submit"
+              aria-label="Search"
+              disabled={pending || offline}
+              className="text-red-700 disabled:text-neutral-400"
+            >
+              <IconCircleCheckFilled size={16} />
+            </button>
+          </>
+        )}
+      </form>
+      {searchOpen && (
+        <div className="bg-background absolute top-full right-0 left-0 z-30 mt-2 max-h-[45dvh] overflow-y-auto border border-neutral-400 text-[12.5px] leading-normal">
+          <button
+            type="button"
+            disabled={offline}
+            onClick={() => {
+              changeQuery("")
+              setSearchOpen(false)
+              input.current?.blur()
+              setMapActive(true)
+              if (element) element.focus()
+            }}
+            className="flex min-h-10 w-full items-center gap-2 border-b border-neutral-300 px-2 py-2 text-left text-red-700 hover:bg-neutral-200 disabled:text-neutral-400"
+          >
+            <IconMapPin size={14} aria-hidden="true" />
+            Choose on map
+          </button>
+          <button
+            type="button"
+            disabled={pending || offline}
+            onClick={() => void preview(locate, "Your current location", true)}
+            className="flex min-h-10 w-full items-center gap-2 border-b border-neutral-300 px-2 py-2 text-left text-red-700 hover:bg-neutral-200 disabled:text-neutral-400"
+          >
+            <IconCurrentLocation size={14} aria-hidden="true" />
+            Use my current location
+          </button>
+          <ul ref={list} id="location-suggestions" role="listbox" aria-label="Places">
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={suggestion.id}
+                id={`location-option-${index}`}
+                role="option"
+                aria-selected={highlighted === index}
+                onMouseDown={event => event.preventDefault()}
+                onClick={() => {
+                  if (!offline) void preview(suggestion.resolve, suggestion.name)
+                }}
+                className={cn(
+                  "cursor-pointer border-b border-neutral-300 px-2 py-2 hover:bg-neutral-200",
+                  highlighted === index && "bg-neutral-200",
+                )}
+              >
+                <p>{suggestion.name}</p>
+                <p className="mt-0.5 text-[11px] text-neutral-500">{suggestion.address}</p>
+              </li>
+            ))}
+          </ul>
+          {query.trim().length >= 2 && suggestions.length === 0 && (
+            <p role="status" className="px-2 py-2 text-[11px] text-neutral-500">
+              {suggestionMessage}
+            </p>
+          )}
+          {query.trim().length >= 2 && (
+            <p className="px-2 py-1 text-[10px] text-neutral-500">Google Maps</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <>
+      {searchContainer ? createPortal(searchControl, searchContainer) : searchControl}
+      {mapActive ? (
+        <section
+          id="location-picker"
+          aria-label="Choose a location"
+          onKeyDown={event => {
+            if (event.key === "Escape") {
+              closePicker()
+              onCancel?.()
+            }
+          }}
+        >
+          <div className="relative aspect-[640/420] max-h-[40dvh] min-h-32 w-full bg-neutral-200">
+            <div
+              ref={setElement}
+              tabIndex={-1}
+              aria-label="Location map"
+              className="absolute inset-0 outline-none"
+            />
             {mapReady && (
               <>
-                <div className="pointer-events-none absolute inset-x-3 top-3 flex justify-center">
-                  <p className="rounded-full bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
+                <div className="pointer-events-none absolute inset-x-2 top-2 flex justify-center">
+                  <p className="bg-background/95 px-2 py-1 text-[11px]">
                     Move the map to choose a spot
                   </p>
                 </div>
                 <IconMapPinFilled
                   aria-hidden="true"
-                  size={40}
+                  size={32}
                   viewBox="0 0 24 22"
-                  className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full text-red-700 drop-shadow-md"
+                  className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full text-red-700"
                 />
               </>
             )}
             {!mapReady && (
               <p
                 role="status"
-                className="absolute inset-0 flex items-center justify-center p-8 text-center text-neutral-600"
+                className="absolute inset-0 flex items-center justify-center p-5 text-center text-neutral-500"
               >
                 {mapError ?? "Loading map…"}
               </p>
             )}
           </div>
-          <div className="shrink-0 border-t border-neutral-300 px-5 pt-4 pb-[max(20px,env(safe-area-inset-bottom))]">
-            <p className="text-xs text-neutral-500">Explore around</p>
-            <p aria-live="polite" className="mt-1 truncate font-sans text-lg font-medium">
-              {moving ? "Choosing a spot…" : label}
-            </p>
-            {draft && (
-              <p className="mt-1 text-xs text-neutral-500">
-                {draft.coordinates.lat.toFixed(5)}, {draft.coordinates.lon.toFixed(5)}
-                {draft.accuracyMeters > 200
-                  ? ` · GPS accuracy about ${Math.round(draft.accuracyMeters)} m; adjust the pin for precision`
-                  : ""}
+          <div className="border-b border-neutral-300 px-[18px] py-2">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p aria-live="polite" className="truncate">
+                  {moving ? "Choosing a spot…" : label}
+                </p>
+                {draft && (
+                  <p className="mt-0.5 text-[10px] text-neutral-500">
+                    {draft.coordinates.lat.toFixed(5)}, {draft.coordinates.lon.toFixed(5)}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  closePicker()
+                  onCancel?.()
+                }}
+                className="min-h-9 text-neutral-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!draft || moving || pending || offline || !!query.trim()}
+                onClick={() => {
+                  if (draft) {
+                    closePicker()
+                    onConfirm(draft)
+                  }
+                }}
+                className="flex min-h-9 shrink-0 items-center gap-1 text-red-700 disabled:text-neutral-400"
+              >
+                <IconCircleCheckFilled size={16} aria-hidden="true" />
+                {pending ? "Finding location…" : "Explore here"}
+              </button>
+            </div>
+            {draft && draft.accuracyMeters > 200 && (
+              <p className="mt-2 text-[11px] text-neutral-500">
+                GPS accuracy about {Math.round(draft.accuracyMeters)} m; adjust the pin for
+                precision.
               </p>
             )}
             {error && (
@@ -384,36 +500,34 @@ export function LocationPicker(
                 You’re offline. Reconnect to explore a new location.
               </p>
             )}
-            <button
-              type="button"
-              disabled={!draft || moving || pending || offline || !!query.trim()}
-              onClick={() => {
-                if (draft) onConfirm(draft)
-              }}
-              className="mt-4 min-h-12 w-full rounded-lg bg-red-700 px-4 py-3 font-semibold text-white disabled:bg-neutral-300 disabled:text-neutral-500"
-            >
-              {pending ? "Finding location…" : "Explore here"}
-            </button>
           </div>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </section>
+      ) : (
+        children
+      )}
+    </>
   )
 }
 
 type Props = {
   /** Active exploration origin; never assumed to be the device position. */
   initial?: Location
-  /** Last observed GPS position, shown as a blue dot independently of the pin. */
+  /** Last observed GPS position, shown separately from the pin. */
   deviceLocation?: Location
+  /** Header slot for the original inline location field. */
+  searchContainer?: HTMLElement | null
+  /** Existing reading map, shown until a position is being chosen. */
+  children?: ReactNode
+  /** Inform the reading screen when map selection begins or ends. */
+  onEditingChange?: (editing: boolean) => void
   /** Fresh browser GPS lookup, only on explicit request. */
   locate: () => Promise<Location>
-  /** Existing text lookup remains available if the map provider fails. */
+  /** Typed lookup remains available if autocomplete fails. */
   resolveLocation: (query: string) => Promise<Location>
   /** Commit one fully resolved position. */
   onConfirm: (location: Location) => void
   /** Discard the tentative selection. */
-  onCancel: () => void
+  onCancel?: () => void
   /** Injectable provider for deterministic behavioral tests. */
   services?: LocationPickerServices
   /** Disable operations while the connection is unavailable. */

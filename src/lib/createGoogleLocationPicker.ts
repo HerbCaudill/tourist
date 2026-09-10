@@ -18,7 +18,7 @@ export function createGoogleLocationPicker(): LocationPickerServices {
     return importLibrary("maps")
   }
   return {
-    /** Mount only while the requesting dialog is still open. */
+    /** Mount only while the requesting picker is still open. */
     async mount(element, initial, onMove, onIdle, signal) {
       const { Map, Circle } = await load()
       signal.throwIfAborted()

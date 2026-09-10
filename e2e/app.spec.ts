@@ -4,7 +4,8 @@ test.use({ viewport: { width: 430, height: 932 } })
 
 test("discovers nearby stories, opens one, and asks a follow-up", async ({ page }) => {
   await page.goto("/?research=fixture")
-  await expect(page.getByRole("button", { name: "Choose a location" })).toContainText(
+  await expect(page.getByRole("combobox", { name: "Search for a place" })).toHaveAttribute(
+    "placeholder",
     "candlemaker row",
   )
   const row = page.getByRole("button", { name: /worst poet/ })

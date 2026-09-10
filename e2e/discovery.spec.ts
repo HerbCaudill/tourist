@@ -142,7 +142,7 @@ test("recovers from denied location, follows live research progress, and opens a
   await page.goto("/?research=live")
   await expect(page.getByRole("alert")).toContainText("Location access was denied")
   await page.route("https://maps.googleapis.com/**", route => route.abort())
-  await page.getByRole("button", { name: "Choose a location" }).click()
+  await page.getByRole("combobox", { name: "Search for a place" }).click()
   await page
     .getByRole("combobox", { name: "Search for a place" })
     .fill("Candlemaker Row, Edinburgh")

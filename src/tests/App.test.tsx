@@ -9,7 +9,7 @@ const research = createFakeResearch({ delayMs: 0 })
 describe("App", () => {
   it("shows the current location, a map, and nearby story previews", async () => {
     render(<App research={research} />)
-    expect(await screen.findByText("candlemaker row")).toBeInTheDocument()
+    expect(await screen.findByPlaceholderText("candlemaker row")).toBeInTheDocument()
     expect(
       await screen.findByText("The worst poet in the world is buried here"),
     ).toBeInTheDocument()
@@ -45,7 +45,7 @@ describe("App", () => {
   it("starts a general chat about the location from the nearby screen", async () => {
     const user = userEvent.setup()
     render(<App research={research} />)
-    await screen.findByText("candlemaker row")
+    await screen.findByPlaceholderText("candlemaker row")
     await user.type(
       await screen.findByPlaceholderText("Ask me anything"),
       "Why is it called Candlemaker Row?{enter}",

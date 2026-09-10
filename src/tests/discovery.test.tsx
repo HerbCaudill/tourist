@@ -49,7 +49,7 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     await waitFor(() => expect(research.locate).toHaveBeenCalledOnce())
-    await user.click(screen.getByRole("button", { name: "Choose a location" }))
+    await user.click(screen.getByRole("combobox", { name: "Search for a place" }))
     await user.type(
       screen.getByRole("combobox", { name: "Search for a place" }),
       "Edinburgh Castle",
@@ -62,7 +62,8 @@ describe("live discovery states", () => {
     await act(async () => finishGps(location))
     expect(research.discover).toHaveBeenCalledOnce()
     expect(research.discover.mock.calls[0][0]).toEqual(chosen)
-    expect(screen.getByRole("button", { name: "Choose a location" })).toHaveTextContent(
+    expect(screen.getByRole("combobox", { name: "Search for a place" })).toHaveAttribute(
+      "placeholder",
       "edinburgh castle",
     )
   })
@@ -76,7 +77,7 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     expect(await screen.findByRole("alert")).toHaveTextContent("Location access was denied.")
-    await user.click(screen.getByRole("button", { name: "Choose a location" }))
+    await user.click(screen.getByRole("combobox", { name: "Search for a place" }))
     await user.type(
       screen.getByRole("combobox", { name: "Search for a place" }),
       "Candlemaker Row{enter}",
@@ -109,7 +110,7 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     expect(await screen.findByRole("alert")).toHaveTextContent("accurate to about 900 m")
-    expect(screen.getByRole("button", { name: "Choose a location" })).toBeVisible()
+    expect(screen.getByRole("combobox", { name: "Search for a place" })).toBeVisible()
     expect(research.discover).not.toHaveBeenCalled()
   })
 
@@ -210,7 +211,7 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     await screen.findByRole("button", { name: /worst poet/ })
-    await user.click(screen.getByRole("button", { name: "Choose a location" }))
+    await user.click(screen.getByRole("combobox", { name: "Search for a place" }))
     await user.type(
       screen.getByRole("combobox", { name: "Search for a place" }),
       "Edinburgh Castle{enter}",
@@ -232,7 +233,7 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     await screen.findByRole("alert")
-    await user.click(screen.getByRole("button", { name: "Choose a location" }))
+    await user.click(screen.getByRole("combobox", { name: "Search for a place" }))
     await user.type(
       screen.getByRole("combobox", { name: "Search for a place" }),
       "Candlemaker Row{enter}",

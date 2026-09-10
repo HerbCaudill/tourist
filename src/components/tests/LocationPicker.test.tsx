@@ -7,7 +7,7 @@ import type { LocationPickerServices, PickerViewport } from "../../lib/locationP
 import type { Location } from "../../types"
 
 /** Exercise selection independently of Google's rendering and network. */
-function setup(overrides: Partial<LocationPickerServices> = {}) {
+async function setup(overrides: Partial<LocationPickerServices> = {}) {
   let move!: () => void
   let idle!: (viewport: PickerViewport) => void
   const map = { center: vi.fn(), setGps: vi.fn(), destroy: vi.fn() }
@@ -47,6 +47,9 @@ function setup(overrides: Partial<LocationPickerServices> = {}) {
       onCancel={onCancel}
     />,
   )
+  await userEvent.click(screen.getByRole("combobox"))
+  await userEvent.click(screen.getByRole("button", { name: "Choose on map" }))
+  await waitFor(() => expect(services.mount).toHaveBeenCalled())
   return {
     services,
     selected,
@@ -62,7 +65,7 @@ function setup(overrides: Partial<LocationPickerServices> = {}) {
 
 it("previews an autocomplete result and confirms its coordinates only on Explore here", async () => {
   const user = userEvent.setup()
-  const { services, selected, map, onConfirm } = setup()
+  const { services, selected, map, onConfirm } = await setup()
   await user.type(screen.getByRole("combobox", { name: "Search for a place" }), "castle")
   await screen.findByRole("option", { name: /Edinburgh Castle/ })
   expect(services.suggest).toHaveBeenLastCalledWith(
@@ -78,7 +81,7 @@ it("previews an autocomplete result and confirms its coordinates only on Explore
 
 it("uses the settled map center as the pin and as the next search bias", async () => {
   const user = userEvent.setup()
-  const { services, onConfirm, move, idle } = setup()
+  const { services, onConfirm, move, idle } = await setup()
   await waitFor(() => expect(services.mount).toHaveBeenCalled())
   act(move)
   expect(screen.getByRole("button", { name: "Explore here" })).toBeDisabled()
@@ -97,16 +100,31 @@ it("uses the settled map center as the pin and as the next search bias", async (
 
 it("cancels without changing the active location", async () => {
   const user = userEvent.setup()
-  const { onConfirm, onCancel } = setup()
+  const { onConfirm, onCancel } = await setup()
   await user.click(screen.getByRole("button", { name: "Cancel" }))
   expect(onCancel).toHaveBeenCalledOnce()
+  expect(onConfirm).not.toHaveBeenCalled()
+})
+
+it("offers map selection before the place suggestions and returns focus to the inline map", async () => {
+  const user = userEvent.setup()
+  const { onConfirm } = await setup()
+  await user.type(screen.getByRole("combobox"), "castle")
+  const suggestion = await screen.findByRole("option")
+  const chooseMap = screen.getByRole("button", { name: "Choose on map" })
+  expect(
+    chooseMap.compareDocumentPosition(suggestion) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy()
+  await user.click(chooseMap)
+  expect(screen.getByLabelText("Location map")).toHaveFocus()
+  expect(screen.getByRole("combobox")).toHaveValue("")
   expect(onConfirm).not.toHaveBeenCalled()
 })
 
 it("selects the last suggestion when keyboard navigation starts with Arrow Up", async () => {
   const user = userEvent.setup()
   const last = { ...location, name: "Last place" }
-  const { onConfirm } = setup({
+  const { onConfirm } = await setup({
     suggest: async () => [
       { id: "first", name: "First place", address: "", resolve: async () => location },
       { id: "last", name: "Last place", address: "", resolve: async () => last },
@@ -128,7 +146,7 @@ it("discards autocomplete results that arrive after the search was cleared", asy
         finish = resolve
       }),
   )
-  setup({ suggest })
+  await setup({ suggest })
   await user.type(screen.getByRole("combobox"), "castle")
   await waitFor(() => expect(suggest).toHaveBeenCalled())
   await user.click(screen.getByRole("button", { name: "Clear search" }))
@@ -142,7 +160,7 @@ it("discards autocomplete results that arrive after the search was cleared", asy
 it("ignores a late place resolution after the user moves the map", async () => {
   const user = userEvent.setup()
   let finish!: (where: Location) => void
-  const { move, idle, onConfirm } = setup({
+  const { move, idle, onConfirm } = await setup({
     suggest: async () => [
       {
         id: "slow",
@@ -170,7 +188,7 @@ it("ignores a late place resolution after the user moves the map", async () => {
 
 it("keeps a dropped pin usable when reverse geocoding fails", async () => {
   const user = userEvent.setup()
-  const { services, move, idle, onConfirm } = setup({
+  const { services, move, idle, onConfirm } = await setup({
     describe: vi.fn().mockRejectedValue(new Error("No address")),
   })
   await waitFor(() => expect(services.mount).toHaveBeenCalled())
@@ -187,8 +205,9 @@ it("keeps a dropped pin usable when reverse geocoding fails", async () => {
 
 it("previews GPS only on request, then leaves its blue dot at the device position when the map moves", async () => {
   const user = userEvent.setup()
-  const { locate, map, onConfirm, move, idle, unmount } = setup()
+  const { locate, map, onConfirm, move, idle, unmount } = await setup()
   expect(locate).not.toHaveBeenCalled()
+  await user.click(screen.getByRole("combobox"))
   await user.click(screen.getByRole("button", { name: "Use my current location" }))
   expect(map.setGps).toHaveBeenCalledWith(location)
   expect(onConfirm).not.toHaveBeenCalled()
