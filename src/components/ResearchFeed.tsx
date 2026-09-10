@@ -58,7 +58,7 @@ export function ResearchFeed(
   }, [reducedMotion])
 
   return (
-    <div className="py-3 font-mono text-[12px] leading-6 text-neutral-500">
+    <div className="py-3 font-mono text-[12px] leading-4 text-neutral-500">
       <p role="status" className="sr-only">
         {location
           ? `Researching within ${radius} m. Stories will appear when ready.`
@@ -118,7 +118,7 @@ function ResearchMessage() {
     return () => clearTimeout(timer)
   }, [frame, message, messages.length])
 
-  return <p className="mt-2 min-h-6">{message.slice(0, frame.length)}</p>
+  return <p className="mt-2 min-h-4">{message.slice(0, frame.length)}</p>
 }
 
 const MESSAGES = [
