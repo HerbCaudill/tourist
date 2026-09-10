@@ -151,4 +151,18 @@
   html {
     @apply bg-background font-sans;
   }
+
+  /* Keep the document out of iOS's scroll-edge treatment; content panels scroll independently. */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
 }
