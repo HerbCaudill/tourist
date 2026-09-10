@@ -42,7 +42,7 @@ async function setup() {
       sources: story.sources.map(source => ({ ...source, url: "https://example.com/source" })),
     })),
     coordinatesExpireAt: new Date(Date.now() + 29 * 86_400_000).toISOString(),
-    promptVersion: "ledger-2",
+    promptVersion: "ledger-3",
     mapProvider: "google",
   }
   const values = new Map<string, string>()

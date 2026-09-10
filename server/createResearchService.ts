@@ -30,7 +30,7 @@ export function createResearchService(
   async function startDiscovery(context: DiscoveryContext): Promise<PendingResearch> {
     const submissionStarted = performance.now()
     const jobId = tickets.jobId([
-      "discovery",
+      "discovery-ledger-3",
       context.requestId,
       context.location,
       context.radiusMeters,
@@ -48,7 +48,6 @@ export function createResearchService(
     const ticket = tickets.seal({
       ...context,
       jobId,
-      candidates: candidates.map(({ id, coordinates }) => ({ id, coordinates })),
     })
     let job: RunnerJob
     try {
@@ -58,7 +57,7 @@ export function createResearchService(
           date: now().toISOString().slice(0, 10),
           location: context.location,
           radiusMeters: context.radiusMeters,
-          candidates,
+          nearbyPlaces: candidates,
         }),
         ticket,
       )
@@ -114,7 +113,6 @@ export function createResearchService(
           kind: "discovery",
           radiusMeters: 200,
           jobId: "",
-          candidates: [],
         })
       const context = decode(DiscoveryContext, tickets.open(request.ticket), "expired")
       const job = await runner.get(context.jobId)
@@ -123,23 +121,23 @@ export function createResearchService(
       const result = decode(DiscoveryOutput, parseResult(job), "malformed")
       const drafts = result.stories.map(value => decode(StoryDraft, value, "malformed"))
       const seen = new Set<string>()
-      const stories = drafts
-        .flatMap(story => {
-          const anchor = context.candidates.find(place => place.id === story.placeId)
-          if (!anchor || seen.has(story.id)) return []
-          const distanceMeters = distanceBetween(context.location.coordinates, anchor.coordinates)
-          if (!Number.isFinite(distanceMeters) || distanceMeters > context.radiusMeters) return []
-          seen.add(story.id)
-          return [
-            {
-              ...story,
-              coordinates: anchor.coordinates,
-              distanceMeters: Math.round(distanceMeters),
-              bearing: compassBearing(context.location.coordinates, anchor.coordinates),
-            },
-          ]
+      const stories: ResearchStory[] = []
+      for (const { locationQuery, ...story } of drafts) {
+        if (seen.has(story.id)) continue
+        const site = await places.resolveStory(locationQuery)
+        if (!site) continue
+        const distanceMeters = distanceBetween(context.location.coordinates, site.coordinates)
+        if (!Number.isFinite(distanceMeters) || distanceMeters > context.radiusMeters) continue
+        seen.add(story.id)
+        stories.push({
+          ...story,
+          placeId: site.id,
+          coordinates: site.coordinates,
+          distanceMeters: Math.round(distanceMeters),
+          bearing: compassBearing(context.location.coordinates, site.coordinates),
         })
-        .slice(0, 3)
+        if (stories.length === 3) break
+      }
       if (stories.length === 0 && context.radiusMeters < 1000)
         return startDiscovery({
           ...context,
@@ -153,7 +151,7 @@ export function createResearchService(
           radiusMeters: context.radiusMeters,
           researchedAt: now().toISOString(),
           coordinatesExpireAt: new Date(now().getTime() + 29 * 86_400_000).toISOString(),
-          promptVersion: "ledger-2",
+          promptVersion: "ledger-3",
         },
       }
     },
@@ -250,9 +248,6 @@ const DiscoveryContext = Schema.Struct({
   location: ResearchLocation,
   radiusMeters: Schema.Literal(200, 500, 1000),
   jobId: Schema.String,
-  candidates: Schema.Array(Schema.Struct({ id: Schema.String, coordinates: Coordinates })).pipe(
-    Schema.maxItems(12),
-  ),
 })
 const ChatContext = Schema.Struct({ kind: Schema.Literal("chat"), jobId: uuid })
 const DiscoveryOutput = Schema.Struct({

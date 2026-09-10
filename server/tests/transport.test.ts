@@ -87,6 +87,63 @@ describe("private runner adapter", () => {
 })
 
 describe("narrow Google adapter", () => {
+  it.each(["street_address", "intersection", "premise", "establishment"])(
+    "geocodes an ordinary %s as an independent story site",
+    async type => {
+      const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+        Response.json({
+          status: "OK",
+          results: [
+            {
+              place_id: "ordinary-site",
+              types: [type],
+              geometry: {
+                location: { lat: point.lat, lng: point.lon },
+                viewport: {
+                  northeast: { lat: point.lat + 0.001, lng: point.lon + 0.001 },
+                  southwest: { lat: point.lat - 0.001, lng: point.lon - 0.001 },
+                },
+              },
+            },
+          ],
+        }),
+      )
+      const query = "Candlemaker Row and Cowgate, Edinburgh, Scotland"
+      expect(await createPlacesAdapter("key", fetcher).resolveStory(query)).toEqual({
+        id: "ordinary-site",
+        coordinates: point,
+      })
+      expect(new URL(String(fetcher.mock.calls[0]?.[0])).searchParams.get("address")).toBe(query)
+    },
+  )
+
+  it.each([
+    { status: "ZERO_RESULTS", results: [] },
+    ...[
+      { types: ["locality"] },
+      { types: ["route"] },
+      { types: ["street_address"], partial_match: true },
+    ].map(fields => ({
+      status: "OK",
+      results: [
+        {
+          place_id: "imprecise-site",
+          ...fields,
+          geometry: {
+            location: { lat: point.lat, lng: point.lon },
+            viewport: {
+              northeast: { lat: point.lat, lng: point.lon },
+              southwest: { lat: point.lat, lng: point.lon },
+            },
+          },
+        },
+      ],
+    })),
+  ])("leaves unmatched or broad story locations unresolved: %j", async response => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json(response))
+    expect(await createPlacesAdapter("key", fetcher).resolveStory("An uncertain site")).toBeNull()
+  })
+
   it("uses provider IDs/coordinates as anchors and requests no descriptions or reviews", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
@@ -94,6 +151,7 @@ describe("narrow Google adapter", () => {
           {
             id: "place-1",
             displayName: { text: "Temporary Google name", languageCode: "en" },
+            formattedAddress: "1 Candlemaker Row, Edinburgh, Scotland",
             location: { latitude: point.lat, longitude: point.lon },
           },
         ],
@@ -105,9 +163,16 @@ describe("narrow Google adapter", () => {
         { name: "My landmark", area: "", coordinates: point, accuracyMeters: 20 },
         200,
       ),
-    ).toEqual([{ id: "place-1", name: "Temporary Google name", coordinates: point }])
+    ).toEqual([
+      {
+        id: "place-1",
+        name: "Temporary Google name",
+        address: "1 Candlemaker Row, Edinburgh, Scotland",
+        coordinates: point,
+      },
+    ])
     expect(fetcher.mock.calls[0]?.[1]?.headers).toMatchObject({
-      "X-Goog-FieldMask": "places.id,places.displayName,places.location",
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location",
     })
     expect(
       JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body)).locationRestriction.circle.radius,
@@ -180,7 +245,12 @@ it("does not allow chat tickets to be used as discovery tickets", async () => {
   const service = createResearchService({
     secret: "long-private-test-secret-32-characters",
     runner: { get: async () => null, start: async id => ({ id, status: "queued" }) },
-    places: { nearby: vi.fn(), resolve: vi.fn(), map: vi.fn() },
+    places: {
+      nearby: vi.fn(),
+      resolve: vi.fn(),
+      map: vi.fn(),
+      resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: point })),
+    },
   })
   const chat = await service.chat({
     requestId: "13516742-4173-49c5-ae65-376e147c4dad",

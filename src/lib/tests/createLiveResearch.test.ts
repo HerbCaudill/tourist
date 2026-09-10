@@ -9,7 +9,7 @@ const discovery = {
   radiusMeters: 1000,
   researchedAt: "2026-09-09T12:00:00Z",
   coordinatesExpireAt: "2026-10-08T12:00:00Z",
-  promptVersion: "ledger-2",
+  promptVersion: "ledger-3",
 }
 
 describe("live discovery adapter", () => {

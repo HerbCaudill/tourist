@@ -6,9 +6,9 @@ import { boundedText } from "./boundedText.ts"
 export const StoryDraft = Schema.Struct({
   /** Identifier unique within this discovery. */
   id: boundedText(100),
-  /** An exact identifier from the supplied geographic candidates. */
-  placeId: boundedText(300),
-  /** Place label recognized from the supplied candidate. */
+  /** Specific present-day address, intersection, or site, including city and country, for geocoding. */
+  locationQuery: boundedText(500),
+  /** Model-written label for the site of the story. */
   place: boundedText(200),
   /** Informative headline. */
   title: boundedText(200),

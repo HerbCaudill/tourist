@@ -46,7 +46,7 @@ const discovery: Discovery = {
   researchedAt: new Date(now),
   radiusMeters: 200,
   mapProvider: "google",
-  promptVersion: "ledger-2",
+  promptVersion: "ledger-3",
   coordinatesExpireAt: "2026-10-08T13:00:00Z",
 }
 const conversation: Conversation = {
@@ -93,28 +93,28 @@ describe("local reading history", () => {
       store.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-2",
+        promptVersion: "ledger-3",
       }),
     ).toBeDefined()
     expect(
       store.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 500,
-        promptVersion: "ledger-2",
+        promptVersion: "ledger-3",
       }),
     ).toBeUndefined()
     expect(
       store.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-3",
+        promptVersion: "future-version",
       }),
     ).toBeUndefined()
     expect(
       store.findSuitableDiscovery({
         location: { ...discovery.location, coordinates: { lat: 56, lon: -3 } },
         radiusMeters: 200,
-        promptVersion: "ledger-2",
+        promptVersion: "ledger-3",
       }),
     ).toBeUndefined()
     const stale = createHistoryStore({ storage: local, now: () => now + 25 * 3_600_000 })
@@ -122,7 +122,7 @@ describe("local reading history", () => {
       stale.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-2",
+        promptVersion: "ledger-3",
       }),
     ).toBeUndefined()
     expect(stale.read().discoveries).toHaveLength(1)
@@ -141,7 +141,7 @@ describe("local reading history", () => {
       aged.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-2",
+        promptVersion: "ledger-3",
       }),
     ).toBeUndefined()
     const expired = createHistoryStore({

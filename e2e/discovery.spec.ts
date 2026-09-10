@@ -29,7 +29,7 @@ test("types nearby places while polling and replaces the feed when stories finis
               radiusMeters: 200,
               researchedAt: new Date().toISOString(),
               coordinatesExpireAt: new Date(Date.now() + 29 * 86_400_000).toISOString(),
-              promptVersion: "ledger-2",
+              promptVersion: "ledger-3",
             },
           }
         : {
@@ -87,7 +87,7 @@ test("recovers from denied location, follows live research progress, and opens a
     })),
     researchedAt: fixture.researchedAt.toISOString(),
     coordinatesExpireAt: new Date(Date.now() + 29 * 86_400_000).toISOString(),
-    promptVersion: "ledger-2",
+    promptVersion: "ledger-3",
     radiusMeters: 500,
   }
   await page.addInitScript(() => {

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
 import { createResearchService } from "../createResearchService.ts"
+import type { PlacesAdapter } from "../types.ts"
 
 /** Exercise discovery against a persistent runner without network dependencies. */
 function setup(results: unknown[]) {
@@ -9,6 +10,10 @@ function setup(results: unknown[]) {
     { id: string; status: "completed"; result: string; context?: string }
   >()
   const nearby = vi.fn(async () => [candidate])
+  const resolveStory = vi.fn<PlacesAdapter["resolveStory"]>(async () => ({
+    id: "resolved-site",
+    coordinates: location.coordinates,
+  }))
   const start = vi.fn(async (id: string, _prompt: string, context?: string) => {
     jobs.set(id, { id, status: "completed", result: JSON.stringify(results.shift()), context })
     return { id, status: "queued" as const, context }
@@ -16,10 +21,10 @@ function setup(results: unknown[]) {
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
     now: () => new Date("2026-09-09T13:00:00Z"),
-    places: { nearby, resolve: vi.fn(), map: vi.fn() },
+    places: { nearby, resolveStory, resolve: vi.fn(), map: vi.fn() },
     runner: { start, get: async (id: string) => jobs.get(id) ?? null },
   })
-  return { service, nearby, start }
+  return { service, nearby, resolveStory, start }
 }
 
 /** Require a resumable response in a test that has just submitted research. */
@@ -39,7 +44,7 @@ const location = {
 const candidate = { id: "place-1", name: "Churchyard", coordinates: location.coordinates }
 const story = {
   id: "story-1",
-  placeId: candidate.id,
+  locationQuery: "Greyfriars Kirkyard, Edinburgh, Scotland",
   place: "A churchyard",
   title: "A memorable story",
   preview: "A supported preview.",
@@ -52,6 +57,20 @@ const story = {
 const requestId = "13516742-4173-49c5-ae65-376e147c4dad"
 
 describe("persistent discovery", () => {
+  it("locates a story at an intersection absent from the nearby orientation places", async () => {
+    const query = "Candlemaker Row and Cowgate, Edinburgh, Scotland"
+    const { service, nearby, resolveStory } = setup([
+      { stories: [{ ...story, locationQuery: query }] },
+    ])
+    nearby.mockResolvedValue([])
+    const initial = await service.discover({ requestId, location })
+    const done = await service.discover({ ticket: ticketOf(initial) })
+    expect(done).toMatchObject({
+      status: "completed",
+      discovery: { stories: [{ placeId: "resolved-site", coordinates: location.coordinates }] },
+    })
+    expect(resolveStory).toHaveBeenCalledWith(query)
+  })
   it("returns nearby labels and distances on submission and replays without another place lookup", async () => {
     const { service, start } = setup([{ stories: [story] }])
     const initial = await service.discover({ requestId, location })
@@ -91,13 +110,36 @@ describe("persistent discovery", () => {
   it("rejects tampered tickets and a caller-supplied search radius", async () => {
     const { service } = setup([{ stories: [] }])
     const initial = await service.discover({ requestId, location })
-    await expect(service.discover({ ticket: ticketOf(initial) + "x" })).rejects.toMatchObject({
+    const ticket = ticketOf(initial)
+    const tampered = (ticket[0] === "A" ? "B" : "A") + ticket.slice(1)
+    await expect(service.discover({ ticket: tampered })).rejects.toMatchObject({
       code: "expired",
     })
     await expect(
       service.discover({ requestId, location, radiusMeters: 1000 }),
     ).rejects.toMatchObject({ code: "invalid" })
   })
+})
+
+it.each([null, { id: "distant-site", coordinates: { lat: 56, lon: -3.192 } }])(
+  "expands when a story's site is unresolved or outside the radius: %j",
+  async site => {
+    const { service, resolveStory } = setup([{ stories: [story] }])
+    resolveStory.mockResolvedValueOnce(site)
+    const initial = await service.discover({ requestId, location })
+    const expanded = await service.discover({ ticket: ticketOf(initial) })
+    expect(expanded).toMatchObject({ status: "queued", radiusMeters: 500 })
+  },
+)
+
+it("reports a story geocoding outage instead of treating it as an empty discovery", async () => {
+  const { service, resolveStory, nearby } = setup([{ stories: [story] }])
+  resolveStory.mockRejectedValueOnce(new Error("Provider unavailable"))
+  const initial = await service.discover({ requestId, location })
+  await expect(service.discover({ ticket: ticketOf(initial) })).rejects.toThrow(
+    "Provider unavailable",
+  )
+  expect(nearby).toHaveBeenCalledTimes(1)
 })
 
 it("safely replays a submitted request after losing its first response", async () => {
@@ -109,12 +151,8 @@ it("safely replays a submitted request after losing its first response", async (
   expect(start).toHaveBeenCalledTimes(1)
 })
 
-it("never attaches model-invented places, and returns a genuine empty result at one kilometer", async () => {
-  const { service, nearby } = setup([
-    { stories: [{ ...story, placeId: "invented" }] },
-    { stories: [] },
-    { stories: [] },
-  ])
+it("returns an empty result after all three radii have no stories", async () => {
+  const { service, nearby } = setup([{ stories: [] }, { stories: [] }, { stories: [] }])
   let result = await service.discover({ requestId, location })
   result = await service.discover({ ticket: ticketOf(result) })
   result = await service.discover({ ticket: ticketOf(result) })
@@ -134,7 +172,12 @@ it("reports a lost or expired job instead of restarting research during a poll",
   }))
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
-    places: { nearby: async () => [candidate], resolve: vi.fn(), map: vi.fn() },
+    places: {
+      nearby: async () => [candidate],
+      resolve: vi.fn(),
+      map: vi.fn(),
+      resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
+    },
     runner: { start, get: async () => null },
   })
   const result = await service.discover({ requestId, location })
@@ -149,7 +192,12 @@ it("expires context after a day and does not reveal precise location in its tick
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
     now: () => time,
-    places: { nearby: async () => [candidate], resolve: vi.fn(), map: vi.fn() },
+    places: {
+      nearby: async () => [candidate],
+      resolve: vi.fn(),
+      map: vi.fn(),
+      resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
+    },
     runner: {
       start: async (id, _prompt, context) => ({ id, status: "queued", context }),
       get: async () => null,
@@ -165,12 +213,21 @@ it("expires context after a day and does not reveal precise location in its tick
 
 it("passes bounded selected-story and conversation context into a follow-up, with all answer sources preserved", async () => {
   const { service, start } = setup([{ text: "A sourced follow-up [1].", sources: story.sources }])
+  const { locationQuery: _query, ...publicStory } = story
   const input = {
     requestId,
     question: "What happened next?",
     location,
     originLocation: { ...location, name: "Original churchyard" },
-    stories: [{ ...story, coordinates: location.coordinates, distanceMeters: 0, bearing: "N" }],
+    stories: [
+      {
+        ...publicStory,
+        placeId: "resolved-site",
+        coordinates: location.coordinates,
+        distanceMeters: 0,
+        bearing: "N",
+      },
+    ],
     selectedStoryId: story.id,
     history: [
       { role: "user", text: "Who was here?" },
@@ -218,7 +275,12 @@ it("uses the first persisted context when duplicate creates race with different 
     ])
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
-    places: { nearby, resolve: vi.fn(), map: vi.fn() },
+    places: {
+      nearby,
+      resolve: vi.fn(),
+      map: vi.fn(),
+      resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
+    },
     runner: {
       get: async id => jobs.get(id) ?? null,
       start: async (id, _prompt, context) => {
@@ -251,7 +313,12 @@ it.each([
 ])("preserves terminal runner %s as public %s", async (error, code) => {
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
-    places: { nearby: vi.fn(), resolve: vi.fn(), map: vi.fn() },
+    places: {
+      nearby: vi.fn(),
+      resolve: vi.fn(),
+      map: vi.fn(),
+      resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
+    },
     runner: { get: async id => ({ id, status: "failed", error }), start: vi.fn() },
   })
   await expect(

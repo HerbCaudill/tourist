@@ -16,20 +16,25 @@ export function createPlacesAdapter(
   transport: typeof fetch = fetch,
 ): PlacesAdapter {
   if (!key) throw new ResearchError("unavailable")
+  /** Share transport and provider status handling for typed origins and story sites. */
+  async function geocode(query: string) {
+    const url = new URL("https://maps.googleapis.com/maps/api/geocode/json")
+    url.search = new URLSearchParams({ address: query, key }).toString()
+    const response = await fetchProvider(url, {}, transport)
+    const data = Schema.decodeUnknownOption(Geocoding)(await readProviderJson(response))
+    if (data._tag === "None") throw new ResearchError("malformed")
+    if (data.value.status === "ZERO_RESULTS") return null
+    if (data.value.status === "REQUEST_DENIED") throw new ResearchError("auth")
+    if (data.value.status === "OVER_QUERY_LIMIT") throw new ResearchError("busy")
+    if (data.value.status !== "OK") throw new ResearchError("unavailable")
+    const result = data.value.results[0]
+    return result && !result.partial_match ? result : null
+  }
   return {
     /** Preserve the user's query as the label and use provider geometry only. */
     async resolve(query) {
-      const url = new URL("https://maps.googleapis.com/maps/api/geocode/json")
-      url.search = new URLSearchParams({ address: query, key }).toString()
-      const response = await fetchProvider(url, {}, transport)
-      const data = Schema.decodeUnknownOption(Geocoding)(await readProviderJson(response))
-      if (data._tag === "None") throw new ResearchError("malformed")
-      if (data.value.status === "ZERO_RESULTS") throw new ResearchError("location_not_found")
-      if (data.value.status === "REQUEST_DENIED") throw new ResearchError("auth")
-      if (data.value.status === "OVER_QUERY_LIMIT") throw new ResearchError("busy")
-      if (data.value.status !== "OK") throw new ResearchError("unavailable")
-      const result = data.value.results[0]
-      if (!result || result.partial_match) throw new ResearchError("location_not_found")
+      const result = await geocode(query)
+      if (!result) throw new ResearchError("location_not_found")
       const coordinates = point(result.geometry.location)
       const accuracyMeters = Math.max(
         20,
@@ -43,7 +48,27 @@ export function createPlacesAdapter(
       if (accuracyMeters > 1000) throw new ResearchError("location_not_found")
       return { name: query.trim(), area: "", coordinates, accuracyMeters }
     },
-    /** Fetch up to twelve historical or civic candidates with an exact field mask; never fetch reviews/photos. */
+    /** Accept identifiable sites, never a whole street or neighborhood as a story pin. */
+    async resolveStory(query) {
+      const result = await geocode(query)
+      if (
+        !result ||
+        !result.place_id ||
+        !result.types?.some(type =>
+          [
+            "street_address",
+            "premise",
+            "subpremise",
+            "intersection",
+            "point_of_interest",
+            "establishment",
+          ].includes(type),
+        )
+      )
+        return null
+      return { id: result.place_id, coordinates: point(result.geometry.location) }
+    },
+    /** Fetch up to twelve nearby orientation clues of any category, without reviews or photos. */
     async nearby(location, radiusMeters) {
       const response = await fetchProvider(
         "https://places.googleapis.com/v1/places:searchNearby",
@@ -51,25 +76,13 @@ export function createPlacesAdapter(
           method: "POST",
           headers: {
             "X-Goog-Api-Key": key,
-            "X-Goog-FieldMask": "places.id,places.displayName,places.location",
+            "X-Goog-FieldMask":
+              "places.id,places.displayName,places.formattedAddress,places.location",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             maxResultCount: 12,
             rankPreference: "DISTANCE",
-            includedTypes: [
-              "historical_landmark",
-              "monument",
-              "museum",
-              "church",
-              "cemetery",
-              "tourist_attraction",
-              "park",
-              "concert_hall",
-              "performing_arts_theater",
-              "art_gallery",
-              "library",
-            ],
             locationRestriction: {
               circle: {
                 center: { latitude: location.coordinates.lat, longitude: location.coordinates.lon },
@@ -84,6 +97,7 @@ export function createPlacesAdapter(
       return (data.places ?? []).map(place => ({
         id: place.id,
         name: place.displayName.text,
+        ...(place.formattedAddress ? { address: place.formattedAddress } : {}),
         coordinates: decode(
           Coordinates,
           { lat: place.location.latitude, lon: place.location.longitude },
@@ -146,6 +160,8 @@ const Geocoding = Schema.Struct({
   status: Schema.String,
   results: Schema.Array(
     Schema.Struct({
+      place_id: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(300))),
+      types: Schema.optional(Schema.Array(Schema.String)),
       partial_match: Schema.optional(Schema.Boolean),
       geometry: Schema.Struct({
         location: GooglePoint,
@@ -159,6 +175,7 @@ const Nearby = Schema.Struct({
     Schema.Array(
       Schema.Struct({
         id: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(300)),
+        formattedAddress: Schema.optional(Schema.String.pipe(Schema.maxLength(1000))),
         displayName: Schema.Struct({
           text: Schema.String.pipe(Schema.maxLength(300)),
           languageCode: Schema.optional(Schema.String),

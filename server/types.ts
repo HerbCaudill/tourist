@@ -6,6 +6,8 @@ export type PlaceCandidate = {
   id: string
   /** Temporary identification clue, never copied into the completed discovery. */
   name: string
+  /** Temporary street/locality context for orienting the model, never archived. */
+  address?: string
   /** Provider-backed position. */
   coordinates: Coordinates
 }
@@ -13,7 +15,9 @@ export type PlaceCandidate = {
 export type PlacesAdapter = {
   /** Resolve a typed location without returning provider display text. */
   resolve: (query: string) => Promise<ResearchLocation>
-  /** Find geographic anchors within one radius. */
+  /** Resolve a story's present-day site; null means no sufficiently specific match. */
+  resolveStory: (query: string) => Promise<{ id: string; coordinates: Coordinates } | null>
+  /** Find orientation clues of any category within one radius. */
   nearby: (location: ResearchLocation, radiusMeters: number) => Promise<readonly PlaceCandidate[]>
   /** Fetch an attributed map image server-side. */
   map: (
