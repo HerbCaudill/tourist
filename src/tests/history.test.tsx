@@ -117,13 +117,13 @@ describe("saved reading", () => {
     expect(research.discover).not.toHaveBeenCalled()
   })
 
-  it("reuses matching recent research after foreground GPS refresh without interrupting a reader", async () => {
+  it("reuses matching recent research and restores the reader after foreground GPS refresh", async () => {
     const user = userEvent.setup()
     const { fake, discovery, store } = await setup()
     store.saveDiscovery(discovery)
     const research = { ...fake, locate: vi.fn().mockResolvedValue(location), discover: vi.fn() }
     render(<App research={research} history={store} />)
-    await user.click(screen.getByRole("button", { name: /worst poet/ }))
+    await user.click(await screen.findByRole("button", { name: /worst poet/ }))
     await act(async () => document.dispatchEvent(new Event("visibilitychange")))
     expect(screen.getByText(/Dundee handloom weaver/)).toBeVisible()
     expect(research.locate).toHaveBeenCalledTimes(2)

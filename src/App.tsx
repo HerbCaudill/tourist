@@ -114,7 +114,7 @@ export function App(
         suggestions: suggestions.filter(question => !asked.has(question)),
         onAsk: (question: string) => ask(question, context),
       }
-      if (story)
+      if (story && !busy)
         return (
           <StoryScreen
             key={context.id}

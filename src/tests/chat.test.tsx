@@ -114,7 +114,7 @@ describe("contextual chat", () => {
     }
     rerender(<App research={replacement} />)
     await act(async () => finish({ text: "Original answer", sources: [] }))
-    await user.type(screen.getByPlaceholderText("ask a follow-up"), "And now?{enter}")
+    await user.type(await screen.findByPlaceholderText("ask a follow-up"), "And now?{enter}")
     await waitFor(() => expect(replacement.ask).toHaveBeenCalledOnce())
     expect(replacement.ask.mock.calls[0][0]).toMatchObject({
       location: moved,

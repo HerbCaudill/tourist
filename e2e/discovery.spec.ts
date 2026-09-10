@@ -54,7 +54,11 @@ test("types nearby places while polling and replaces the feed when stories finis
   await expect(page.getByRole("status")).toContainText("Researching within 200 m")
   await page.clock.runFor(15_000)
   await expect(page.getByText(/Pleasance Courtyard \(90m\)/)).toBeVisible()
-  await expect(page.getByText("Google Maps", { exact: true })).toBeVisible()
+  const message = page.getByText(
+    /^(Collecting|Poking|Looking|Following|Dusting|Finding|Exploring).*\.\.\.$/,
+  )
+  for (let step = 0; step < 20 && !(await message.isVisible()); step++) await page.clock.runFor(500)
+  await expect(message).toBeVisible()
   await page.screenshot({ path: "test-results/research-feed-mobile.png", fullPage: true })
   complete = true
   await page.clock.runFor(1500)

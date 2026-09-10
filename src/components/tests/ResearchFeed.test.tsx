@@ -6,6 +6,7 @@ import { location } from "../../data/location"
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 it("types the location and nearby places, then keeps showing activity", async () => {
@@ -18,7 +19,6 @@ it("types the location and nearby places, then keeps showing activity", async ()
         radiusMeters: 200,
         nearbyPlaces: [{ name: "Memorial garden", distanceMeters: 40 }],
       }}
-      google
     />,
   )
   expect(screen.queryByText(/Memorial garden/)).not.toBeInTheDocument()
@@ -26,8 +26,39 @@ it("types the location and nearby places, then keeps showing activity", async ()
   expect(screen.getByText(/Memorial garden \(40m\)/)).toBeVisible()
   expect(screen.getByText(/Location:/)).toHaveTextContent(location.coordinates.lat.toFixed(4))
   expect(screen.getByText(/Searching within 200m/)).toBeVisible()
-  expect(screen.getByText("Google Maps")).toBeVisible()
   expect(screen.getByRole("status")).toHaveTextContent(/Researching within 200 m/)
+})
+
+it("finishes the place list before typing, holding, and erasing a shuffled message", async () => {
+  vi.useFakeTimers()
+  vi.spyOn(Math, "random").mockReturnValue(0.999)
+  render(
+    <ResearchFeed
+      location={location}
+      progress={{
+        status: "running",
+        radiusMeters: 200,
+        nearbyPlaces: [{ name: "Memorial garden", distanceMeters: 40 }],
+      }}
+    />,
+  )
+  expect(screen.queryByText("Collecting obscure facts...")).not.toBeInTheDocument()
+  for (let step = 0; step < 300 && !screen.queryByText(/Memorial garden \(40m\)/); step++)
+    await act(() => vi.advanceTimersByTimeAsync(40))
+  expect(screen.getByText(/Memorial garden \(40m\)/)).toBeVisible()
+  expect(screen.queryByText(/^Collect/)).not.toBeInTheDocument()
+  for (let step = 0; step < 20; step++) await act(() => vi.advanceTimersByTimeAsync(40))
+  const partial = screen.getByText(/^Coll/).textContent!
+  expect("Collecting obscure facts...").toContain(partial)
+  expect(partial).not.toBe("Collecting obscure facts...")
+  for (let step = 0; step < 100 && !screen.queryByText("Collecting obscure facts..."); step++)
+    await act(() => vi.advanceTimersByTimeAsync(40))
+  expect(screen.getByText("Collecting obscure facts...")).toBeVisible()
+  await act(() => vi.advanceTimersByTimeAsync(2500))
+  for (let step = 0; step < 5; step++) await act(() => vi.advanceTimersByTimeAsync(40))
+  const erasing = screen.getByText(/^Collect/).textContent!
+  expect("Collecting obscure facts...").toContain(erasing)
+  expect(erasing.length).toBeLessThan("Collecting obscure facts...".length)
 })
 
 it("shows the complete notebook without animation when reduced motion is preferred", () => {

@@ -3,23 +3,14 @@ import type { Location, ResearchProgress } from "../types"
 
 /** Type a temporary field notebook while the durable research job runs. */
 export function ResearchFeed(
-  /** Search context and attribution for this temporary feed. */
+  /** Search context for this temporary feed. */
   {
     location,
     progress,
-    google,
   }: Props,
 ) {
   const [length, setLength] = useState(0)
   const [tick, setTick] = useState(0)
-  const [messages] = useState(() => {
-    const shuffled = [...MESSAGES]
-    for (let index = shuffled.length - 1; index > 0; index--) {
-      const other = Math.floor(Math.random() * (index + 1))
-      ;[shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]]
-    }
-    return shuffled
-  })
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
   )
@@ -38,6 +29,10 @@ export function ResearchFeed(
           : []),
       ].join("\n")
     : ""
+  const showMessages =
+    !!location &&
+    (reducedMotion || length >= text.length) &&
+    (places !== undefined || progress?.status === "running")
 
   useEffect(() => {
     const media = window.matchMedia?.("(prefers-reduced-motion: reduce)")
@@ -58,7 +53,7 @@ export function ResearchFeed(
 
   useEffect(() => {
     if (reducedMotion) return
-    const timer = setInterval(() => setTick(value => value + 1), 120)
+    const timer = setInterval(() => setTick(value => value + 1), 80)
     return () => clearInterval(timer)
   }, [reducedMotion])
 
@@ -73,26 +68,59 @@ export function ResearchFeed(
         <div className="break-words whitespace-pre-wrap">
           {reducedMotion ? text : text.slice(0, length)}
         </div>
-        <div className="mt-2 flex items-start gap-2">
-          <span className="inline-block w-[1ch] shrink-0 text-red-700">
-            {reducedMotion ? ">" : "|/-\\"[tick % 4]}
-          </span>
-          <span>
-            {!location
-              ? "Finding your location..."
-              : reducedMotion
-                ? "Collecting obscure facts..."
-                : messages[Math.floor(tick / 60) % messages.length]}
-          </span>
-        </div>
-      </div>
-      {google && !!places?.length && (
-        <p className="mt-2 text-[10px]">
-          Nearby places from <span className="font-medium">Google Maps</span>
+        {!location && <p>Finding your location...</p>}
+        {showMessages &&
+          (reducedMotion ? (
+            <p className="mt-2">Collecting obscure facts...</p>
+          ) : (
+            <ResearchMessage />
+          ))}
+        <p className="mt-2 text-[16px] text-red-700">
+          {reducedMotion ? "⠿" : "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"[tick % 10]}
         </p>
-      )}
+      </div>
     </div>
   )
+}
+
+/** Type and erase one shuffled activity message at a time after the notebook finishes. */
+function ResearchMessage() {
+  const [messages] = useState(() => {
+    const shuffled = [...MESSAGES]
+    for (let index = shuffled.length - 1; index > 0; index--) {
+      const other = Math.floor(Math.random() * (index + 1))
+      ;[shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]]
+    }
+    return shuffled
+  })
+  const [frame, setFrame] = useState({ index: 0, length: 0, erasing: false })
+  const message = messages[frame.index]
+
+  useEffect(() => {
+    const full = frame.length === message.length
+    const empty = frame.length === 0
+    const delay = frame.erasing
+      ? empty
+        ? 450
+        : 15 + Math.random() * 15
+      : full
+        ? 2500
+        : empty
+          ? 350
+          : 15 + Math.random() * 30
+    const timer = setTimeout(() => {
+      if (frame.erasing)
+        setFrame(
+          empty
+            ? { index: (frame.index + 1) % messages.length, length: 0, erasing: false }
+            : { ...frame, length: frame.length - 1 },
+        )
+      else setFrame(full ? { ...frame, erasing: true } : { ...frame, length: frame.length + 1 })
+    }, delay)
+    return () => clearTimeout(timer)
+  }, [frame, message, messages.length])
+
+  return <p className="mt-2 min-h-6">{message.slice(0, frame.length)}</p>
 }
 
 const MESSAGES = [
@@ -111,6 +139,4 @@ type Props = {
   location?: Location
   /** Radius and temporary nearby search results. */
   progress?: ResearchProgress
-  /** Attribute names supplied by the Google nearby search. */
-  google?: boolean
 }

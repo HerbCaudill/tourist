@@ -33,8 +33,8 @@ export function NearbyScreen(
   }: Props,
 ) {
   const [query, setQuery] = useState("")
-  const stories = discovery?.stories ?? []
-  const origin = discovery?.location ?? location
+  const stories = researching ? [] : (discovery?.stories ?? [])
+  const origin = researching ? location : (discovery?.location ?? location)
 
   return (
     <>
@@ -129,7 +129,6 @@ export function NearbyScreen(
             key={`${location?.coordinates.lat}/${location?.coordinates.lon}/${progress?.radiusMeters ?? 200}`}
             location={progress ? location : undefined}
             progress={progress}
-            google={mapProvider === "google"}
           />
         )}
         {!researching && discovery && stories.length === 0 && (
@@ -137,7 +136,7 @@ export function NearbyScreen(
             Nothing worth telling within {formatDistance(radiusMeters)}. Try refreshing later.
           </p>
         )}
-        <div className={cn(researching && stories.length > 0 && "opacity-60")}>
+        <div>
           {stories.map((story, index) => (
             <StoryRow
               key={story.id}

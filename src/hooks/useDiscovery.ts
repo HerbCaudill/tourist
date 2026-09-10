@@ -16,7 +16,7 @@ export function useDiscovery(
   const [discovery, setDiscovery] = useState<Discovery | undefined>(
     () => history?.read().discoveries[0],
   )
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState(() => navigator.onLine)
   const [progress, setProgress] = useState<ResearchProgress>()
   const [error, setError] = useState<string>()
   const [storageError, setStorageError] = useState(false)
