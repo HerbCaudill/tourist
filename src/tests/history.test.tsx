@@ -158,7 +158,8 @@ describe("saved reading", () => {
     const original = renderHook(() => useDiscovery(first, store))
     vi.spyOn(navigator, "onLine", "get").mockReturnValue(true)
     await act(async () => {
-      void original.result.current.choosePlace(manual ? "Dundee" : undefined)
+      if (manual) original.result.current.choosePlace(location)
+      else window.dispatchEvent(new Event("online"))
     })
     await waitFor(() => expect(first.discover).toHaveBeenCalledOnce())
     original.unmount()
@@ -196,7 +197,7 @@ describe("saved reading", () => {
       }
       const hook = renderHook(() => useDiscovery(research, store))
       await waitFor(() => expect(hook.result.current.error).toBe("Disconnected"))
-      await act(async () => hook.result.current.choosePlace("Dundee"))
+      await act(async () => hook.result.current.choosePlace(location))
       expect(store.read().pendingDiscovery).toBeUndefined()
       expect(hook.result.current.error).toBeUndefined()
       expect(hook.result.current.storageError).toBe(storageFails)

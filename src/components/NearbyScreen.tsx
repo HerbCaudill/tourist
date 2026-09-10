@@ -1,4 +1,4 @@
-import { IconCircleCheckFilled, IconRefresh } from "@tabler/icons-react"
+import { IconChevronDown, IconMapPin, IconRefresh } from "@tabler/icons-react"
 import { useState, type ReactNode } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
@@ -9,6 +9,7 @@ import { HeaderLine } from "./HeaderLine"
 import { MiniMap } from "./MiniMap"
 import { Prompt } from "./Prompt"
 import { StoryRow } from "./StoryRow"
+import { LocationPicker } from "./LocationPicker"
 
 /** The main ledger: location line, a little map, and numbered story rows. */
 export function NearbyScreen(
@@ -16,6 +17,7 @@ export function NearbyScreen(
   {
     discovery,
     location,
+    deviceLocation,
     radiusMeters,
     researching,
     offline,
@@ -25,6 +27,8 @@ export function NearbyScreen(
     onRefresh,
     onRetry,
     onChoosePlace,
+    locate,
+    resolveLocation,
     onOpenStory,
     onAsk,
     chatPending,
@@ -32,7 +36,7 @@ export function NearbyScreen(
     savedReading,
   }: Props,
 ) {
-  const [query, setQuery] = useState("")
+  const [choosing, setChoosing] = useState(false)
   const stories = researching ? [] : (discovery?.stories ?? [])
   const origin = researching ? location : (discovery?.location ?? location)
 
@@ -40,38 +44,20 @@ export function NearbyScreen(
     <>
       <HeaderLine
         left={
-          <form
-            className="flex min-w-0 items-center gap-1.5"
-            onSubmit={event => {
-              event.preventDefault()
-              if (query.trim()) onChoosePlace(query.trim())
-            }}
-          >
+          <div className="flex min-w-0 items-center gap-1.5">
             <b>tourist</b>
             <span className="text-neutral-500">@</span>
-            {/* Keep a 16px input for iOS focus handling, scaled to the surrounding 12.5px text. */}
-            <span className="relative h-[1.25em] min-w-0 flex-1">
-              <input
-                aria-label="Enter a place"
-                disabled={offline}
-                placeholder={location?.name.toLowerCase() ?? "choose a place"}
-                maxLength={200}
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-                className="absolute top-0 left-0 w-[128%] origin-top-left scale-[0.78125] bg-transparent text-[16px] leading-tight outline-none placeholder:text-neutral-400/60 focus:border-b focus:border-neutral-400"
-              />
-            </span>
-            {query.trim() && (
-              <button
-                type="submit"
-                aria-label="Search"
-                disabled={offline}
-                className="shrink-0 text-red-700 disabled:text-neutral-400"
-              >
-                <IconCircleCheckFilled size={18} aria-hidden="true" />
-              </button>
-            )}
-          </form>
+            <button
+              type="button"
+              aria-label="Choose a location"
+              disabled={offline}
+              onClick={() => setChoosing(true)}
+              className="flex min-w-0 items-center gap-1 py-2 text-neutral-600 disabled:text-neutral-400"
+            >
+              <span className="truncate">{location?.name.toLowerCase() ?? "choose a place"}</span>
+              <IconChevronDown size={14} className="shrink-0" aria-hidden="true" />
+            </button>
+          </div>
         }
         right={
           <button
@@ -101,7 +87,18 @@ export function NearbyScreen(
           </div>
         )}
         {origin && (
-          <div className="-mx-[18px] my-2.5">
+          <div className="relative -mx-[18px] my-2.5">
+            <div className="absolute top-2 right-2 z-10">
+              <button
+                type="button"
+                disabled={offline}
+                onClick={() => setChoosing(true)}
+                className="flex min-h-11 items-center gap-1.5 rounded-full bg-white/95 px-3 text-xs text-red-700 shadow-sm disabled:text-neutral-400"
+              >
+                <IconMapPin size={16} />
+                Choose on map
+              </button>
+            </div>
             {(discovery?.mapProvider ?? mapProvider) === "google" ? (
               <GoogleMap
                 location={origin}
@@ -156,6 +153,20 @@ export function NearbyScreen(
         <div hidden>{savedReading}</div>
       </div>
       <Prompt placeholder="Ask me anything" onAsk={onAsk} disabled={!location || chatPending} />
+      {choosing && (
+        <LocationPicker
+          initial={origin}
+          deviceLocation={deviceLocation}
+          locate={locate}
+          resolveLocation={resolveLocation}
+          offline={offline}
+          onCancel={() => setChoosing(false)}
+          onConfirm={where => {
+            setChoosing(false)
+            onChoosePlace(where)
+          }}
+        />
+      )}
     </>
   )
 }
@@ -165,6 +176,8 @@ type Props = {
   discovery?: Discovery
   /** Current chosen or browser location. */
   location?: Location
+  /** Last known device position, distinct from an alternate exploration origin. */
+  deviceLocation?: Location
   /** Radius belonging to the displayed results. */
   radiusMeters: number
   /** Whether location or research is pending. */
@@ -183,8 +196,12 @@ type Props = {
   onRefresh: () => void
   /** Reconnect or retry location. */
   onRetry: () => void
-  /** Search around a typed place. */
-  onChoosePlace: (query: string) => void
+  /** Search around a confirmed map or search position. */
+  onChoosePlace: (location: Location) => void
+  /** Preview a fresh device position. */
+  locate: () => Promise<Location>
+  /** Resolve a typed place if autocomplete is unavailable. */
+  resolveLocation: (query: string) => Promise<Location>
   /** Open a story snapshot. */
   onOpenStory: (id: string) => void
   /** Start general chat. */

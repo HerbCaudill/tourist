@@ -4,9 +4,8 @@ test.use({ viewport: { width: 430, height: 932 } })
 
 test("discovers nearby stories, opens one, and asks a follow-up", async ({ page }) => {
   await page.goto("/?research=fixture")
-  await expect(page.getByRole("textbox", { name: "Enter a place" })).toHaveAttribute(
-    "placeholder",
-    /candlemaker row/,
+  await expect(page.getByRole("button", { name: "Choose a location" })).toContainText(
+    "candlemaker row",
   )
   const row = page.getByRole("button", { name: /worst poet/ })
   await expect(row).toBeVisible({ timeout: 10_000 })

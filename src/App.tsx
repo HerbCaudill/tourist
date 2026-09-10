@@ -132,6 +132,7 @@ export function App(
       <NearbyScreen
         discovery={displayedDiscovery}
         location={location}
+        deviceLocation={nearby.deviceLocation}
         radiusMeters={displayedDiscovery?.radiusMeters ?? RADIUS_METERS}
         researching={busy}
         offline={!online}
@@ -139,6 +140,8 @@ export function App(
         progress={progress}
         error={error}
         locationError={locationError}
+        locate={research.locate}
+        resolveLocation={research.resolveLocation}
         onRetry={retry}
         onChoosePlace={query => {
           if (archivedContext) setView({ kind: "nearby" }, true)

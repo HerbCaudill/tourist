@@ -13,6 +13,7 @@ export function useDiscovery(
   onHistoryChange?: () => void,
 ) {
   const [location, setLocation] = useState<Location>()
+  const [deviceLocation, setDeviceLocation] = useState<Location>()
   const [discovery, setDiscovery] = useState<Discovery | undefined>(
     () => history?.read().discoveries[0],
   )
@@ -34,9 +35,9 @@ export function useDiscovery(
   }, [])
 
   /** Start a superseding operation and stop polling its predecessor. */
-  const begin = useCallback((query?: string) => {
+  const begin = useCallback(() => {
     operation.current?.controller.abort()
-    const current = { query, controller: new AbortController() }
+    const current = { controller: new AbortController() }
     operation.current = current
     setBusy(true)
     setError(undefined)
@@ -137,25 +138,25 @@ export function useDiscovery(
     [history, onHistoryChange, research, stop],
   )
 
-  /** Resolve browser location or a typed place before selecting suitable cached research. */
+  /** Resolve browser location before selecting suitable cached research. */
   const locate = useCallback(
-    async (query?: string, reuse = true) => {
+    async (reuse = true) => {
       if (!navigator.onLine) return
-      if (query && operation.current?.query === query) return
-      const current = begin(query)
+      const current = begin()
       try {
-        const where = query ? await research.resolveLocation(query) : await research.locate()
+        const where = await research.locate()
         if (operation.current !== current) return
-        if (!query && where.accuracyMeters > 200)
+        setDeviceLocation(where)
+        if (where.accuracyMeters > 200)
           throw new Error(
             `Location is only accurate to about ${Math.round(where.accuracyMeters)} m. Enter a street or landmark instead.`,
           )
-        active.current = { location: where, manual: !!query }
+        active.current = { location: where, manual: false }
         setLocation(where)
         await discover(where, current, undefined, reuse)
       } catch (failure) {
         if (operation.current !== current || current.controller.signal.aborted) return
-        failed.current = { kind: "location", query }
+        failed.current = { kind: "location" }
         setError(
           failure instanceof Error
             ? failure.message
@@ -177,7 +178,7 @@ export function useDiscovery(
       setLocation(pending.location)
       void discover(pending.location, begin(), pending.requestId)
     } else if (active.current?.manual) {
-      void discover(active.current.location, begin(active.current.location.name), undefined, true)
+      void discover(active.current.location, begin(), undefined, true)
     } else void locate()
   }, [begin, discover, history, locate])
 
@@ -202,17 +203,16 @@ export function useDiscovery(
   const refresh = () => {
     if (operation.current || !navigator.onLine) return
     setDiscovery(undefined)
-    if (active.current?.manual)
-      void discover(active.current.location, begin(active.current.location.name))
-    else void locate(undefined, false)
+    if (active.current?.manual) void discover(active.current.location, begin())
+    else void locate(false)
   }
 
-  /** Replay the operation that failed, retaining its original query or request ID. */
+  /** Replay the operation that failed, retaining its original position and request ID. */
   const retry = () => {
     if (operation.current || !navigator.onLine) return
     if (failed.current?.kind === "discovery")
       void discover(failed.current.location, begin(), failed.current.requestId)
-    else void locate(failed.current?.query)
+    else void locate()
   }
 
   /** Remove readable state and cancel pending responses so they cannot restore cleared history. */
@@ -222,13 +222,24 @@ export function useDiscovery(
     failed.current = undefined
     setDiscovery(undefined)
     setLocation(undefined)
+    setDeviceLocation(undefined)
     setError(undefined)
     setStorageError(false)
     setLocationError(false)
   }
 
+  /** Commit a picker position directly, superseding GPS and older research responses. */
+  const choosePlace = (where: Location) => {
+    if (!navigator.onLine) return
+    const current = begin()
+    active.current = { location: where, manual: true }
+    setLocation(where)
+    void discover(where, current, undefined, true)
+  }
+
   return {
     location,
+    deviceLocation,
     discovery,
     busy,
     progress,
@@ -237,19 +248,17 @@ export function useDiscovery(
     locationError,
     refresh,
     retry,
-    choosePlace: locate,
+    choosePlace,
     clear,
     showSaved: setDiscovery,
   }
 }
 
 type Operation = {
-  /** Typed query used to deduplicate repeated submissions. */
-  query?: string
   /** Cancel local polling without canceling the persisted server job. */
   controller: AbortController
 }
 /** Exact operation to replay after a recoverable failure. */
 type FailedOperation =
-  | { kind: "location"; query?: string }
+  | { kind: "location" }
   | { kind: "discovery"; location: Location; requestId: string }

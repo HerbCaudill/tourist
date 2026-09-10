@@ -49,15 +49,20 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     await waitFor(() => expect(research.locate).toHaveBeenCalledOnce())
-    await user.type(screen.getByRole("textbox", { name: "Enter a place" }), "Edinburgh Castle")
+    await user.click(screen.getByRole("button", { name: "Choose a location" }))
+    await user.type(
+      screen.getByRole("combobox", { name: "Search for a place" }),
+      "Edinburgh Castle",
+    )
     await user.click(screen.getByRole("button", { name: "Search" }))
     await waitFor(() => expect(research.resolveLocation).toHaveBeenCalledWith("Edinburgh Castle"))
+    expect(research.discover).not.toHaveBeenCalled()
+    await user.click(screen.getByRole("button", { name: "Explore here" }))
     await screen.findByRole("button", { name: /worst poet/ })
     await act(async () => finishGps(location))
     expect(research.discover).toHaveBeenCalledOnce()
     expect(research.discover.mock.calls[0][0]).toEqual(chosen)
-    expect(screen.getByRole("textbox", { name: "Enter a place" })).toHaveAttribute(
-      "placeholder",
+    expect(screen.getByRole("button", { name: "Choose a location" })).toHaveTextContent(
       "edinburgh castle",
     )
   })
@@ -71,10 +76,12 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     expect(await screen.findByRole("alert")).toHaveTextContent("Location access was denied.")
+    await user.click(screen.getByRole("button", { name: "Choose a location" }))
     await user.type(
-      screen.getByRole("textbox", { name: "Enter a place" }),
+      screen.getByRole("combobox", { name: "Search for a place" }),
       "Candlemaker Row{enter}",
     )
+    await user.click(screen.getByRole("button", { name: "Explore here" }))
     expect(await screen.findByText("The worst poet in the world is buried here")).toBeVisible()
     expect(research.resolveLocation).toHaveBeenCalledWith("Candlemaker Row")
   })
@@ -102,7 +109,7 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     expect(await screen.findByRole("alert")).toHaveTextContent("accurate to about 900 m")
-    expect(screen.getByRole("textbox", { name: "Enter a place" })).toBeVisible()
+    expect(screen.getByRole("button", { name: "Choose a location" })).toBeVisible()
     expect(research.discover).not.toHaveBeenCalled()
   })
 
@@ -194,22 +201,22 @@ describe("live discovery states", () => {
     await act(async () => finishOld(first))
     expect(screen.queryByRole("button", { name: /worst poet/ })).not.toBeInTheDocument()
   })
-  it("does not submit the same typed place twice while its research is running", async () => {
+  it("keeps existing results when a tentative location is cancelled", async () => {
     const user = userEvent.setup()
     const fake = createFakeResearch({ delayMs: 0 })
     const research = {
       ...fake,
-      locate: vi.fn().mockRejectedValue(new Error("Location denied")),
-      discover: vi.fn().mockImplementation(() => new Promise<Discovery>(() => {})),
+      discover: vi.fn(fake.discover),
     }
     render(<App research={research} />)
-    await screen.findByRole("alert")
+    await screen.findByRole("button", { name: /worst poet/ })
+    await user.click(screen.getByRole("button", { name: "Choose a location" }))
     await user.type(
-      screen.getByRole("textbox", { name: "Enter a place" }),
+      screen.getByRole("combobox", { name: "Search for a place" }),
       "Edinburgh Castle{enter}",
     )
-    await waitFor(() => expect(research.discover).toHaveBeenCalledTimes(1))
-    await user.type(screen.getByRole("textbox", { name: "Enter a place" }), "{enter}")
+    await user.click(screen.getByRole("button", { name: "Cancel" }))
+    expect(await screen.findByRole("button", { name: /worst poet/ })).toBeVisible()
     expect(research.discover).toHaveBeenCalledTimes(1)
   })
   it("retries a failed typed location without returning to denied GPS", async () => {
@@ -225,12 +232,14 @@ describe("live discovery states", () => {
     }
     render(<App research={research} />)
     await screen.findByRole("alert")
+    await user.click(screen.getByRole("button", { name: "Choose a location" }))
     await user.type(
-      screen.getByRole("textbox", { name: "Enter a place" }),
+      screen.getByRole("combobox", { name: "Search for a place" }),
       "Candlemaker Row{enter}",
     )
     expect(await screen.findByRole("alert")).toHaveTextContent("Location service unavailable")
-    await user.click(screen.getByRole("button", { name: "Try again" }))
+    await user.click(screen.getByRole("button", { name: "Search" }))
+    await user.click(screen.getByRole("button", { name: "Explore here" }))
     expect(await screen.findByRole("button", { name: /worst poet/ })).toBeVisible()
     expect(research.resolveLocation).toHaveBeenCalledTimes(2)
     expect(research.resolveLocation).toHaveBeenLastCalledWith("Candlemaker Row")
