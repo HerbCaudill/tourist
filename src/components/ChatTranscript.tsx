@@ -2,7 +2,7 @@ import { IconMessageCircle } from "@tabler/icons-react"
 import { useEffect, useRef } from "react"
 import { cn } from "cn"
 import type { Message } from "../types"
-import { Cursor } from "./Cursor"
+import { BrailleSpinner } from "./BrailleSpinner"
 
 /** Questions, answers, and retry controls shared by inline and location conversations. */
 export function ChatTranscript(
@@ -64,7 +64,7 @@ export function ChatTranscript(
       ))}
       {answering && (
         <div className="mb-3 flex gap-2">
-          <Cursor />
+          <BrailleSpinner />
         </div>
       )}
       {error && (

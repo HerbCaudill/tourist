@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { Location, ResearchProgress } from "../types"
+import { BrailleSpinner } from "./BrailleSpinner"
 
 /** Type a temporary field notebook while the durable research job runs. */
 export function ResearchFeed(
@@ -10,7 +11,6 @@ export function ResearchFeed(
   }: Props,
 ) {
   const [length, setLength] = useState(0)
-  const [tick, setTick] = useState(0)
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
   )
@@ -51,12 +51,6 @@ export function ResearchFeed(
     return () => clearTimeout(timer)
   }, [length, text, reducedMotion])
 
-  useEffect(() => {
-    if (reducedMotion) return
-    const timer = setInterval(() => setTick(value => value + 1), 80)
-    return () => clearInterval(timer)
-  }, [reducedMotion])
-
   return (
     <div className="py-3 font-mono text-[12px] leading-4 text-neutral-500">
       <p role="status" className="sr-only">
@@ -75,8 +69,8 @@ export function ResearchFeed(
           ) : (
             <ResearchMessage />
           ))}
-        <p className="mt-2 text-[16px] text-red-700">
-          {reducedMotion ? "⠿" : "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"[tick % 10]}
+        <p className="mt-2">
+          <BrailleSpinner />
         </p>
       </div>
     </div>
