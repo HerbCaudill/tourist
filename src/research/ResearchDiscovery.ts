@@ -15,7 +15,7 @@ export const ResearchDiscovery = Schema.Struct({
   /** ISO deadline for retaining provider-derived coordinates. */
   coordinatesExpireAt: Schema.String,
   /** Editorial and validation version for cache invalidation. */
-  promptVersion: Schema.Literal("ledger-3"),
+  promptVersion: Schema.Literal("ledger-4"),
 })
 
 /** Serializable ResearchDiscovery contract inferred from its boundary schema. */

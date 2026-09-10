@@ -30,7 +30,7 @@ export function createResearchService(
   async function startDiscovery(context: DiscoveryContext): Promise<PendingResearch> {
     const submissionStarted = performance.now()
     const jobId = tickets.jobId([
-      "discovery-ledger-3",
+      "discovery-ledger-4",
       context.requestId,
       context.location,
       context.radiusMeters,
@@ -53,12 +53,14 @@ export function createResearchService(
     try {
       job = await runner.start(
         jobId,
-        prompt("discovery", {
-          date: now().toISOString().slice(0, 10),
-          location: context.location,
-          radiusMeters: context.radiusMeters,
-          nearbyPlaces: candidates,
-        }),
+        prompt(
+          "discovery",
+          [
+            `Current location: ${await describeLocation(context.location)}`,
+            `Search radius: ${context.radiusMeters} meters`,
+            `Nearby places:\n${candidates.map(place => `- ${place.name}`).join("\n") || "None listed."}`,
+          ].join("\n\n"),
+        ),
         ticket,
       )
     } catch (error) {
@@ -101,6 +103,13 @@ export function createResearchService(
     const context = decode(DiscoveryContext, tickets.open(job.context), "expired")
     if (context.jobId !== job.id) throw new ResearchError("malformed")
     return pending(job, job.context, context.radiusMeters)
+  }
+
+  /** Replace the browser's GPS label with a readable location for the model. */
+  async function describeLocation(location: ResearchLocation) {
+    if (/^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?$/.test(location.name))
+      return places.describeLocation(location.coordinates)
+    return [location.name, location.area].filter(Boolean).join(", ")
   }
 
   return {
@@ -151,7 +160,7 @@ export function createResearchService(
           radiusMeters: context.radiusMeters,
           researchedAt: now().toISOString(),
           coordinatesExpireAt: new Date(now().getTime() + 29 * 86_400_000).toISOString(),
-          promptVersion: "ledger-3",
+          promptVersion: "ledger-4",
         },
       }
     },
@@ -179,7 +188,24 @@ export function createResearchService(
         (await runner.get(jobId)) ??
         (await runner.start(
           jobId,
-          prompt("chat", { ...request, date: now().toISOString().slice(0, 10) }),
+          prompt(
+            "chat",
+            [
+              `Current location: ${await describeLocation(request.location)}`,
+              `Conversation location: ${await describeLocation(request.originLocation)}`,
+              `Stories:\n${request.stories
+                .map(story =>
+                  [
+                    `${story.id === request.selectedStoryId ? "Selected story: " : ""}${story.title} (${story.place})`,
+                    ...story.account,
+                    ...story.sources.map(source => `${source.name}: ${source.url}`),
+                  ].join("\n\n"),
+                )
+                .join("\n\n")}`,
+              `Conversation:\n${request.history.map(message => `${message.role}: ${message.text}`).join("\n\n")}`,
+              `Question: ${request.question}`,
+            ].join("\n\n"),
+          ),
         ))
       return pending(job, tickets.seal({ kind: "chat", jobId }))
     },
@@ -199,8 +225,8 @@ export function createResearchService(
 }
 
 /** Read versioned editorial instructions from a file bundled with the Vercel function. */
-function prompt(name: "discovery" | "chat", context: unknown) {
-  return `${readFileSync(join(process.cwd(), "server", "prompts", `${name}.prompt.md`), "utf8")}\n\nContext JSON:\n${JSON.stringify(context)}`
+function prompt(name: "discovery" | "chat", context: string) {
+  return `${readFileSync(join(process.cwd(), "server", "prompts", `${name}.prompt.md`), "utf8")}\n\n${context}`
 }
 
 /** Translate terminal failures without returning private runner messages. */

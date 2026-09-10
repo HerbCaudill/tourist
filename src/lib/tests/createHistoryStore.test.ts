@@ -34,7 +34,6 @@ const discovery: Discovery = {
       title: "A sourced story",
       preview: "A preview",
       account: ["An independently sourced account."],
-      kind: "documented",
       sources: [{ name: "History", org: "Archive", url: "https://example.org/history" }],
       coordinates: { lat: 55.946, lon: -3.192 },
       distanceMeters: 0,
@@ -46,7 +45,7 @@ const discovery: Discovery = {
   researchedAt: new Date(now),
   radiusMeters: 200,
   mapProvider: "google",
-  promptVersion: "ledger-3",
+  promptVersion: "ledger-4",
   coordinatesExpireAt: "2026-10-08T13:00:00Z",
 }
 const conversation: Conversation = {
@@ -93,14 +92,14 @@ describe("local reading history", () => {
       store.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-3",
+        promptVersion: "ledger-4",
       }),
     ).toBeDefined()
     expect(
       store.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 500,
-        promptVersion: "ledger-3",
+        promptVersion: "ledger-4",
       }),
     ).toBeUndefined()
     expect(
@@ -114,7 +113,7 @@ describe("local reading history", () => {
       store.findSuitableDiscovery({
         location: { ...discovery.location, coordinates: { lat: 56, lon: -3 } },
         radiusMeters: 200,
-        promptVersion: "ledger-3",
+        promptVersion: "ledger-4",
       }),
     ).toBeUndefined()
     const stale = createHistoryStore({ storage: local, now: () => now + 25 * 3_600_000 })
@@ -122,7 +121,7 @@ describe("local reading history", () => {
       stale.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-3",
+        promptVersion: "ledger-4",
       }),
     ).toBeUndefined()
     expect(stale.read().discoveries).toHaveLength(1)
@@ -141,7 +140,7 @@ describe("local reading history", () => {
       aged.findSuitableDiscovery({
         location: discovery.location,
         radiusMeters: 200,
-        promptVersion: "ledger-3",
+        promptVersion: "ledger-4",
       }),
     ).toBeUndefined()
     const expired = createHistoryStore({

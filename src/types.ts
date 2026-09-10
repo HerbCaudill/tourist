@@ -1,6 +1,3 @@
-/** How well a story's central claim is supported. */
-export type Kind = "documented" | "disputed" | "folklore"
-
 /** A point on the earth. */
 export type Coordinates = {
   /** Latitude in degrees. */
@@ -37,8 +34,6 @@ export type Story = {
   preview: string
   /** Fuller account, one paragraph per entry. */
   account: string[]
-  /** How well the story is supported. */
-  kind: Kind
   /** References for the reader. */
   sources: Source[]
   /** Suggested questions from live research, without canned answers. */

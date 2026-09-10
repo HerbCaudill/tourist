@@ -15,7 +15,6 @@ export const stories: StoryData[] = [
       "He spent his last years in Edinburgh, poor and mostly forgotten, and died in a rented room on South College Street in September 1902. He was buried here in a pauper’s grave with no stone. The plaque near the north wall was added in 1999.",
       "The fish-throwing is well documented in the contemporary press. The claim that he never realised he was being mocked is more debated: some biographers think he understood exactly what was happening and played along for the fee.",
     ],
-    kind: "documented",
     sources: [
       {
         name: "Notable burials",
@@ -69,7 +68,6 @@ export const stories: StoryData[] = [
       "The nose-rubbing is recent. It started around 2000, spread through guidebooks and social media, and has now stripped the patina down to bright bronze. The city council has repeatedly asked people to stop, and has repainted the nose at least once.",
       "The two-dog theory comes from a 2011 study by Jan Bondeson, who argues that the original Bobby was a mongrel who died around 1867 and that the kirkyard’s curator and a nearby restaurant owner, both profiting from visitors, replaced him with a younger Skye terrier. Others dispute this, pointing to continuous eyewitness accounts. Nobody disputes that a dog lived in the kirkyard and that the story sold a lot of dinners.",
     ],
-    kind: "disputed",
     sources: [
       {
         name: "Greyfriars Bobby: The Most Faithful Dog in the World",
@@ -111,7 +109,6 @@ export const stories: StoryData[] = [
       "The building went up between 1628 and 1650 on the site of a former Dominican friary, just outside the Flodden Wall. Cromwell’s army used it as a barracks before it opened. It became a fee-paying day school in 1886 and still admits fatherless children free of charge under the terms of the original bequest.",
       "The Hogwarts connection is a guess that has hardened into fact through repetition. Rowling wrote parts of the early books in cafés with a view of the school, and the four-tower plan and house system are suggestive, but she has never named it as a source. Treat it as pleasant folklore.",
     ],
-    kind: "folklore",
     sources: [
       {
         name: "History of the school",

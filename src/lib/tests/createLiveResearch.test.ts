@@ -9,7 +9,7 @@ const discovery = {
   radiusMeters: 1000,
   researchedAt: "2026-09-09T12:00:00Z",
   coordinatesExpireAt: "2026-10-08T12:00:00Z",
-  promptVersion: "ledger-3",
+  promptVersion: "ledger-4",
 }
 
 describe("live discovery adapter", () => {
@@ -147,7 +147,6 @@ describe("live discovery adapter", () => {
       title: "Title",
       preview: "Preview",
       account: Array.from({ length: 8 }, () => "古".repeat(3000)),
-      kind: "documented" as const,
       sources: Array.from({ length: 8 }, () => ({
         name: "Source",
         org: "Archive",

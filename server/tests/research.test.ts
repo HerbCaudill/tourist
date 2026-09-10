@@ -10,6 +10,7 @@ function setup(results: unknown[]) {
     { id: string; status: "completed"; result: string; context?: string }
   >()
   const nearby = vi.fn(async () => [candidate])
+  const describeLocation = vi.fn(async () => "Greyfriars Kirk, Edinburgh")
   const resolveStory = vi.fn<PlacesAdapter["resolveStory"]>(async () => ({
     id: "resolved-site",
     coordinates: location.coordinates,
@@ -21,10 +22,10 @@ function setup(results: unknown[]) {
   const service = createResearchService({
     secret: "test-secret-with-at-least-32-characters",
     now: () => new Date("2026-09-09T13:00:00Z"),
-    places: { nearby, resolveStory, resolve: vi.fn(), map: vi.fn() },
+    places: { describeLocation, nearby, resolveStory, resolve: vi.fn(), map: vi.fn() },
     runner: { start, get: async (id: string) => jobs.get(id) ?? null },
   })
-  return { service, nearby, resolveStory, start }
+  return { service, nearby, resolveStory, describeLocation, start }
 }
 
 /** Require a resumable response in a test that has just submitted research. */
@@ -49,7 +50,6 @@ const story = {
   title: "A memorable story",
   preview: "A supported preview.",
   account: ["A sourced historical account."],
-  kind: "documented",
   sources: [{ name: "History", org: "Archive", url: "https://example.org/history" }],
   suggestedQuestions: ["What happened next?"],
   timeSensitive: false,
@@ -57,6 +57,21 @@ const story = {
 const requestId = "13516742-4173-49c5-ae65-376e147c4dad"
 
 describe("persistent discovery", () => {
+  it("describes GPS locations before generating stories and reuses submitted jobs", async () => {
+    const { service, start, describeLocation } = setup([{ stories: [story] }])
+    const gps = { ...location, name: "55.9460, -3.1920" }
+    await service.discover({ requestId, location: gps })
+    await service.discover({ requestId, location: gps })
+    expect(describeLocation).toHaveBeenCalledExactlyOnceWith(location.coordinates)
+    expect(start.mock.calls[0][1]).toContain("Current location: Greyfriars Kirk, Edinburgh")
+  })
+  it("sends readable location and nearby names to the researcher", async () => {
+    const { service, start } = setup([{ stories: [story] }])
+    await service.discover({ requestId, location })
+    expect(start.mock.calls[0][1]).toContain("Current location: Edinburgh")
+    expect(start.mock.calls[0][1]).toContain("Search radius: 200 meters")
+    expect(start.mock.calls[0][1]).toContain("Nearby places:\n- Churchyard")
+  })
   it("locates a story at an intersection absent from the nearby orientation places", async () => {
     const query = "Candlemaker Row and Cowgate, Edinburgh, Scotland"
     const { service, nearby, resolveStory } = setup([
@@ -176,6 +191,7 @@ it("reports a lost or expired job instead of restarting research during a poll",
       nearby: async () => [candidate],
       resolve: vi.fn(),
       map: vi.fn(),
+      describeLocation: vi.fn(async () => "Greyfriars Kirk, Edinburgh"),
       resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
     },
     runner: { start, get: async () => null },
@@ -196,6 +212,7 @@ it("expires context after a day and does not reveal precise location in its tick
       nearby: async () => [candidate],
       resolve: vi.fn(),
       map: vi.fn(),
+      describeLocation: vi.fn(async () => "Greyfriars Kirk, Edinburgh"),
       resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
     },
     runner: {
@@ -239,7 +256,7 @@ it("passes bounded selected-story and conversation context into a follow-up, wit
   const answer = await service.chat({ ticket: initial.ticket })
   expect(answer).toMatchObject({ status: "completed", answer: { sources: story.sources } })
   expect(start.mock.calls[0]?.[1]).toContain("Who was here?")
-  expect(start.mock.calls[0]?.[1]).toContain(story.id)
+  expect(start.mock.calls[0]?.[1]).toContain(`Selected story: ${story.title} (${story.place})`)
   expect(start.mock.calls[0]?.[1]).toContain("Original churchyard")
   await expect(
     service.chat({ ...input, history: Array.from({ length: 13 }, () => input.history[0]) }),
@@ -279,6 +296,7 @@ it("uses the first persisted context when duplicate creates race with different 
       nearby,
       resolve: vi.fn(),
       map: vi.fn(),
+      describeLocation: vi.fn(async () => "Greyfriars Kirk, Edinburgh"),
       resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
     },
     runner: {
@@ -317,6 +335,7 @@ it.each([
       nearby: vi.fn(),
       resolve: vi.fn(),
       map: vi.fn(),
+      describeLocation: vi.fn(async () => "Greyfriars Kirk, Edinburgh"),
       resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: location.coordinates })),
     },
     runner: { get: async id => ({ id, status: "failed", error }), start: vi.fn() },

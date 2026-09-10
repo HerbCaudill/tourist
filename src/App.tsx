@@ -240,7 +240,7 @@ function conversationContext(
     researchedAt: discovery?.researchedAt.toISOString() ?? new Date().toISOString(),
     coordinatesExpireAt:
       discovery?.coordinatesExpireAt ?? new Date(Date.now() + 29 * 86_400_000).toISOString(),
-    promptVersion: discovery?.promptVersion ?? "ledger-3",
+    promptVersion: discovery?.promptVersion ?? "ledger-4",
   }
 }
 

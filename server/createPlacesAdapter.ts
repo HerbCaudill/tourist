@@ -31,6 +31,27 @@ export function createPlacesAdapter(
     return result && !result.partial_match ? result : null
   }
   return {
+    /** Resolve a GPS position to a street or place description without exposing coordinates to the model. */
+    async describeLocation(coordinates) {
+      const url = new URL("https://maps.googleapis.com/maps/api/geocode/json")
+      url.search = new URLSearchParams({
+        latlng: `${coordinates.lat},${coordinates.lon}`,
+        key,
+      }).toString()
+      const response = await fetchProvider(url, {}, transport)
+      const data = decode(
+        Schema.Struct({
+          status: Schema.String,
+          results: Schema.Array(Schema.Struct({ formatted_address: Schema.String })),
+        }),
+        await readProviderJson(response),
+        "malformed",
+      )
+      if (data.status === "REQUEST_DENIED") throw new ResearchError("auth")
+      if (data.status === "OVER_QUERY_LIMIT") throw new ResearchError("busy")
+      if (data.status !== "OK" || !data.results[0]) throw new ResearchError("location_not_found")
+      return data.results[0].formatted_address
+    },
     /** Preserve the user's query as the label and use provider geometry only. */
     async resolve(query) {
       const result = await geocode(query)

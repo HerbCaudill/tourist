@@ -249,6 +249,7 @@ it("does not allow chat tickets to be used as discovery tickets", async () => {
       nearby: vi.fn(),
       resolve: vi.fn(),
       map: vi.fn(),
+      describeLocation: vi.fn(async () => "Greyfriars Kirk, Edinburgh"),
       resolveStory: vi.fn(async () => ({ id: "resolved-site", coordinates: point })),
     },
   })
@@ -262,4 +263,20 @@ it("does not allow chat tickets to be used as discovery tickets", async () => {
   })
   if (chat.status === "completed") throw new Error("Expected pending chat")
   await expect(service.discover({ ticket: chat.ticket })).rejects.toMatchObject({ code: "expired" })
+})
+
+it("turns GPS coordinates into a readable prompt location", async () => {
+  const fetcher = vi.fn<typeof fetch>(async () =>
+    Response.json({
+      status: "OK",
+      results: [{ formatted_address: "Greyfriars Place, Edinburgh, UK" }],
+    }),
+  )
+  const label = await createPlacesAdapter("key", fetcher).describeLocation({
+    lat: 55.9468,
+    lon: -3.1928,
+  })
+  expect(label).toBe("Greyfriars Place, Edinburgh, UK")
+  const url = new URL(String(fetcher.mock.calls[0]?.[0]))
+  expect(url.searchParams.get("latlng")).toBe("55.9468,-3.1928")
 })

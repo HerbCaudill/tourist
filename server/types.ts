@@ -13,6 +13,8 @@ export type PlaceCandidate = {
 }
 /** Bounded mapping operations. */
 export type PlacesAdapter = {
+  /** Describe GPS coordinates as a readable location for the research prompt. */
+  describeLocation: (coordinates: Coordinates) => Promise<string>
   /** Resolve a typed location without returning provider display text. */
   resolve: (query: string) => Promise<ResearchLocation>
   /** Resolve a story's present-day site; null means no sufficiently specific match. */
