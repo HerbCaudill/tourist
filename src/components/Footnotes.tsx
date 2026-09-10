@@ -7,6 +7,8 @@ export function Footnotes(
     sources,
   }: Props,
 ) {
+  if (sources.length === 0) return null
+
   return (
     <ol className="mt-2 border-t border-neutral-300 pt-2 text-[12px] text-neutral-500">
       {sources.map((source, i) => (

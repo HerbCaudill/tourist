@@ -100,7 +100,7 @@ export function ChatTranscript(
                 className="mt-px shrink-0 text-neutral-500"
                 aria-hidden="true"
               />
-              <span>{q.toLowerCase()}</span>
+              <span className="italic">{q.toLowerCase()}</span>
             </button>
           ))}
         </div>
