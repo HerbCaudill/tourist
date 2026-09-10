@@ -54,11 +54,19 @@ it("finishes the place list before typing, holding, and erasing a shuffled messa
   for (let step = 0; step < 100 && !screen.queryByText("Collecting obscure facts..."); step++)
     await act(() => vi.advanceTimersByTimeAsync(40))
   expect(screen.getByText("Collecting obscure facts...")).toBeVisible()
-  await act(() => vi.advanceTimersByTimeAsync(2500))
-  for (let step = 0; step < 5; step++) await act(() => vi.advanceTimersByTimeAsync(40))
+  await act(() => vi.advanceTimersByTimeAsync(6000))
+  await act(() => vi.advanceTimersByTimeAsync(40))
+  expect(screen.getByText("Collecting obscure facts...")).toBeVisible()
+  await act(() => vi.advanceTimersByTimeAsync(460))
+  await act(() => vi.advanceTimersByTimeAsync(10))
   const erasing = screen.getByText(/^Collect/).textContent!
   expect("Collecting obscure facts...").toContain(erasing)
   expect(erasing.length).toBeLessThan("Collecting obscure facts...".length)
+  for (let step = 0; step < 30 && !screen.queryByText("C", { exact: true }); step++)
+    await act(() => vi.advanceTimersByTimeAsync(10))
+  expect(screen.getByText("C", { exact: true })).toBeVisible()
+  await act(() => vi.advanceTimersByTimeAsync(10))
+  expect(screen.getByText("P", { exact: true })).toBeVisible()
 })
 
 it("shows the complete notebook without animation when reduced motion is preferred", () => {

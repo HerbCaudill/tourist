@@ -100,19 +100,17 @@ function ResearchMessage() {
     const full = frame.length === message.length
     const empty = frame.length === 0
     const delay = frame.erasing
-      ? empty
-        ? 450
-        : 15 + Math.random() * 15
+      ? 5 + Math.random() * 5
       : full
-        ? 2500
+        ? 6500
         : empty
           ? 350
           : 15 + Math.random() * 30
     const timer = setTimeout(() => {
       if (frame.erasing)
         setFrame(
-          empty
-            ? { index: (frame.index + 1) % messages.length, length: 0, erasing: false }
+          frame.length <= 1
+            ? { index: (frame.index + 1) % messages.length, length: 1, erasing: false }
             : { ...frame, length: frame.length - 1 },
         )
       else setFrame(full ? { ...frame, erasing: true } : { ...frame, length: frame.length + 1 })
