@@ -139,6 +139,8 @@ export type ResearchOptions = {
 
 /** The known state of live discovery. */
 export type ResearchProgress = {
+  /** Nearby search clues displayed only while this operation runs. */
+  nearbyPlaces?: readonly { name: string; distanceMeters: number }[]
   /** Whether the runner is queued or executing. */
   status: "queued" | "running"
   /** Current bounded search radius. */

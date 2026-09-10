@@ -52,6 +52,14 @@ const story = {
 const requestId = "13516742-4173-49c5-ae65-376e147c4dad"
 
 describe("persistent discovery", () => {
+  it("returns nearby labels and distances on submission and replays without another place lookup", async () => {
+    const { service, start } = setup([{ stories: [story] }])
+    const initial = await service.discover({ requestId, location })
+    expect(initial).toMatchObject({ nearbyPlaces: [{ name: "Churchyard", distanceMeters: 0 }] })
+    const replay = await service.discover({ requestId, location })
+    expect(replay).not.toHaveProperty("nearbyPlaces")
+    expect(start).toHaveBeenCalledOnce()
+  })
   it("expands only after an empty validated result, stopping as soon as a story survives", async () => {
     const { service, nearby } = setup([{ stories: [] }, { stories: [story] }])
     const initial = await service.discover({ requestId, location })

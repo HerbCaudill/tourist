@@ -4,6 +4,64 @@ import { location } from "../src/data/location"
 
 test.use({ viewport: { width: 430, height: 932 } })
 
+test("types nearby places while polling and replaces the feed when stories finish", async ({
+  page,
+}) => {
+  await page.clock.install()
+  await page.addInitScript(position => {
+    Object.defineProperty(navigator, "geolocation", {
+      value: {
+        getCurrentPosition: (success: (value: unknown) => void) =>
+          success({ coords: { latitude: position.lat, longitude: position.lon, accuracy: 20 } }),
+      },
+    })
+  }, location.coordinates)
+  let complete = false
+  await page.route("**/api/discover", route => {
+    const request = route.request().postDataJSON()
+    return route.fulfill({
+      json: complete
+        ? {
+            status: "completed",
+            discovery: {
+              location,
+              stories: [],
+              radiusMeters: 200,
+              researchedAt: new Date().toISOString(),
+              coordinatesExpireAt: new Date(Date.now() + 29 * 86_400_000).toISOString(),
+              promptVersion: "ledger-2",
+            },
+          }
+        : {
+            status: "running",
+            ticket: "feed-progress",
+            retryAfterMs: 1000,
+            radiusMeters: 200,
+            ...(!request.ticket
+              ? {
+                  nearbyPlaces: [
+                    { name: "James Hutton memorial garden", distanceMeters: 40 },
+                    { name: "Edinburgh Town Wall", distanceMeters: 75 },
+                    { name: "Pleasance Courtyard", distanceMeters: 90 },
+                  ],
+                }
+              : {}),
+          },
+    })
+  })
+  await page.route("**/api/map", route => route.fulfill({ status: 503 }))
+  await page.goto("/?research=live")
+  await expect(page.getByRole("status")).toContainText("Researching within 200 m")
+  await page.clock.runFor(15_000)
+  await expect(page.getByText(/Pleasance Courtyard \(90m\)/)).toBeVisible()
+  await expect(page.getByText("Google Maps", { exact: true })).toBeVisible()
+  await page.screenshot({ path: "test-results/research-feed-mobile.png", fullPage: true })
+  complete = true
+  await page.clock.runFor(1500)
+  await expect(page.getByText(/Nothing worth telling/)).toBeVisible()
+  await expect(page.getByRole("button", { name: "Refresh", exact: true })).toBeEnabled()
+})
+
 test("recovers from denied location, follows live research progress, and opens a sourced story", async ({
   page,
 }) => {

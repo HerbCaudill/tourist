@@ -79,7 +79,21 @@ export function createResearchService(
         durationMs: Math.round(performance.now() - submissionStarted),
       }),
     )
-    return resumeDiscovery(job)
+    return {
+      ...resumeDiscovery(job),
+      ...(job.context === ticket
+        ? {
+            nearbyPlaces: candidates
+              .map(place => ({
+                name: place.name,
+                distanceMeters: Math.round(
+                  distanceBetween(context.location.coordinates, place.coordinates),
+                ),
+              }))
+              .sort((a, b) => a.distanceMeters - b.distanceMeters),
+          }
+        : {}),
+    }
   }
 
   /** Reuse the exact geography sealed when this job was first created, without another Google request. */

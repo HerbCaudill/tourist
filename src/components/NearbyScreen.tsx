@@ -3,7 +3,7 @@ import { useState, type ReactNode } from "react"
 import { cn } from "cn"
 import { formatDistance } from "../lib/formatDistance"
 import type { Discovery, Location, ResearchProgress } from "../types"
-import { Cursor } from "./Cursor"
+import { ResearchFeed } from "./ResearchFeed"
 import { GoogleMap } from "./GoogleMap"
 import { HeaderLine } from "./HeaderLine"
 import { MiniMap } from "./MiniMap"
@@ -125,12 +125,12 @@ export function NearbyScreen(
         className="min-h-0 flex-1 overflow-y-auto px-[18px] pb-2"
       >
         {researching && (
-          <p role="status" className={origin ? "sr-only" : "py-1 text-neutral-500"}>
-            {progress
-              ? `${progress.status === "queued" ? "Waiting to research" : "Researching"} within ${formatDistance(progress.radiusMeters)}${progress.radiusMeters > 200 ? " · expanded search" : ""}`
-              : "Finding your location"}{" "}
-            <Cursor />
-          </p>
+          <ResearchFeed
+            key={`${location?.coordinates.lat}/${location?.coordinates.lon}/${progress?.radiusMeters ?? 200}`}
+            location={progress ? location : undefined}
+            progress={progress}
+            google={mapProvider === "google"}
+          />
         )}
         {!researching && discovery && stories.length === 0 && (
           <p className="py-1 text-neutral-500">

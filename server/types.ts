@@ -1,10 +1,10 @@
 import type { Coordinates, ResearchLocation } from "../src/research/contracts.ts"
 
-/** Minimal provider candidate; names stay server-side. */
+/** Minimal provider candidate; labels may appear in the temporary progress feed. */
 export type PlaceCandidate = {
   /** Provider identifier. */
   id: string
-  /** Temporary search clue, never copied into the public result. */
+  /** Temporary identification clue, never copied into the completed discovery. */
   name: string
   /** Provider-backed position. */
   coordinates: Coordinates

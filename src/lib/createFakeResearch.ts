@@ -18,7 +18,18 @@ export function createFakeResearch(
       return location
     },
     resolveLocation: async query => ({ ...location, name: query }),
-    discover: async where => {
+    discover: async (where, options) => {
+      options?.onProgress?.({
+        status: "running",
+        radiusMeters: RADIUS_METERS,
+        nearbyPlaces: stories
+          .map(story => ({
+            name: story.place,
+            distanceMeters: Math.round(distanceBetween(where.coordinates, story.coordinates)),
+          }))
+          .filter(place => place.distanceMeters <= RADIUS_METERS)
+          .sort((a, b) => a.distanceMeters - b.distanceMeters),
+      })
       await wait(delayMs)
       return {
         location: where,

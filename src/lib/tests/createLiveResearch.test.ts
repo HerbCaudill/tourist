@@ -17,7 +17,13 @@ describe("live discovery adapter", () => {
     const transport = vi
       .fn()
       .mockResolvedValueOnce(
-        Response.json({ status: "queued", ticket: "first", retryAfterMs: 5000, radiusMeters: 200 }),
+        Response.json({
+          status: "queued",
+          ticket: "first",
+          retryAfterMs: 5000,
+          radiusMeters: 200,
+          nearbyPlaces: [{ name: "Memorial garden", distanceMeters: 40 }],
+        }),
       )
       .mockResolvedValueOnce(
         Response.json({
@@ -35,6 +41,11 @@ describe("live discovery adapter", () => {
     expect(JSON.parse(transport.mock.calls[1][1].body)).toEqual({ ticket: "first" })
     expect(JSON.parse(transport.mock.calls[2][1].body)).toEqual({ ticket: "expanded" })
     expect(progress).toHaveBeenLastCalledWith({ status: "running", radiusMeters: 1000 })
+    expect(progress).toHaveBeenNthCalledWith(1, {
+      status: "queued",
+      radiusMeters: 200,
+      nearbyPlaces: [{ name: "Memorial garden", distanceMeters: 40 }],
+    })
     expect(result.radiusMeters).toBe(1000)
     expect(result.mapProvider).toBe("google")
     expect(result.researchedAt).toEqual(new Date(discovery.researchedAt))

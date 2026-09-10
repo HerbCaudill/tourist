@@ -72,7 +72,11 @@ export function createLiveResearch(
       continuations.set(id, pending.ticket)
       if (continuations.size > 8) continuations.delete(continuations.keys().next().value!)
       if (path === "discover")
-        options.onProgress?.({ status: pending.status, radiusMeters: pending.radiusMeters ?? 200 })
+        options.onProgress?.({
+          status: pending.status,
+          radiusMeters: pending.radiusMeters ?? 200,
+          ...(pending.nearbyPlaces ? { nearbyPlaces: pending.nearbyPlaces } : {}),
+        })
       await wait(pending.retryAfterMs, options.signal)
       body = { ticket: pending.ticket }
     }
@@ -160,6 +164,14 @@ function waitForPoll(ms: number, signal?: AbortSignal): Promise<void> {
 }
 
 const Pending = Schema.Struct({
+  nearbyPlaces: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(1000)),
+        distanceMeters: Schema.Number.pipe(Schema.int(), Schema.between(0, 1000)),
+      }),
+    ).pipe(Schema.maxItems(12)),
+  ),
   status: Schema.Literal("queued", "running"),
   ticket: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(40_000)),
   retryAfterMs: Schema.Number.pipe(Schema.between(1000, 60_000)),

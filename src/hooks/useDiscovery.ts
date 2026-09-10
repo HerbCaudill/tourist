@@ -97,7 +97,15 @@ export function useDiscovery(
           requestId,
           signal: current.controller.signal,
           onProgress: next => {
-            if (operation.current === current) setProgress(next)
+            if (operation.current === current)
+              setProgress(previous => ({
+                ...next,
+                nearbyPlaces:
+                  next.nearbyPlaces ??
+                  (previous?.radiusMeters === next.radiusMeters
+                    ? previous.nearbyPlaces
+                    : undefined),
+              }))
           },
         })
         if (operation.current !== current) return

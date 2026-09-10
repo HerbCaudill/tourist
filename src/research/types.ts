@@ -3,6 +3,8 @@ import type { ResearchAnswer } from "./ResearchAnswer.ts"
 
 /** Resumable research progress. POST this ticket back to the same operation. */
 export type PendingResearch = {
+  /** Transient provider labels and distances, present on a fresh discovery submission. */
+  nearbyPlaces?: readonly { name: string; distanceMeters: number }[]
   /** Current runner state. */
   status: "queued" | "running"
   /** Opaque encrypted context, suitable for transient session recovery. */
