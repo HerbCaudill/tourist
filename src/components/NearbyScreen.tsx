@@ -49,15 +49,18 @@ export function NearbyScreen(
           >
             <b>tourist</b>
             <span className="text-neutral-500">@</span>
-            <input
-              aria-label="Enter a place"
-              disabled={offline}
-              placeholder={location?.name.toLowerCase() ?? "choose a place"}
-              maxLength={200}
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-neutral-400/60 focus:border-b focus:border-neutral-400"
-            />
+            {/* Keep a 16px input for iOS focus handling, scaled to the surrounding 12.5px text. */}
+            <span className="relative h-[1.25em] min-w-0 flex-1">
+              <input
+                aria-label="Enter a place"
+                disabled={offline}
+                placeholder={location?.name.toLowerCase() ?? "choose a place"}
+                maxLength={200}
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                className="absolute top-0 left-0 w-[128%] origin-top-left scale-[0.78125] bg-transparent text-[16px] leading-tight outline-none placeholder:text-neutral-400/60 focus:border-b focus:border-neutral-400"
+              />
+            </span>
             {query.trim() && (
               <button
                 type="submit"
