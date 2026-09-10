@@ -281,7 +281,16 @@ it("turns GPS coordinates into a readable prompt location", async () => {
   const fetcher = vi.fn<typeof fetch>(async () =>
     Response.json({
       status: "OK",
-      results: [{ formatted_address: "Greyfriars Place, Edinburgh, UK" }],
+      plus_code: { global_code: "9C7RWRC4+PV" },
+      results: [
+        {
+          formatted_address: "Greyfriars Place, Edinburgh, UK",
+          address_components: [{ long_name: "Edinburgh", types: ["locality"] }],
+          geometry: { location: { lat: 55.9468, lng: -3.1928 } },
+          place_id: "google-place-id",
+          types: ["street_address"],
+        },
+      ],
     }),
   )
   const label = await createPlacesAdapter("key", fetcher).describeLocation({

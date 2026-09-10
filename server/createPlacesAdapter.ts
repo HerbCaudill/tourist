@@ -39,14 +39,15 @@ export function createPlacesAdapter(
         key,
       }).toString()
       const response = await fetchProvider(url, {}, transport)
-      const data = decode(
+      // Google includes address components and geometry that this label lookup does not need.
+      const decoded = Schema.decodeUnknownOption(
         Schema.Struct({
           status: Schema.String,
           results: Schema.Array(Schema.Struct({ formatted_address: Schema.String })),
         }),
-        await readProviderJson(response),
-        "malformed",
-      )
+      )(await readProviderJson(response))
+      if (decoded._tag === "None") throw new ResearchError("malformed")
+      const data = decoded.value
       if (data.status === "REQUEST_DENIED") throw new ResearchError("auth")
       if (data.status === "OVER_QUERY_LIMIT") throw new ResearchError("busy")
       if (data.status !== "OK" || !data.results[0]) throw new ResearchError("location_not_found")
