@@ -21,5 +21,36 @@
   "workerVersion": "d6060e26-f1fc-4e9e-a49e-ea5e84c2f2e6",
   "touristDeployment": "dpl_H9u4pgnoJHPq7oEgDaz9LwQ6L3bb",
   "verification": "Two concurrent production discoveries, initial-request replay for each, then a follow-up chat. Timings include submission, five-second polling, and geographic validation.",
-  "cutoverNote": "A probe before Vercel promotion returned HTTP 503 while the old caller still used the previous request contract. The reported completed runs began after promotion."
+  "cutoverNote": "A probe before Vercel promotion returned HTTP 503 while the old caller still used the previous request contract. The reported completed runs began after promotion.",
+  "runnerTimings": [
+    {
+      "jobId": "8e2cd5f5-9c8d-44c7-a973-6bea7e32c1ca",
+      "operation": "discovery",
+      "alarmWaitMs": 888,
+      "openaiMs": 30103,
+      "attemptMs": 30626,
+      "persistMs": 407
+    },
+    {
+      "jobId": "61b07331-4cba-4948-af43-89009edfd927",
+      "operation": "discovery",
+      "alarmWaitMs": 885,
+      "openaiMs": 30330,
+      "attemptMs": 30873,
+      "persistMs": 425
+    },
+    {
+      "jobId": "09e160c4-b47b-4f04-aab6-d70a021fda41",
+      "operation": "chat",
+      "alarmWaitMs": 849,
+      "openaiMs": 5906,
+      "attemptMs": 6497,
+      "persistMs": 480
+    }
+  ],
+  "containerCleanup": {
+    "imageDigest": "sha256:94af4555f651f6669b0fba05dcbfda67dfabfefc6b42079d0d85e72cfaa714e9",
+    "activeRollout": false,
+    "healthyInstances": 3
+  }
 }
