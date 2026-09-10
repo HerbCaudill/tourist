@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-10T10:49:47.727Z",
+  "discoveries": [
+    {
+      "location": "Greyfriars Kirk, Edinburgh",
+      "durationMs": 37578,
+      "stories": 2,
+      "replayRecovered": true
+    },
+    {
+      "location": "Barcelona Gothic Quarter",
+      "durationMs": 37990,
+      "stories": 3,
+      "replayRecovered": true
+    }
+  ],
+  "chat": {
+    "durationMs": 13585,
+    "answerCharacters": 475
+  },
+  "workerVersion": "d6060e26-f1fc-4e9e-a49e-ea5e84c2f2e6",
+  "touristDeployment": "dpl_H9u4pgnoJHPq7oEgDaz9LwQ6L3bb",
+  "verification": "Two concurrent production discoveries, initial-request replay for each, then a follow-up chat. Timings include submission, five-second polling, and geographic validation.",
+  "cutoverNote": "A probe before Vercel promotion returned HTTP 503 while the old caller still used the previous request contract. The reported completed runs began after promotion."
+}

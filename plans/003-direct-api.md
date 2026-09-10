@@ -47,3 +47,11 @@ The final worker passed typechecking, all 92 tests, and Wrangler's deployment dr
 ## Final live result
 
 With the old queue paused, simultaneous Edinburgh and Barcelona discoveries completed through the public Tourist endpoints in 35.6 and 37.1 seconds, returning two geographically accepted stories each. Replaying each initial discovery reused its original recovery ticket. A subsequent public chat completed in 13.9 seconds. The two discovery alarms were claimed after 0.84 and 1.04 seconds; their API calls took 27.8 and 31.8 seconds. Chat dispatch took 1.29 seconds and its API call took 5.75 seconds. All three completed on their first attempt. The end-to-end values include Vercel requests, the discovery replay check, five-second polling, and geographic validation. The old queue was resumed after verification.
+
+## Application ownership cleanup
+
+The complete model request now lives in Tourist's `server/createModelRequest.ts`, including the shared `server/prompts/system.prompt.md`. Discovery, chat, and the latency benchmark use it. Codex Cloud accepts a caller-supplied Responses API request and adds no application instructions or model defaults. Its existing durable job identities and result retrieval remain stable.
+
+The obsolete research CLI runner, custom container files, research-auth endpoint and seeding script, legacy synchronous research endpoint, and queue consumer were removed. The unused Cloudflare research queue and its encrypted research-only Codex login were deleted. The shared container image was rebuilt without the research files. General Codex and email-processing behavior retains its existing tests and configuration.
+
+Production verification is recorded in `api-ownership-verification.json`: two concurrent discoveries completed in 37.6 and 38.0 seconds with two and three stories; request replay recovered both original jobs; follow-up chat completed in 13.6 seconds. Tourist passed 50 backend tests, typechecking, lint, and build. Codex Cloud passed 61 tests, typechecking, scoped formatting, and Worker bundling. Its aggregate `pnpm check` remains blocked only by the pre-existing untracked `.vscode/settings.json` formatting issue.

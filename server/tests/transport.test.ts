@@ -66,7 +66,19 @@ describe("private runner adapter", () => {
     const [url, init] = fetcher.mock.calls[1]!
     expect(String(url)).toBe("https://runner.example/v1/research/jobs")
     expect(init?.headers).toMatchObject({ Authorization: "Bearer secret-token" })
-    expect(JSON.parse(String(init?.body))).toEqual({ id: "id-1", prompt: "Research prompt" })
+    expect(JSON.parse(String(init?.body))).toEqual({
+      id: "id-1",
+      request: {
+        model: "gpt-6-astra",
+        reasoning: { effort: "low" },
+        input: "Research prompt",
+        instructions: expect.stringContaining("You are Tourist"),
+        tools: [],
+        store: false,
+        service_tier: "default",
+        max_output_tokens: 6000,
+      },
+    })
   })
 
   it.each([

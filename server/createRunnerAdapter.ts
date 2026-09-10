@@ -1,4 +1,5 @@
 import { Schema } from "effect"
+import { createModelRequest } from "./createModelRequest.ts"
 import { decode } from "./decode.ts"
 import { fetchProvider } from "./fetchProvider.ts"
 import { readProviderJson } from "./readProviderJson.ts"
@@ -31,7 +32,11 @@ export function createRunnerAdapter(
         {
           method: "POST",
           headers,
-          body: JSON.stringify({ id, prompt, ...(context !== undefined ? { context } : {}) }),
+          body: JSON.stringify({
+            id,
+            request: await createModelRequest(prompt),
+            ...(context !== undefined ? { context } : {}),
+          }),
         },
         transport,
       )

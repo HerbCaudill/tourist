@@ -81,3 +81,7 @@ Discovery and chat answer from model knowledge and supplied context; stories may
 ## Prompt format
 
 Discovery and chat use short editorial prompts followed by plain-text context. Discovery supplies the readable current location, search radius and nearby names. Chat supplies current and originating locations, story text, source links, selected-story label, conversation and question. IDs and coordinates remain in application contracts for validation, maps and recovery, but are omitted from model context. Story output no longer includes `kind`; legends and disputed accounts are labeled in prose. Prompt version is `ledger-4`, so earlier discoveries are not reused as current cache hits.
+
+## Application ownership
+
+Tourist owns the complete provider request in `server/createModelRequest.ts`. The shared personality prompt is `server/prompts/system.prompt.md`; discovery and chat retain their own editorial and output-format prompts. The runner adapter submits `{id, request, context}` to the generic durable job service. Codex Cloud forwards that model request unchanged and owns only authentication, execution limits, encrypted job state, retries, expiry, and result delivery. Changing model behavior requires a Tourist deployment. The latency benchmark uses the same request builder and no longer reads code or prompts from the sibling repository.

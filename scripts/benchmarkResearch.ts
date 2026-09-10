@@ -1,3 +1,4 @@
+import { createModelRequest } from "../server/createModelRequest.ts"
 import { createHash, randomUUID } from "node:crypto"
 import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
@@ -25,10 +26,7 @@ async function main() {
       readFileSync(resolve(homedir(), ".config/codex-cloud/token"), "utf8").trim(),
   )
   const contextSecret = randomUUID()
-  const instructions = readFileSync(
-    resolve(process.env.CODEX_CLOUD_DIR ?? "../codex-cloud", "container/research.prompt.md"),
-    "utf8",
-  )
+  const { instructions } = await createModelRequest("benchmark")
   const samples: Record<string, unknown>[] = []
   const outputPath = process.argv[2] ?? "plans/api-latency-samples.json"
   const date = new Date()
@@ -98,7 +96,7 @@ async function main() {
             JSON.stringify({ event: "benchmark_start", arm, location: location.name, jobId: id }),
           )
           if (arm === "cloud") return cloud.start(id, prompt, context)
-          const response = await generate(prompt, apiKey, instructions)
+          const response = await generate(prompt, apiKey)
           Object.assign(pass, response.metrics)
           const job: RunnerJob = { id, status: "completed", result: response.text, context }
           jobs.set(id, job)
@@ -196,23 +194,14 @@ async function generate(
   prompt: string,
   /** API credential retained only in memory. */
   apiKey: string,
-  /** Same custom instructions loaded by the research runner. */
-  instructions: string,
 ) {
   const started = performance.now()
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-6-astra",
-      reasoning: { effort: "low" },
-      instructions,
-      input: prompt,
-      tools: [],
-      store: false,
+      ...(await createModelRequest(prompt)),
       stream: true,
-      service_tier: "default",
-      max_output_tokens: 6000,
     }),
     signal: AbortSignal.timeout(180_000),
   })
