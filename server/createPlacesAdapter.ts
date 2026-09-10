@@ -68,42 +68,76 @@ export function createPlacesAdapter(
         return null
       return { id: result.place_id, coordinates: point(result.geometry.location) }
     },
-    /** Fetch up to twelve nearby orientation clues of any category, without reviews or photos. */
+    /** Prioritize landmarks, then fill twelve distinct orientation clues from broader surroundings. */
     async nearby(location, radiusMeters) {
-      const response = await fetchProvider(
-        "https://places.googleapis.com/v1/places:searchNearby",
-        {
-          method: "POST",
-          headers: {
-            "X-Goog-Api-Key": key,
-            "X-Goog-FieldMask":
-              "places.id,places.displayName,places.formattedAddress,places.location",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            maxResultCount: 12,
-            rankPreference: "DISTANCE",
-            locationRestriction: {
-              circle: {
-                center: { latitude: location.coordinates.lat, longitude: location.coordinates.lon },
-                radius: radiusMeters,
-              },
+      /** Fetch one category set independently so either search can provide useful context. */
+      async function search(includedTypes: readonly string[]) {
+        const response = await fetchProvider(
+          "https://places.googleapis.com/v1/places:searchNearby",
+          {
+            method: "POST",
+            headers: {
+              "X-Goog-Api-Key": key,
+              "X-Goog-FieldMask":
+                "places.id,places.displayName,places.formattedAddress,places.location",
+              "Content-Type": "application/json",
             },
-          }),
-        },
-        transport,
-      )
-      const data = decode(Nearby, await readProviderJson(response), "malformed")
-      return (data.places ?? []).map(place => ({
-        id: place.id,
-        name: place.displayName.text,
-        ...(place.formattedAddress ? { address: place.formattedAddress } : {}),
-        coordinates: decode(
-          Coordinates,
-          { lat: place.location.latitude, lon: place.location.longitude },
-          "malformed",
-        ),
-      }))
+            body: JSON.stringify({
+              maxResultCount: 12,
+              includedTypes,
+              rankPreference: "DISTANCE",
+              locationRestriction: {
+                circle: {
+                  center: {
+                    latitude: location.coordinates.lat,
+                    longitude: location.coordinates.lon,
+                  },
+                  radius: radiusMeters,
+                },
+              },
+            }),
+          },
+          transport,
+        )
+        const data = decode(Nearby, await readProviderJson(response), "malformed")
+        return (data.places ?? []).map(place => ({
+          id: place.id,
+          name: place.displayName.text,
+          ...(place.formattedAddress ? { address: place.formattedAddress } : {}),
+          coordinates: decode(
+            Coordinates,
+            { lat: place.location.latitude, lon: place.location.longitude },
+            "malformed",
+          ),
+        }))
+      }
+      const [landmarks, surroundings] = await Promise.allSettled([
+        search(LANDMARK_TYPES),
+        search(SURROUNDING_TYPES),
+      ])
+      if (landmarks.status === "rejected" && surroundings.status === "rejected")
+        throw landmarks.reason
+      const prioritized = [
+        ...(landmarks.status === "fulfilled" ? landmarks.value : []),
+        ...(surroundings.status === "fulfilled" ? surroundings.value : []),
+      ]
+      const seen = new Set<string>()
+      return prioritized
+        .filter(place => {
+          if (
+            seen.has(place.id) ||
+            distanceBetween(location.coordinates, place.coordinates) > radiusMeters
+          )
+            return false
+          seen.add(place.id)
+          return true
+        })
+        .slice(0, 12)
+        .sort(
+          (a, b) =>
+            distanceBetween(location.coordinates, a.coordinates) -
+            distanceBetween(location.coordinates, b.coordinates),
+        )
     },
     /** Proxy a whole image, retaining the embedded Google logo and attribution. */
     async map(center, markers, radiusMeters) {
@@ -154,6 +188,43 @@ export function createPlacesAdapter(
 function point(value: { readonly lat: number; readonly lng: number }) {
   return decode(Coordinates, { lat: value.lat, lon: value.lng }, "malformed")
 }
+
+/** Recognizable places take precedence over nearer everyday businesses. */
+const LANDMARK_TYPES = [
+  "historical_landmark",
+  "monument",
+  "museum",
+  "church",
+  "cemetery",
+  "tourist_attraction",
+  "park",
+  "concert_hall",
+  "performing_arts_theater",
+  "art_gallery",
+  "library",
+]
+/** Broader context fills gaps without making lodging or generic services eligible. */
+const SURROUNDING_TYPES = [
+  ...LANDMARK_TYPES,
+  "historical_place",
+  "cultural_landmark",
+  "sculpture",
+  "plaza",
+  "garden",
+  "university",
+  "school",
+  "community_center",
+  "government_office",
+  "post_office",
+  "restaurant",
+  "cafe",
+  "coffee_shop",
+  "pub",
+  "bar",
+  "book_store",
+  "store",
+  "supermarket",
+]
 
 const GooglePoint = Schema.Struct({ lat: Schema.Number, lng: Schema.Number })
 const Geocoding = Schema.Struct({
