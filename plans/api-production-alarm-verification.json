@@ -1,0 +1,67 @@
+{
+  "date": "2026-09-10T10:34:39.916Z",
+  "workerVersion": "2781ffa1-9f44-45f4-964a-7c8543b131db",
+  "legacyQueuePaused": true,
+  "samples": [
+    {
+      "label": "Greyfriars Kirk, Edinburgh",
+      "operation": "discover",
+      "elapsedMs": 35551,
+      "firstRunningMs": 8292,
+      "replayReusedTicket": true,
+      "storyCount": 2,
+      "radiusMeters": 200
+    },
+    {
+      "label": "Plaça del Rei, Barcelona",
+      "operation": "discover",
+      "elapsedMs": 37145,
+      "firstRunningMs": 9620,
+      "replayReusedTicket": true,
+      "storyCount": 2,
+      "radiusMeters": 200
+    },
+    {
+      "label": "Edinburgh follow-up",
+      "operation": "chat",
+      "elapsedMs": 13851,
+      "firstRunningMs": 8292,
+      "answerCharacters": 690
+    }
+  ],
+  "runnerTraces": [
+    {
+      "jobId": "c3074368-102c-4e2f-89db-66d722253c0f",
+      "attempt": 1,
+      "dispatchMs": 838,
+      "openaiMs": 27835,
+      "attemptMs": 28473,
+      "persistMs": 456,
+      "inputTokens": 376,
+      "outputTokens": 1051,
+      "reasoningTokens": 60
+    },
+    {
+      "jobId": "f2be7674-87ef-4383-94f3-15b96ec75fcb",
+      "attempt": 1,
+      "dispatchMs": 1036,
+      "openaiMs": 31785,
+      "attemptMs": 32338,
+      "persistMs": 457,
+      "inputTokens": 369,
+      "outputTokens": 1130,
+      "reasoningTokens": 85
+    },
+    {
+      "jobId": "6dc65568-fde7-4f6d-951a-2b19e90ca4fc",
+      "attempt": 1,
+      "dispatchMs": 1293,
+      "openaiMs": 5746,
+      "attemptMs": 6335,
+      "persistMs": 450,
+      "inputTokens": 617,
+      "outputTokens": 143,
+      "reasoningTokens": 0
+    }
+  ]
+}

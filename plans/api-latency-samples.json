@@ -1,0 +1,138 @@
+{
+  "date": "2026-09-10T10:06:44.509Z",
+  "model": "gpt-6-astra",
+  "reasoning": "low",
+  "webSearch": false,
+  "instructionsSha256": "464678a958ad58e829c730831eb894ce45842c701d1df38bc55f24e60665ef01",
+  "apiServiceTier": "default",
+  "usdPerMillionTokens": {
+    "input": 10,
+    "cachedInput": 1,
+    "output": 50
+  },
+  "samples": [
+    {
+      "location": "Greyfriars Kirk, Edinburgh",
+      "arm": "api",
+      "initialPlacesMs": 444,
+      "elapsedMs": 28098,
+      "geocodeMs": 822,
+      "storyCount": 3,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "ef07d85d-a387-43cb-8775-a5f64ec1aa95",
+          "promptSha256": "5e066046e6e4a13cf54b90525dec77d759d4d3820e3dceb9e9a06420a501912e",
+          "submittedAt": "2026-09-10T10:06:44.957Z",
+          "headersMs": 2441,
+          "firstTextMs": 8166,
+          "completedMs": 27271,
+          "model": "gpt-6-astra",
+          "serviceTier": "default",
+          "inputTokens": 1744,
+          "cachedInputTokens": 0,
+          "outputTokens": 932,
+          "reasoningTokens": 97,
+          "estimatedUsd": 0.06404
+        }
+      ]
+    },
+    {
+      "location": "Greyfriars Kirk, Edinburgh",
+      "arm": "cloud",
+      "initialPlacesMs": 444,
+      "elapsedMs": 93731,
+      "firstRunningMs": 12794,
+      "geocodeMs": 1138,
+      "storyCount": 2,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "c2c5fd14-5ae0-45ab-a2d1-380850988b0d",
+          "promptSha256": "5e066046e6e4a13cf54b90525dec77d759d4d3820e3dceb9e9a06420a501912e",
+          "submittedAt": "2026-09-10T10:06:45.674Z"
+        }
+      ]
+    },
+    {
+      "location": "Plaça del Rei, Barcelona",
+      "arm": "api",
+      "initialPlacesMs": 433,
+      "elapsedMs": 28491,
+      "geocodeMs": 720,
+      "storyCount": 2,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "16773ac6-3a8b-45d5-bb14-0a7890eaf5ad",
+          "promptSha256": "3317927ff2f90b8364e8a328b00736b7ab05ea9077e91ce9f4f46507547d9975",
+          "submittedAt": "2026-09-10T10:08:19.120Z",
+          "headersMs": 1155,
+          "firstTextMs": 4837,
+          "completedMs": 27767,
+          "model": "gpt-6-astra",
+          "serviceTier": "default",
+          "inputTokens": 1835,
+          "cachedInputTokens": 0,
+          "outputTokens": 899,
+          "reasoningTokens": 81,
+          "estimatedUsd": 0.0633
+        }
+      ]
+    },
+    {
+      "location": "Plaça del Rei, Barcelona",
+      "arm": "cloud",
+      "initialPlacesMs": 433,
+      "elapsedMs": 112988,
+      "firstRunningMs": 6315,
+      "geocodeMs": 563,
+      "storyCount": 2,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "a3cf8afc-07d0-44ab-89d8-1cbb1148656d",
+          "promptSha256": "3317927ff2f90b8364e8a328b00736b7ab05ea9077e91ce9f4f46507547d9975",
+          "submittedAt": "2026-09-10T10:08:19.497Z"
+        }
+      ]
+    },
+    {
+      "location": "Place des Vosges, Paris",
+      "arm": "api",
+      "initialPlacesMs": 244,
+      "elapsedMs": 69950,
+      "geocodeMs": 882,
+      "storyCount": 2,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "4c76a791-f346-4309-b529-1e9a20400549",
+          "promptSha256": "7b3c8425b57a4e5db60ca4cc9bfa5fdbd818a54cebfc7a141aa1302a93f69558",
+          "submittedAt": "2026-09-10T10:10:12.355Z",
+          "headersMs": 1084,
+          "firstTextMs": 68811,
+          "completedMs": 69065,
+          "model": "gpt-6-astra",
+          "serviceTier": "default",
+          "inputTokens": 1711,
+          "cachedInputTokens": 0,
+          "outputTokens": 723,
+          "reasoningTokens": 138,
+          "estimatedUsd": 0.05326
+        }
+      ]
+    },
+    {
+      "location": "Place des Vosges, Paris",
+      "arm": "cloud",
+      "status": "benchmark_failed",
+      "jobId": "2e57d652-5166-4686-b8c9-4f0d91797702",
+      "failureStage": "not_retained",
+      "cleanClientTiming": false,
+      "recoveredJobStatus": "completed",
+      "recoveredStoryCount": 2,
+      "note": "Tail connection also disconnected. Later retrieval and schema/geographic validation succeeded; no end-to-end timing inferred."
+    }
+  ]
+}

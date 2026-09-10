@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-10T10:27:51.960Z",
+  "workerVersion": "e3e9b4f5-9fd8-4a29-b49f-52ec669b161f",
+  "samples": [
+    {
+      "label": "Plaça del Rei, Barcelona",
+      "operation": "discover",
+      "elapsedMs": 43556,
+      "replayReusedTicket": true,
+      "storyCount": 3,
+      "radiusMeters": 200
+    },
+    {
+      "label": "Greyfriars Kirk, Edinburgh",
+      "operation": "discover",
+      "elapsedMs": 72988,
+      "replayReusedTicket": true,
+      "storyCount": 2,
+      "radiusMeters": 200
+    }
+  ]
+}

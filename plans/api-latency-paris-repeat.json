@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-10T10:16:15.988Z",
+  "model": "gpt-6-astra",
+  "reasoning": "low",
+  "webSearch": false,
+  "instructionsSha256": "464678a958ad58e829c730831eb894ce45842c701d1df38bc55f24e60665ef01",
+  "apiServiceTier": "default",
+  "usdPerMillionTokens": {
+    "input": 10,
+    "cachedInput": 1,
+    "output": 50
+  },
+  "samples": [
+    {
+      "location": "Place des Vosges, Paris",
+      "arm": "api",
+      "initialPlacesMs": 514,
+      "elapsedMs": 27095,
+      "geocodeMs": 508,
+      "storyCount": 2,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "4eb089bd-537e-4a54-bacc-4db06ff2c175",
+          "promptSha256": "7b3c8425b57a4e5db60ca4cc9bfa5fdbd818a54cebfc7a141aa1302a93f69558",
+          "submittedAt": "2026-09-10T10:16:16.506Z",
+          "headersMs": 1392,
+          "firstTextMs": 5797,
+          "completedMs": 26581,
+          "model": "gpt-6-astra",
+          "serviceTier": "default",
+          "inputTokens": 1711,
+          "cachedInputTokens": 1708,
+          "outputTokens": 657,
+          "reasoningTokens": 86,
+          "estimatedUsd": 0.034588
+        }
+      ]
+    },
+    {
+      "location": "Place des Vosges, Paris",
+      "arm": "cloud",
+      "initialPlacesMs": 514,
+      "elapsedMs": 61239,
+      "firstRunningMs": 7754,
+      "geocodeMs": 389,
+      "storyCount": 2,
+      "radiusMeters": 200,
+      "passes": [
+        {
+          "jobId": "20b43370-c699-42bb-92bd-978da6078843",
+          "promptSha256": "7b3c8425b57a4e5db60ca4cc9bfa5fdbd818a54cebfc7a141aa1302a93f69558",
+          "submittedAt": "2026-09-10T10:16:17.140Z"
+        }
+      ]
+    }
+  ]
+}
