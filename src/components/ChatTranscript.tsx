@@ -86,7 +86,7 @@ export function ChatTranscript(
         </div>
       )}
       {!offline && !questionDisabled && !answering && !error && suggestions.length > 0 && (
-        <div className="border-t border-neutral-300 pt-2">
+        <div className="space-y-2 border-t border-neutral-300 pt-2">
           {suggestions.map(q => (
             <button
               key={q}
