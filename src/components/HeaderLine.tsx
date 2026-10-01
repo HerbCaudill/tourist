@@ -12,7 +12,7 @@ export function HeaderLine(
 ) {
   return (
     // WebKit recognizes sticky top bars and can extend their solid background beneath the status bar.
-    <header className="bg-background sticky top-0 z-30 w-full shrink-0 px-[18px] pt-[calc(env(safe-area-inset-top)+24px)]">
+    <header className="bg-background sticky top-0 z-30 w-full shrink-0 px-[18px] pt-[env(safe-area-inset-top)]">
       <div className="flex justify-between gap-3 pt-1">
         <div className={cn("min-w-0 flex-1", !allowOverflow && "truncate")}>{left}</div>
         <span className="shrink-0 text-neutral-500">{right}</span>
