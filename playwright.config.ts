@@ -21,8 +21,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: preview ? "pnpm preview --host 127.0.0.1 --port 5180" : "pnpm dev",
+    command: preview ? "pnpm preview --host 127.0.0.1 --port 5180" : "pnpm dev:app",
     url: preview ? "http://localhost:5180" : "http://localhost:5179",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 })

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --open",
+    "dev": "localhost-dev pnpm dev:app",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
@@ -15,7 +15,9 @@
     "typecheck": "tsc -b",
     "format": "oxfmt .",
     "lint": "oxlint .",
-    "test:pw:offline": "pnpm build && TOURIST_PREVIEW=1 playwright test --max-failures=1"
+    "test:pw:offline": "pnpm build && TOURIST_PREVIEW=1 playwright test --max-failures=1",
+    "dev:app": "vite",
+    "dev:url": "localhost-dev url"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
