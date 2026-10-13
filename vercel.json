@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "__dolt_remote_info__": false
+    }
+  },
   "functions": {
     "api/*.ts": {
       "includeFiles": "server/prompts/*.prompt.md",
